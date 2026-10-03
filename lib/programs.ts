@@ -9,11 +9,11 @@ export type Program = {
   name: string;
 };
 
-const starter = [
-  "Safety products",
-  "Energy solutions",
-  "Digital media",
-  "Software development",
+const starter: Program[] = [
+  { id: "safety-products", name: "Safety products" },
+  { id: "energy-solutions", name: "Energy solutions" },
+  { id: "digital-media", name: "Digital media" },
+  { id: "software-development", name: "Software development" },
 ];
 
 async function readPrograms(): Promise<Program[] | null> {
@@ -36,12 +36,12 @@ async function writePrograms(programs: Program[]) {
 export async function listPrograms() {
   const existing = await readPrograms();
   if (existing) return existing;
-  const seeded = starter.map((name) => ({
-    id: randomBytes(8).toString("hex"),
-    name,
-  }));
-  await writePrograms(seeded);
-  return seeded;
+  try {
+    await writePrograms(starter);
+  } catch {
+    return starter;
+  }
+  return starter;
 }
 
 export async function addProgram(name: string) {
