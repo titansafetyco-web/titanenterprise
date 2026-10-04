@@ -1,4 +1,3 @@
-import { sendMailbox } from "@/lib/mail";
 import { site } from "@/lib/site";
 
 export type AccountNotice = "review" | "approved" | "denied";
@@ -125,6 +124,7 @@ export async function sendAccountNotice(input: {
     password: input.password ?? "",
     kind: input.kind,
   });
+  const { sendMailbox } = await import("@/lib/mail");
   await sendMailbox({
     to: email,
     subject: message.subject,
