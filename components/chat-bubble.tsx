@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { openSupport, sendChat, supportPresence } from "@/app/chat/actions";
 import { useLocale } from "@/components/locale-provider";
 import { localizeError } from "@/lib/i18n/errors";
@@ -34,6 +34,40 @@ export function ChatBubble({
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const inputId = useId();
+  const anchorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const anchor = anchorRef.current;
+    const footer = document.querySelector("footer");
+    if (!anchor || !footer) return;
+    const box = anchor;
+    const foot = footer;
+
+    const gap = 20;
+    let frame = 0;
+
+    function place() {
+      frame = 0;
+      const covering = window.innerHeight - foot.getBoundingClientRect().top;
+      const lifted = covering > 0 ? covering + gap : gap;
+      const limit = Math.max(gap, window.innerHeight - box.offsetHeight - gap);
+      box.style.bottom = `${Math.min(lifted, limit)}px`;
+    }
+
+    function schedule() {
+      if (frame) return;
+      frame = window.requestAnimationFrame(place);
+    }
+
+    place();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [open]);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(threadKey) ?? "";
@@ -108,7 +142,7 @@ export function ChatBubble({
   }
 
   return (
-    <div className="chat-anchor fixed right-5 z-40 flex flex-col items-end gap-3">
+    <div ref={anchorRef} className="chat-anchor fixed right-5 z-40 flex flex-col items-end gap-3">
       {open ? (
         <section
           aria-label={t.chat}
@@ -247,9 +281,10 @@ export function ChatBubble({
         onClick={() => setOpen((current) => !current)}
         aria-expanded={open}
         aria-label={open ? t.closeChat : t.openChat}
-        className="flex h-14 w-14 items-center justify-center bg-accent text-ink shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition-colors hover:bg-[#e0b400]"
+        className="flex h-14 items-center justify-center gap-2 bg-accent px-4 text-ink shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition-colors hover:bg-[#e0b400]"
       >
         <ChatIcon />
+        <span className="font-display text-sm font-semibold uppercase tracking-[0.16em]">{t.chat}</span>
       </button>
     </div>
   );

@@ -49,12 +49,13 @@ export async function Footer({ name }: { name: string }) {
     { href: "/terms", label: t.terms },
     { href: "/privacy", label: t.privacy },
     { href: "/affiliate-policy", label: t.affiliatePolicy },
+    { href: "/payout-policy", label: t.payoutPolicy },
   ];
 
   return (
     <footer className="border-t-4 border-accent bg-ink text-white">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-6 sm:flex-row sm:items-start sm:justify-between sm:gap-10">
-        <div className="mx-auto flex max-w-2xl flex-col items-center text-center sm:mx-0 sm:items-start sm:text-left">
+      <div className="mx-auto grid max-w-6xl items-center gap-8 px-6 py-6 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:gap-10">
+        <div className="mx-auto flex max-w-sm flex-col items-center text-center sm:mx-0 sm:items-start sm:text-left">
           <Image
             src="/logo-landscape.webp"
             alt={name}
@@ -62,11 +63,12 @@ export async function Footer({ name }: { name: string }) {
             height={401}
             className="h-28 w-auto max-w-full bg-transparent"
           />
-          <div className="mt-3 flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-8 sm:ml-8">
-            <p className="max-w-sm text-sm leading-snug text-white/70">
-              {t.footerBlurb}
-            </p>
-            <ul className="flex justify-center gap-3 sm:ml-8" aria-label="Assurances">
+          <p className="mt-3 text-sm leading-snug text-white/70">
+            {t.footerBlurb}
+          </p>
+        </div>
+        <div className="flex w-full items-center justify-between sm:-my-3 sm:h-full sm:w-auto sm:flex-col sm:self-stretch">
+            <ul className="flex justify-center gap-3 sm:translate-y-8" aria-label="Assurances">
             <Seal label={t.safety}>
               <path
                 d="M32 16.5 45.5 22v9.8c0 7.6-5.8 13.6-13.5 17.2C24.3 45.4 18.5 39.4 18.5 31.8V22L32 16.5z"
@@ -105,9 +107,32 @@ export async function Footer({ name }: { name: string }) {
               <circle cx="38.5" cy="39.5" r="3.2" fill="#f5c400" />
             </Seal>
             </ul>
-          </div>
+            <ul className="flex flex-col items-center gap-2 sm:translate-y-6" aria-label={t.socials}>
+              <li>
+                <a
+                  href="https://www.instagram.com/titan.safetyco/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm text-accent transition-colors hover:text-white"
+                >
+                  <InstagramIcon />
+                  Instagram
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.tiktok.com/@titan.enterprise"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm text-accent transition-colors hover:text-white"
+                >
+                  <TikTokIcon />
+                  TikTok
+                </a>
+              </li>
+            </ul>
         </div>
-        <div className="grid grid-cols-2 gap-6 sm:contents">
+        <div className="grid grid-cols-2 gap-6 sm:justify-self-end">
         <nav aria-label="Footer">
           <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-accent">
             {t.explore}
@@ -140,28 +165,6 @@ export async function Footer({ name }: { name: string }) {
                 </Link>
               </li>
             ))}
-            <li>
-              <a
-                href="https://www.instagram.com/titan.safetyco/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm text-accent transition-colors hover:text-muted"
-              >
-                <InstagramIcon />
-                Instagram
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://www.tiktok.com/@titan.enterprise"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm text-accent transition-colors hover:text-muted"
-              >
-                <TikTokIcon />
-                TikTok
-              </a>
-            </li>
           </ul>
         </nav>
         </div>

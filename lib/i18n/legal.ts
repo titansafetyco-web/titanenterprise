@@ -2,6 +2,7 @@ import type { Locale } from "@/lib/i18n/locale";
 
 export type LegalBlock =
   | string
+  | { items: string[] }
   | {
       before: string;
       href: string;
@@ -381,4 +382,82 @@ export function termsCopy(locale: Locale) {
 
 export function policyCopy(locale: Locale) {
   return locale === "es" ? policyEs : policyEn;
+}
+
+const payoutEn: LegalDoc = {
+  eyebrow: "Policies",
+  title: "Payout policy",
+  sections: [
+    {
+      title: "Version 1.0",
+      blocks: ["Effective date: October 4, 2026."],
+    },
+    {
+      title: "Purpose and scope",
+      blocks: [
+        "This policy explains how Titan Safety Co. (“Titan,” “we,” “us,” or “our”) calculates, approves, and pays compensation to participating agents and members for qualifying affiliate results and agreed contractor jobs.",
+        "The terms “agent” and “member” describe platform roles and do not determine employment status. Employee wages are handled through a separate payroll process. Applicable legal payment requirements take priority over conflicting provisions in this policy.",
+      ],
+    },
+    {
+      title: "How compensation is earned",
+      blocks: [
+        "Each offer or written job agreement identifies:",
+        {
+          items: [
+            "The work or qualifying result required.",
+            "The compensation amount or calculation.",
+            "Required documentation or evidence.",
+            "Approval and validation requirements.",
+            "Any applicable cancellation or reversal conditions.",
+            "Any specific payment due date.",
+          ],
+        },
+        "Compensation may be a fixed amount per qualified lead, application, enrollment, sale, or accepted deliverable. An offer may also provide percentage-based compensation with a clearly defined calculation.",
+        "Creating an account, submitting a lead, or completing an application does not automatically qualify a member for payment. The requirements stated in the applicable offer must be satisfied.",
+        "Titan records the compensation rate applicable when work is accepted or a qualifying referral is attributed. Later rate changes apply prospectively and do not change compensation for previously accepted work.",
+      ],
+    },
+  ],
+};
+
+const payoutEs: LegalDoc = {
+  eyebrow: "Políticas",
+  title: "Política de pagos",
+  sections: [
+    {
+      title: "Versión 1.0",
+      blocks: ["Fecha de vigencia: 4 de octubre de 2026."],
+    },
+    {
+      title: "Propósito y alcance",
+      blocks: [
+        "Esta política explica cómo Titan Safety Co. (“Titan”, “nosotros” o “nuestro”) calcula, aprueba y paga la compensación a los agentes y miembros participantes por resultados de afiliados que califican y por trabajos de contratista acordados.",
+        "Los términos “agente” y “miembro” describen roles de la plataforma y no determinan la condición de empleo. Los salarios de empleados se gestionan mediante un proceso de nómina separado. Los requisitos legales de pago aplicables tienen prioridad sobre las disposiciones de esta política que entren en conflicto.",
+      ],
+    },
+    {
+      title: "Cómo se gana la compensación",
+      blocks: [
+        "Cada oferta o acuerdo de trabajo por escrito identifica:",
+        {
+          items: [
+            "El trabajo o resultado que califica.",
+            "El monto o el cálculo de la compensación.",
+            "La documentación o evidencia requerida.",
+            "Los requisitos de aprobación y validación.",
+            "Cualquier condición de cancelación o reversión que aplique.",
+            "Cualquier fecha específica de pago.",
+          ],
+        },
+        "La compensación puede ser un monto fijo por prospecto calificado, solicitud, inscripción, venta o entregable aceptado. Una oferta también puede prever una compensación porcentual con un cálculo definido con claridad.",
+        "Crear una cuenta, enviar un prospecto o completar una solicitud no califica automáticamente a un miembro para el pago. Deben cumplirse los requisitos indicados en la oferta aplicable.",
+        "Titan registra la tarifa de compensación aplicable cuando se acepta el trabajo o se atribuye un referido que califica. Los cambios posteriores de tarifa se aplican hacia adelante y no modifican la compensación de trabajo ya aceptado.",
+      ],
+    },
+  ],
+};
+
+export function payoutCopy(locale: Locale) {
+  return locale === "es" ? payoutEs : payoutEn;
 }

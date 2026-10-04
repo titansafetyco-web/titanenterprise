@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useId, useState, useTransition } from "react";
+import { deleteDeniedAccount } from "@/app/admin/review-actions";
 import { loadAccountDetails, type AccountDetails } from "@/app/dashboard/team/actions";
 import { useLocale } from "@/components/locale-provider";
 import { localizeError } from "@/lib/i18n/errors";
@@ -64,11 +66,11 @@ export function AccountList({ accounts }: { accounts: AccountRow[] }) {
     <>
       <ul>
         {accounts.map((item) => (
-          <li key={item.id} className="border-b border-line bg-white even:bg-canvas last:border-0">
+          <li key={item.id} className="flex items-stretch border-b border-line bg-white even:bg-canvas last:border-0">
             <button
               type="button"
               onClick={() => setSelected(item)}
-              className="w-full px-6 py-5 text-left hover:bg-[#e8eaed]"
+              className="min-w-0 flex-1 px-6 py-5 text-left hover:bg-[#e8eaed]"
             >
               <div className="flex flex-wrap items-center gap-3">
                 <p className="font-display text-lg font-semibold uppercase tracking-wide">{item.name}</p>
@@ -81,10 +83,114 @@ export function AccountList({ accounts }: { accounts: AccountRow[] }) {
                 {statusName(item.status, t)}
               </p>
             </button>
+            {item.status === "denied" ? (
+              <DeniedDelete
+                id={item.id}
+                onDeleted={() => {
+                  if (selected?.id === item.id) setSelected(null);
+                }}
+              />
+            ) : null}
           </li>
         ))}
       </ul>
       {selected ? <AccountOverlay account={selected} onClose={() => setSelected(null)} /> : null}
+    </>
+  );
+}
+
+function DeniedDelete({ id, onDeleted }: { id: string; onDeleted: () => void }) {
+  const locale = useLocale();
+  const t = ui(locale);
+  const router = useRouter();
+  const titleId = useId();
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState("");
+  const [pending, start] = useTransition();
+
+  useEffect(() => {
+    if (!open) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape" && !pending) setOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, pending]);
+
+  function confirm() {
+    setError("");
+    start(async () => {
+      const result = await deleteDeniedAccount(id);
+      if (result.error) {
+        setError(localizeError(locale, result.error));
+        return;
+      }
+      setOpen(false);
+      onDeleted();
+      router.refresh();
+    });
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        aria-label={t.deleteAccount}
+        onClick={() => {
+          setError("");
+          setOpen(true);
+        }}
+        className="inline-flex w-14 shrink-0 items-center justify-center text-[#c4322a] hover:bg-[#fde8e6]"
+      >
+        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <path d="M4 7h16" />
+          <path d="M9 7V5h6v2" />
+          <path d="M8 7l1 12h6l1-12" />
+        </svg>
+      </button>
+      {open ? (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/50 p-6"
+          onClick={(event) => {
+            if (event.target === event.currentTarget && !pending) setOpen(false);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            className="w-full max-w-md border border-line bg-white p-6 shadow-[0_24px_60px_rgba(16,24,32,0.2)]"
+          >
+            <h2 id={titleId} className="font-display text-2xl font-bold uppercase tracking-wide">
+              {t.deleteAccount}
+            </h2>
+            <p className="mt-4 leading-relaxed">{t.deleteAccountWarning}</p>
+            {error ? (
+              <p role="alert" className="mt-4 border-l-4 border-accent pl-3 text-sm">
+                {error}
+              </p>
+            ) : null}
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => setOpen(false)}
+                className="border border-ink px-5 py-3 font-display text-sm font-semibold uppercase tracking-wider text-ink hover:bg-canvas disabled:opacity-60"
+              >
+                {t.cancel}
+              </button>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={confirm}
+                className="bg-[#c4322a] px-5 py-3 font-display text-sm font-semibold uppercase tracking-wider text-white hover:bg-[#a82822] disabled:opacity-60"
+              >
+                {pending ? t.pleaseWait : t.deleteAccount}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }

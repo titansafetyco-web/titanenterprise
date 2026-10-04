@@ -8,7 +8,7 @@ import { ui } from "@/lib/i18n/ui";
 import { listChosenJobs } from "@/lib/jobs";
 import { loadBankAccount, loadCryptoHoldings, loadCryptoWallet, refreshBankAccount } from "@/lib/payouts";
 import { listOwnPayouts, loadWallet } from "@/lib/wallet";
-import type { WalletEntry } from "@/lib/money";
+import { formatMoney, type WalletEntry } from "@/lib/money";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: `${ui(await getLocale()).wallet} · Titan Safety Co.` };
@@ -45,6 +45,8 @@ export default async function WalletPage({
         amountCents: item.amountCents,
         otherName: item.hint || (item.method === "ach" ? t.achPayout : t.cryptoPayout),
         createdAt: item.createdAt,
+        process: "" as const,
+        portal: "" as const,
       })),
   ].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
 
@@ -85,6 +87,7 @@ export default async function WalletPage({
                 >
                   <p className="font-display text-sm font-semibold uppercase tracking-wide">{job.title}</p>
                   <p className="bg-[#fff3c4] px-2 py-0.5 font-display text-xs font-semibold uppercase tracking-wider text-[#7a5b10]">
+                    {job.payCents > 0 ? `${formatMoney(job.payCents, locale)} · ` : ""}
                     {job.pay === "weekly" ? t.payWeekly : t.payBiweekly}
                   </p>
                 </li>

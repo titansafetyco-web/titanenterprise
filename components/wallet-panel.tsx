@@ -37,6 +37,22 @@ function roleLabel(role: string, t: ReturnType<typeof ui>) {
   return t.roleAffiliate;
 }
 
+function transferRail(process: string, portal: string, t: ReturnType<typeof ui>) {
+  const processLabel = process === "pending" ? t.processPending : process === "payment" ? t.processPayment : "";
+  const portals: Record<string, string> = {
+    wire: t.portalWire,
+    ach: t.portalAch,
+    zelle: t.portalZelle,
+    venmo: t.portalVenmo,
+    cashapp: t.portalCashapp,
+    paypal: t.portalPaypal,
+    crypto: t.portalCrypto,
+    deposit: t.portalDeposit,
+  };
+  const detail = [processLabel, portals[portal] ?? ""].filter(Boolean).join(" · ");
+  return detail ? ` · ${detail}` : "";
+}
+
 function MoneyForm({
   action,
   title,
@@ -97,7 +113,7 @@ function AmountField({ label, field, hint }: { label: string; field: string; hin
         <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#8a6a3d]">$</span>
         <input name="amount" inputMode="decimal" required placeholder="0.00" className={field} />
       </span>
-      {hint ? <span className="mt-2 block text-sm text-[#8a6a3d]">{hint}</span> : null}
+      {hint ? <span className="mt-2 block text-sm font-bold text-ink">{hint}</span> : null}
     </label>
   );
 }
@@ -150,6 +166,7 @@ function CryptoPortal({
   const locale = useLocale();
   const t = ui(locale);
   const router = useRouter();
+  const [open, setOpen] = useState(false);
   const [note, setNote] = useState("");
   const [pending, start] = useTransition();
   const [state, formAction, saving] = useActionState(saveCryptoWalletAction, initialState);
@@ -162,13 +179,18 @@ function CryptoPortal({
 
   return (
     <section className="border border-[#e6d7c3] bg-[#fffaf3]">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e6d7c3] px-6 py-4">
-        <div>
+      <div className={`flex flex-wrap items-center justify-between gap-3 px-6 py-4 ${open ? "border-b border-[#e6d7c3]" : ""}`}>
+        <button
+          type="button"
+          aria-expanded={open}
+          onClick={() => setOpen((current) => !current)}
+          className="text-left"
+        >
           <h2 className="font-display text-sm font-semibold uppercase tracking-[0.16em]">{t.cryptoPayout}</h2>
           <p className="mt-1 text-sm text-[#8a6a3d]">
             {t.cryptoBroker} · {connected ? t.brokerConnected : t.brokerNotConnected}
           </p>
-        </div>
+        </button>
         <button
           type="button"
           disabled={pending}
@@ -178,6 +200,7 @@ function CryptoPortal({
               const result = await connectBrokerAction();
               if (result) {
                 setNote(localizeError(locale, result));
+                setOpen(true);
                 return;
               }
               router.refresh();
@@ -188,6 +211,8 @@ function CryptoPortal({
           {pending ? t.pleaseWait : t.connectBroker}
         </button>
       </div>
+      {open ? (
+      <>
       <div className="border-b border-[#e6d7c3] px-6 py-4">
         <p className={label}>{t.cryptoBalance}</p>
         <ul className="mt-4 grid gap-4 sm:grid-cols-3">
@@ -217,6 +242,8 @@ function CryptoPortal({
           {saving ? t.pleaseWait : t.saveWallet}
         </button>
       </form>
+      </>
+      ) : null}
     </section>
   );
 }
@@ -438,6 +465,9 @@ export function WalletPanel({
   const received = sumKind(history, "in");
   const sent = sumKind(history, "out");
   const added = sumKind(history, "credit");
+  const pending = history
+    .filter((entry) => entry.process === "pending")
+    .reduce((total, entry) => total + entry.amountCents, 0);
   const recorded = balanceCents + sent;
   const share = recorded === 0 ? 0 : Math.round((balanceCents / recorded) * 100);
   const radius = 42;
@@ -456,6 +486,7 @@ export function WalletPanel({
     { label: t.walletReceived, cents: received },
     { label: t.walletSent, cents: sent },
     { label: t.walletAdded, cents: added },
+    { label: t.processPending, cents: pending },
   ];
 
   const kindTag = {
@@ -499,7 +530,7 @@ export function WalletPanel({
             </svg>
           ) : null}
         </div>
-        <ul className="grid border-t border-[#e6d7c3] sm:grid-cols-3">
+        <ul className="grid border-t border-[#e6d7c3] sm:grid-cols-4">
           {cards.map((card) => (
             <li key={card.label} className="border-b border-[#e6d7c3] px-6 py-5 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
               <p className={label}>{card.label}</p>
@@ -544,6 +575,12 @@ export function WalletPanel({
         {admin ? (
           <>
             <MoneyForm action={addFundsAction} title={t.addFunds} submit={t.addFunds}>
+              <div>
+                <p className={label}>{t.availableBalance}</p>
+                <p className={`mt-2 font-display text-2xl font-bold ${moneyTone(balanceCents)}`}>
+                  {formatMoney(balanceCents, locale)}
+                </p>
+              </div>
               <AmountField label={label} field={amountField} />
             </MoneyForm>
             <MoneyForm action={transferAction} title={t.transfer} submit={t.transfer}>
@@ -556,6 +593,28 @@ export function WalletPanel({
                       {person.name} · {roleLabel(person.role, t)}
                     </option>
                   ))}
+                </select>
+              </label>
+              <label className="block">
+                <span className={label}>{t.process}</span>
+                <select name="process" required defaultValue="" className={field}>
+                  <option value="">{t.chooseProcess}</option>
+                  <option value="pending">{t.processPending}</option>
+                  <option value="payment">{t.processPayment}</option>
+                </select>
+              </label>
+              <label className="block">
+                <span className={label}>{t.portal}</span>
+                <select name="portal" required defaultValue="" className={field}>
+                  <option value="">{t.choosePortal}</option>
+                  <option value="wire">{t.portalWire}</option>
+                  <option value="ach">{t.portalAch}</option>
+                  <option value="zelle">{t.portalZelle}</option>
+                  <option value="venmo">{t.portalVenmo}</option>
+                  <option value="cashapp">{t.portalCashapp}</option>
+                  <option value="paypal">{t.portalPaypal}</option>
+                  <option value="crypto">{t.portalCrypto}</option>
+                  <option value="deposit">{t.portalDeposit}</option>
                 </select>
               </label>
               <AmountField label={label} field={amountField} hint={`${t.balance} ${formatMoney(balanceCents, locale)}`} />
@@ -600,12 +659,13 @@ export function WalletPanel({
                 dateStyle: "medium",
                 timeStyle: "short",
               }).format(new Date(entry.createdAt));
+              const rail = transferRail(entry.process, entry.portal, t);
               const line =
                 entry.kind === "credit"
                   ? t.fundsAdded
                   : entry.kind === "out"
-                    ? `${t.sentTo} ${entry.otherName}`
-                    : `${t.receivedFrom} ${entry.otherName}`;
+                    ? `${t.sentTo} ${entry.otherName}${rail}`
+                    : `${t.receivedFrom} ${entry.otherName}${rail}`;
               const inbound = entry.kind !== "out";
               return (
                 <li

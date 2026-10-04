@@ -2,8 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { sendAccountNotice } from "@/lib/account-mail";
 import { setApplicationStatus, type ReviewStatus } from "@/lib/applications";
-import { getCurrentUser, setProfileStatus } from "@/lib/auth";
+import { getCurrentUser, getProfile, setProfileStatus } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 function decision(value: FormDataEntryValue | null): ReviewStatus | null {
   if (value === "approved" || value === "denied") return value;
@@ -23,9 +25,35 @@ export async function reviewAccount(formData: FormData) {
   const status = decision(formData.get("decision"));
   if (!id || !status) return;
   if (id === user.id) return;
-  await setProfileStatus(id, status);
+  const profile = await getProfile(id);
+  const saved = await setProfileStatus(id, status);
+  if (!saved.ok || !profile) return;
+  await sendAccountNotice({
+    name: profile.name,
+    email: profile.email,
+    kind: status === "approved" ? "approved" : "denied",
+  });
   revalidatePath("/admin");
   revalidatePath("/dashboard/team");
+}
+
+export async function deleteDeniedAccount(id: string): Promise<{ error: string }> {
+  const user = await requireReviewer();
+  if (!id || id === user.id) return { error: "The account could not be deleted." };
+
+  const supabase = await createClient();
+  if (!supabase) return { error: "The account could not be deleted." };
+
+  const deleted = await supabase.rpc("delete_denied_account", { target: id });
+  if (deleted.error) {
+    const text = deleted.error.message.toLowerCase();
+    if (text.includes("transfer")) return { error: "This account has transfers and cannot be deleted." };
+    return { error: "The account could not be deleted." };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/dashboard/team");
+  return { error: "" };
 }
 
 export async function reviewApplication(formData: FormData) {

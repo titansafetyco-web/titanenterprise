@@ -196,7 +196,9 @@ export async function sendMailbox(input: {
   to: string;
   subject: string;
   body: string;
+  html?: string;
   replyTo?: string;
+  storedBody?: string;
 }) {
   const mailbox = account();
   if (!mailbox.password) return "The mailbox for admin@titansafetystore.com is not connected yet.";
@@ -215,6 +217,7 @@ export async function sendMailbox(input: {
       replyTo: input.replyTo,
       subject: input.subject,
       text: input.body,
+      html: input.html,
     });
     await saveNote({
       key: sent.messageId || `sent-${crypto.randomUUID()}`,
@@ -223,7 +226,7 @@ export async function sendMailbox(input: {
       from: mailbox.user,
       to: input.to,
       subject: input.subject,
-      body: input.body,
+      body: input.storedBody || input.body,
       at: new Date().toISOString(),
     });
   } catch {

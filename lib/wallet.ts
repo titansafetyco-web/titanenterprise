@@ -1,10 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { databaseMessage, supabaseConfigured } from "@/lib/supabase/env";
-import type { WalletEntry, WalletRecipient } from "@/lib/money";
+import type { PayPortal, PayProcess, WalletEntry, WalletRecipient } from "@/lib/money";
 
 function transferError(message: string) {
   const text = message.toLowerCase();
   if (text.includes("insufficient")) return "That amount is more than the balance.";
+  if (text.includes("process")) return "Choose a process.";
+  if (text.includes("portal")) return "Choose a portal.";
   if (text.includes("recipient")) return "Choose a recipient.";
   if (text.includes("amount")) return "Enter an amount from $0.01 to $1,000,000.";
   return "The transfer could not be sent.";
@@ -44,6 +46,8 @@ export async function loadWallet() {
     amount_cents: number;
     other_name: string;
     created_at: string;
+    process: string;
+    portal: string;
   }[]) {
     if (row.kind !== "credit" && row.kind !== "out" && row.kind !== "in") continue;
     entries.push({
@@ -52,6 +56,8 @@ export async function loadWallet() {
       amountCents: row.amount_cents,
       otherName: row.other_name,
       createdAt: row.created_at,
+      process: payProcess(row.process),
+      portal: payPortal(row.portal),
     });
   }
 
@@ -102,10 +108,35 @@ export async function creditWallet(cents: number) {
   return error ? creditError(error.message) : "";
 }
 
-export async function transferFunds(recipient: string, cents: number) {
+function payProcess(value: string): PayProcess {
+  return value === "pending" || value === "payment" ? value : "";
+}
+
+function payPortal(value: string): PayPortal {
+  if (
+    value === "wire" ||
+    value === "ach" ||
+    value === "zelle" ||
+    value === "venmo" ||
+    value === "cashapp" ||
+    value === "paypal" ||
+    value === "crypto" ||
+    value === "deposit"
+  ) {
+    return value;
+  }
+  return "";
+}
+
+export async function transferFunds(recipient: string, cents: number, process: PayProcess, portal: PayPortal) {
   const supabase = await createClient();
   if (!supabase) return databaseMessage;
-  const { error } = await supabase.rpc("transfer_funds", { recipient, cents });
+  const { error } = await supabase.rpc("transfer_funds", {
+    recipient,
+    cents,
+    pay_process: process,
+    pay_portal: portal,
+  });
   return error ? transferError(error.message) : "";
 }
 

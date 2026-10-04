@@ -5,6 +5,16 @@ import type { LegalBlock, LegalDoc } from "@/lib/i18n/legal";
 function Block({ block }: { block: LegalBlock }) {
   if (typeof block === "string") return <p>{block}</p>;
 
+  if ("items" in block) {
+    return (
+      <ul className="list-disc space-y-2 pl-5">
+        {block.items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    );
+  }
+
   if ("href2" in block) {
     return (
       <p>

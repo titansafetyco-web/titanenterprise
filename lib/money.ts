@@ -6,12 +6,17 @@ export type WalletRecipient = {
   role: string;
 };
 
+export type PayProcess = "" | "pending" | "payment";
+export type PayPortal = "" | "wire" | "ach" | "zelle" | "venmo" | "cashapp" | "paypal" | "crypto" | "deposit";
+
 export type WalletEntry = {
   id: string;
   kind: "credit" | "out" | "in";
   amountCents: number;
   otherName: string;
   createdAt: string;
+  process: PayProcess;
+  portal: PayPortal;
 };
 
 const MAX_CENTS = 100_000_000;

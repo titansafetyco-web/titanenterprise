@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { dollarsToCents } from "@/lib/money";
+import { dollarsToCents, type PayPortal, type PayProcess } from "@/lib/money";
 import {
   cryptoReady,
   loadBankAccount,
@@ -17,6 +17,23 @@ import { databaseMessage } from "@/lib/supabase/env";
 import { creditWallet, releasePayout, reservePayout, settlePayout, transferFunds } from "@/lib/wallet";
 
 export type WalletState = { error: string };
+
+function isPortal(value: string): value is PayPortal {
+  return (
+    value === "wire" ||
+    value === "ach" ||
+    value === "zelle" ||
+    value === "venmo" ||
+    value === "cashapp" ||
+    value === "paypal" ||
+    value === "crypto" ||
+    value === "deposit"
+  );
+}
+
+function isProcess(value: string): value is PayProcess {
+  return value === "pending" || value === "payment";
+}
 
 export async function addFundsAction(_prev: WalletState, formData: FormData): Promise<WalletState> {
   const user = await getCurrentUser();
@@ -37,11 +54,15 @@ export async function transferAction(_prev: WalletState, formData: FormData): Pr
 
   const recipient = String(formData.get("recipient") ?? "");
   if (!recipient) return { error: "Choose a recipient." };
+  const process = String(formData.get("process") ?? "");
+  const portal = String(formData.get("portal") ?? "");
+  if (!isProcess(process)) return { error: "Choose a process." };
+  if (!isPortal(portal)) return { error: "Choose a portal." };
 
   const cents = dollarsToCents(String(formData.get("amount") ?? ""));
   if (cents === null) return { error: "Enter an amount from $0.01 to $1,000,000." };
 
-  const error = await transferFunds(recipient, cents);
+  const error = await transferFunds(recipient, cents, process, portal);
   if (error) return { error };
   revalidatePath("/dashboard/wallet");
   return { error: "" };

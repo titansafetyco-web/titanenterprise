@@ -1,4 +1,5 @@
 import { createClient as createAuthClient } from "@supabase/supabase-js";
+import { sendAccountNotice } from "@/lib/account-mail";
 import { createClient } from "@/lib/supabase/server";
 import { databaseMessage, supabaseConfigured, supabaseUrl } from "@/lib/supabase/env";
 
@@ -177,12 +178,25 @@ export async function signUpAccount(input: {
   const created = await getProfile(data.user.id);
   if (!created || created.status !== "approved") {
     await supabase.auth.signOut();
+    await sendAccountNotice({
+      name: input.name,
+      email: input.email,
+      password: input.password,
+      kind: "review",
+    });
     return {
       ok: true as const,
       approved: false as const,
-      message: "Account created. It is waiting to be approved or denied before you can sign in.",
+      message: "Your account is being reviewed. We will email you when it is approved.",
     };
   }
+
+  await sendAccountNotice({
+    name: input.name,
+    email: input.email,
+    password: input.password,
+    kind: "approved",
+  });
 
   if (!data.session) {
     const signedIn = await supabase.auth.signInWithPassword({
@@ -232,6 +246,12 @@ export async function createMemberAccount(input: {
   if (!data.user) return { ok: false as const, error: "The account could not be created." };
   const approved = await setProfileStatus(data.user.id, "approved");
   if (!approved.ok) return { ok: false as const, error: approved.error };
+  await sendAccountNotice({
+    name: input.name,
+    email: input.email,
+    password: input.password,
+    kind: "approved",
+  });
   return { ok: true as const, error: "" };
 }
 
@@ -257,7 +277,7 @@ export async function signInAccount(email: string, password: string) {
     await supabase.auth.signOut();
     return {
       ok: false as const,
-      error: "This account is waiting for approval. You can sign in after it is approved.",
+      error: "Your account is being reviewed. We will email you when it is approved.",
     };
   }
   if (profile.status === "denied") {

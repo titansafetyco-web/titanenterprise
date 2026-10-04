@@ -350,8 +350,24 @@ create table if not exists public.jobs (
   title text not null,
   description text not null,
   pay text not null check (pay in ('weekly', 'biweekly')),
+  starts_on date,
+  pay_cents integer not null default 0,
+  message text not null default '',
+  link text not null default '',
+  program text not null default '',
   created_at timestamptz not null default now()
 );
+
+alter table public.jobs add column if not exists starts_on date;
+alter table public.jobs add column if not exists pay_cents integer not null default 0;
+alter table public.jobs add column if not exists message text not null default '';
+alter table public.jobs add column if not exists link text not null default '';
+alter table public.jobs add column if not exists program text not null default '';
+
+alter table public.jobs drop constraint if exists jobs_pay_cents_check;
+alter table public.jobs add constraint jobs_pay_cents_check check (pay_cents >= 0);
+alter table public.jobs drop constraint if exists jobs_program_check;
+alter table public.jobs add constraint jobs_program_check check (program in ('', 'safety', 'energy', 'media', 'software', 'insurance'));
 
 create table if not exists public.job_selections (
   id uuid primary key default gen_random_uuid(),
@@ -432,6 +448,8 @@ create table if not exists public.wallet_transfers (
   from_user uuid not null references auth.users (id) on delete cascade,
   to_user uuid not null references auth.users (id) on delete cascade,
   amount_cents integer not null check (amount_cents > 0),
+  process text not null default '' check (process in ('', 'pending', 'payment')),
+  portal text not null default '' check (portal in ('', 'wire', 'ach', 'zelle', 'venmo', 'cashapp', 'paypal', 'crypto', 'deposit')),
   created_at timestamptz not null default now(),
   check (from_user <> to_user)
 );
@@ -491,29 +509,33 @@ as $$
   order by p.name;
 $$;
 
-create or replace function public.wallet_history()
+drop function if exists public.wallet_history();
+
+create function public.wallet_history()
 returns table (
   id uuid,
   kind text,
   amount_cents integer,
   other_name text,
-  created_at timestamptz
+  created_at timestamptz,
+  process text,
+  portal text
 )
 language sql
 stable
 security definer
 set search_path = public
 as $$
-  select c.id, 'credit'::text, c.amount_cents, ''::text, c.created_at
+  select c.id, 'credit'::text, c.amount_cents, ''::text, c.created_at, ''::text, ''::text
   from public.wallet_credits c
   where c.user_id = auth.uid()
   union all
-  select t.id, 'out'::text, t.amount_cents, coalesce(p.name, ''), t.created_at
+  select t.id, 'out'::text, t.amount_cents, coalesce(p.name, ''), t.created_at, t.process, t.portal
   from public.wallet_transfers t
   left join public.profiles p on p.id = t.to_user
   where t.from_user = auth.uid()
   union all
-  select t.id, 'in'::text, t.amount_cents, coalesce(p.name, ''), t.created_at
+  select t.id, 'in'::text, t.amount_cents, coalesce(p.name, ''), t.created_at, t.process, t.portal
   from public.wallet_transfers t
   left join public.profiles p on p.id = t.from_user
   where t.to_user = auth.uid()
@@ -542,7 +564,9 @@ begin
 end;
 $$;
 
-create or replace function public.transfer_funds(recipient uuid, cents integer)
+drop function if exists public.transfer_funds(uuid, integer);
+
+create or replace function public.transfer_funds(recipient uuid, cents integer, pay_process text, pay_portal text)
 returns void
 language plpgsql
 security definer
@@ -560,6 +584,12 @@ begin
   end if;
   if cents is null or cents <= 0 or cents > 100000000 then
     raise exception 'enter an amount';
+  end if;
+  if pay_process is null or pay_process not in ('pending', 'payment') then
+    raise exception 'choose a process';
+  end if;
+  if pay_portal is null or pay_portal not in ('wire', 'ach', 'zelle', 'venmo', 'cashapp', 'paypal', 'crypto', 'deposit') then
+    raise exception 'choose a portal';
   end if;
   if not exists (
     select 1 from public.profiles
@@ -594,8 +624,8 @@ begin
   set balance_cents = balance_cents + cents, updated_at = now()
   where user_id = recipient;
 
-  insert into public.wallet_transfers (from_user, to_user, amount_cents)
-  values (sender, recipient, cents);
+  insert into public.wallet_transfers (from_user, to_user, amount_cents, process, portal)
+  values (sender, recipient, cents, pay_process, pay_portal);
 end;
 $$;
 
@@ -603,12 +633,12 @@ revoke all on function public.wallet_balance() from public, anon;
 revoke all on function public.transfer_recipients() from public, anon;
 revoke all on function public.wallet_history() from public, anon;
 revoke all on function public.credit_wallet(integer) from public, anon;
-revoke all on function public.transfer_funds(uuid, integer) from public, anon;
+revoke all on function public.transfer_funds(uuid, integer, text, text) from public, anon;
 grant execute on function public.wallet_balance() to authenticated;
 grant execute on function public.transfer_recipients() to authenticated;
 grant execute on function public.wallet_history() to authenticated;
 grant execute on function public.credit_wallet(integer) to authenticated;
-grant execute on function public.transfer_funds(uuid, integer) to authenticated;
+grant execute on function public.transfer_funds(uuid, integer, text, text) to authenticated;
 
 grant select on public.wallets, public.wallet_credits, public.wallet_transfers to authenticated;
 
@@ -1439,3 +1469,46 @@ $$;
 
 revoke all on function public.delete_own_account() from public, anon;
 grant execute on function public.delete_own_account() to authenticated;
+
+create or replace function public.delete_denied_account(target uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  uid uuid := auth.uid();
+begin
+  if uid is null or target is null or target = uid or not public.is_reviewer() then
+    raise exception 'not allowed';
+  end if;
+
+  if not exists (
+    select 1 from public.profiles
+    where id = target and status = 'denied'
+  ) then
+    raise exception 'not denied';
+  end if;
+
+  if exists (
+    select 1 from public.wallet_transfers
+    where from_user = target or to_user = target
+  ) then
+    raise exception 'has transfers';
+  end if;
+
+  begin
+    delete from storage.objects
+    where bucket_id = 'avatars'
+      and split_part(name, '/', 1) = target::text;
+  exception
+    when others then
+      null;
+  end;
+
+  delete from auth.users where id = target;
+end;
+$$;
+
+revoke all on function public.delete_denied_account(uuid) from public, anon;
+grant execute on function public.delete_denied_account(uuid) to authenticated;

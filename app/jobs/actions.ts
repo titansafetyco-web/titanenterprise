@@ -32,9 +32,15 @@ export async function addJobAction(
     title: String(formData.get("title") ?? ""),
     description: String(formData.get("description") ?? ""),
     pay: String(formData.get("pay") ?? ""),
+    startsOn: String(formData.get("startsOn") ?? ""),
+    amount: String(formData.get("amount") ?? ""),
+    message: String(formData.get("message") ?? ""),
+    link: String(formData.get("link") ?? ""),
+    program: String(formData.get("program") ?? ""),
   });
   revalidatePath("/jobs");
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/listing");
   return result;
 }
 

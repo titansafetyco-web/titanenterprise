@@ -1,15 +1,15 @@
 "use client";
 
 import { setJobProgressAction, unselectJobAction } from "@/app/jobs/actions";
+import { JobFacts } from "@/components/job-facts";
 import { useLocale } from "@/components/locale-provider";
 import { localizeError } from "@/lib/i18n/errors";
 import { ui } from "@/lib/i18n/ui";
-import type { ChosenJob, Job } from "@/lib/jobs";
+import type { ChosenJob } from "@/lib/jobs";
 
 export function ChosenJobs({ jobs, error }: { jobs: readonly ChosenJob[]; error: string }) {
   const locale = useLocale();
   const t = ui(locale);
-  const payLabel = (pay: Job["pay"]) => (pay === "weekly" ? t.payWeekly : t.payBiweekly);
   const statusLabel = {
     processing: t.jobProcessing,
     done: t.jobDone,
@@ -34,10 +34,7 @@ export function ChosenJobs({ jobs, error }: { jobs: readonly ChosenJob[]; error:
                   <p className="font-display text-lg font-semibold uppercase tracking-wide">
                     {job.title}
                   </p>
-                  <p className="mt-2 font-display text-xs font-semibold uppercase tracking-[0.14em] text-accent">
-                    {payLabel(job.pay)}
-                  </p>
-                  <p className="mt-3 whitespace-pre-wrap leading-relaxed">{job.description}</p>
+                  <JobFacts job={job} locale={locale} />
                 </div>
                 <div className="flex shrink-0 flex-col gap-2">
                   <form action={setJobProgressAction}>

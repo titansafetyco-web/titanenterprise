@@ -54,6 +54,10 @@ const known: Record<string, keyof Ui> = {
   "Write a short description.": "jobDescriptionShort",
   "Keep the description under 500 characters.": "jobDescriptionLong",
   "Choose weekly or every two weeks.": "choosePay",
+  "Choose a start date.": "jobDateRequired",
+  "Write a short message.": "jobMessageShort",
+  "Keep the message under 2,000 characters.": "jobMessageLong",
+  "Enter a link that starts with https://.": "jobLinkInvalid",
   "The job could not be added.": "jobAddFail",
   "The job could not be removed.": "jobRemoveFail",
   "That job could not be selected.": "jobSelectFail",
@@ -61,6 +65,8 @@ const known: Record<string, keyof Ui> = {
   "Choose a job status.": "chooseJobStatus",
   "That job status could not be saved.": "jobStatusFail",
   "Choose a recipient.": "chooseRecipient",
+  "Choose a process.": "chooseProcess",
+  "Choose a portal.": "choosePortal",
   "Enter an amount from $0.01 to $1,000,000.": "enterAmount",
   "That amount is more than the balance.": "insufficientBalance",
   "The transfer could not be sent.": "transferFail",
@@ -92,10 +98,8 @@ const known: Record<string, keyof Ui> = {
   "The file has more than one account.": "csvMany",
   "An account with that email already exists.": "emailTaken",
   "Account created. Sign in to open your dashboard.": "accountCreatedConfirm",
-  "Account created. It is waiting to be approved or denied before you can sign in.":
-    "accountCreatedWaiting",
-  "This account is waiting for approval. You can sign in after it is approved.":
-    "signupWaiting",
+  "Your account is being reviewed. We will email you when it is approved.": "accountCreatedWaiting",
+  "This account is waiting for approval. You can sign in after it is approved.": "signupWaiting",
 };
 
 export function localizeError(locale: Locale, error: string) {

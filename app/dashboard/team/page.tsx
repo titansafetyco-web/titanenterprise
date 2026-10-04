@@ -20,7 +20,7 @@ export default async function TeamPage() {
   const locale = await getLocale();
   const t = ui(locale);
   const profiles = await listProfiles();
-  const review = profiles.items.filter((item) => item.status === "pending" || item.status === "denied");
+  const review = profiles.items.filter((item) => item.status === "pending");
   const roleName = (role: string) =>
     role === "admin"
       ? t.roleAdmin
