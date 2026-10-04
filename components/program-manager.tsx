@@ -7,6 +7,10 @@ import {
   removeProgramAction,
   type ProgramState,
 } from "@/app/admin/program-actions";
+import { useLocale } from "@/components/locale-provider";
+import { programLabel } from "@/lib/i18n/catalog";
+import { localizeError } from "@/lib/i18n/errors";
+import { ui } from "@/lib/i18n/ui";
 
 const initialState: ProgramState = { error: "" };
 
@@ -15,6 +19,8 @@ export function ProgramManager({
 }: {
   programs: readonly { id: string; name: string }[];
 }) {
+  const locale = useLocale();
+  const t = ui(locale);
   const router = useRouter();
   const [state, formAction, pending] = useActionState(
     addProgramAction,
@@ -36,10 +42,10 @@ export function ProgramManager({
     <section className="mt-12 bg-white">
       <div className="border-b border-line px-6 py-5">
         <h2 className="font-display text-2xl font-bold uppercase tracking-wide">
-          Programs
+          {t.programs}
         </h2>
         <p className="mt-2 max-w-2xl text-sm text-muted">
-          These names fill the menus on the affiliate onboarding form.
+          {t.programsHelp}
         </p>
       </div>
       <form
@@ -49,7 +55,7 @@ export function ProgramManager({
       >
         <label className="min-w-0 flex-1">
           <span className="font-display text-xs font-semibold uppercase tracking-[0.16em] text-muted">
-            Program name
+            {t.programName}
           </span>
           <input
             name="name"
@@ -62,17 +68,17 @@ export function ProgramManager({
           disabled={pending}
           className="bg-accent px-5 py-3 font-display text-sm font-semibold uppercase tracking-wider text-ink transition-colors hover:bg-[#e0b400] disabled:opacity-60"
         >
-          Add
+          {t.add}
         </button>
         {state.error ? (
           <p role="alert" className="w-full border-l-4 border-accent pl-3 text-sm">
-            {state.error}
+            {localizeError(locale, state.error)}
           </p>
         ) : null}
       </form>
       {programs.length === 0 ? (
         <p className="border-t border-line px-6 py-8 text-muted">
-          No programs yet. Add one to open the menus.
+          {t.noProgramsYet}
         </p>
       ) : (
         <ul className="border-t border-line">
@@ -82,7 +88,7 @@ export function ProgramManager({
               className="flex items-center justify-between gap-4 border-b border-line px-6 py-4 last:border-0"
             >
               <p className="font-display text-lg font-semibold uppercase tracking-wide">
-                {program.name}
+                {programLabel(locale, program)}
               </p>
               <form action={remove}>
                 <input type="hidden" name="id" value={program.id} />
@@ -90,7 +96,7 @@ export function ProgramManager({
                   type="submit"
                   className="border border-line px-3 py-2 font-display text-xs font-semibold uppercase tracking-[0.14em] transition-colors hover:border-ink"
                 >
-                  Remove
+                  {t.remove}
                 </button>
               </form>
             </li>

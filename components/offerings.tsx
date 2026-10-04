@@ -1,7 +1,12 @@
 import Image from "next/image";
-import { offerings } from "@/lib/site";
+import { catalog } from "@/lib/i18n/catalog";
+import { getLocale } from "@/lib/i18n/locale";
+import { ui } from "@/lib/i18n/ui";
 
-export function Offerings() {
+export async function Offerings() {
+  const t = ui(await getLocale());
+  const { offerings } = catalog(await getLocale());
+
   return (
     <section id="work" className="bg-canvas">
       <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
@@ -10,12 +15,11 @@ export function Offerings() {
             <h2 className="font-display text-4xl font-bold uppercase tracking-wide md:col-span-4 md:text-5xl">
               <span className="flex items-center gap-4">
                 <WorkIcon />
-                Work
+                {t.work}
               </span>
             </h2>
             <p className="text-lg leading-relaxed md:col-span-8">
-              Five practices. Each one introduces a relevant offer and stays
-              with interested applicants through signup and onboarding.
+              {t.workIntro}
             </p>
           </div>
           <ul className="grid border-t border-line sm:grid-cols-5">

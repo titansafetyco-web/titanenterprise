@@ -10,7 +10,9 @@ export type ProgramState = {
 };
 
 async function requireAdmin() {
-  if (!(await getCurrentUser())) redirect("/login?next=/admin");
+  const user = await getCurrentUser();
+  if (!user) redirect("/login?next=/admin");
+  if (user.role !== "admin") redirect("/dashboard");
 }
 
 export async function addProgramAction(

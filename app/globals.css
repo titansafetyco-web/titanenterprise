@@ -25,6 +25,7 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 7rem;
+  scrollbar-gutter: stable;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -62,4 +63,25 @@ body {
 
 .chat-anchor {
   bottom: 1.25rem;
+}
+
+@keyframes tech-signal {
+  from {
+    left: 0;
+    opacity: 1;
+  }
+  to {
+    left: calc(100% - 1.15rem);
+    opacity: 1;
+  }
+}
+
+.tech-signal {
+  animation: tech-signal 720ms linear forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tech-signal {
+    animation: none;
+  }
 }

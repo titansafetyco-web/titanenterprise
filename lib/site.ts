@@ -2,7 +2,7 @@ export const site = {
   name: "Titan Safety Co.",
   description:
     "Titan Safety Co. connects people with essential products and services, including insurance affiliates, and helps partners turn that demand into business.",
-  contactEmail: "" as string,
+  contactEmail: "admin@titansafetystore.com",
   nav: [
     { href: "/about", label: "About" },
     { href: "/#work", label: "Work" },
@@ -153,9 +153,64 @@ export const standards = [
 ] as const;
 
 export const tools = [
-  "Websites",
-  "Landing pages",
-  "Intake forms",
-  "Dashboards",
-  "Workflow tools",
+  {
+    title: "Websites",
+    image: "/tech-websites.jpg",
+    text: "Campaign sites that give an offer a clear place to be seen.",
+    detail:
+      "We develop websites that support a campaign and give people a clear place to learn about an offer. Media connects the message to the audience.",
+    points: [
+      "A clear page for the offer",
+      "Support for the campaign",
+      "A place to start an inquiry",
+    ],
+  },
+  {
+    title: "Landing pages",
+    image: "/tech-landing.jpg",
+    text: "A focused page for one offer.",
+    detail:
+      "Landing pages present a relevant offer plainly, so an interested person can move to the next step. A page is not a promise of approval.",
+    points: [
+      "One offer, stated plainly",
+      "A path to the next step",
+      "Not a promise of approval",
+    ],
+  },
+  {
+    title: "Intake forms",
+    image: "/tech-forms.jpg",
+    text: "Forms that organize an inquiry.",
+    detail:
+      "Intake forms collect what a partner’s program needs, so an inquiry can be organized and followed through accurately.",
+    points: [
+      "The fields a program asks for",
+      "Inquiries kept in order",
+      "Accurate follow-through",
+    ],
+  },
+  {
+    title: "Dashboards",
+    image: "/tech-dashboards.jpg",
+    text: "A view of inquiries and results.",
+    detail:
+      "Dashboards organize inquiries and track results for a campaign, so the team can see what moved forward.",
+    points: [
+      "Inquiries in one view",
+      "Results for the campaign",
+      "What moved to the next step",
+    ],
+  },
+  {
+    title: "Workflow tools",
+    image: "/tech-workflow.jpg",
+    text: "Tools that carry an inquiry to the next step.",
+    detail:
+      "Workflow tools connect an inquiry to signup and onboarding, so the process stays clear from first interest to a qualified opportunity.",
+    points: [
+      "From inquiry to the next step",
+      "Signup and onboarding support",
+      "A clear path through the process",
+    ],
+  },
 ] as const;

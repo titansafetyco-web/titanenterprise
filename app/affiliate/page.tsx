@@ -3,117 +3,199 @@ import Image from "next/image";
 import { AffiliateForm } from "@/components/affiliate-form";
 import { Footer } from "@/components/footer";
 import { SiteHeader } from "@/components/site-header";
+import { programLabel } from "@/lib/i18n/catalog";
+import { getLocale } from "@/lib/i18n/locale";
+import { affiliateCopy } from "@/lib/i18n/pages";
+import { ui } from "@/lib/i18n/ui";
 import { listPrograms } from "@/lib/programs";
-import { site } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Affiliate programs · Titan Safety Co.",
-  description:
-    "Titan Safety Co. works through affiliate and referral programs, earning commissions for qualified leads, approved applications, enrollments, or completed sales, depending on each partner’s program.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const copy = affiliateCopy(await getLocale());
+  return {
+    title: `${copy.eyebrow} · Titan Safety Co.`,
+    description: copy.purposeBody,
+  };
+}
 
 export default async function AffiliatePage() {
-  const programs = await listPrograms();
+  const locale = await getLocale();
+  const copy = affiliateCopy(locale);
+  const t = ui(locale);
+  const programs = (await listPrograms()).map((program) => ({
+    id: program.id,
+    name: programLabel(locale, program),
+  }));
+  const { lines, sequenceItems: sequence, standardsItems: standards, tools } = copy;
 
   return (
     <>
       <SiteHeader />
       <main>
-        <section className="relative isolate min-h-[32rem] overflow-hidden bg-ink text-white md:min-h-[38rem]">
+        <section className="relative isolate min-h-[28rem] overflow-hidden bg-ink text-white md:min-h-[34rem]">
           <Image
             src="/affiliate-hero.jpg"
-            alt="Two professionals reviewing a folder in a bright office."
+            alt={copy.alt}
             fill
             priority
             sizes="100vw"
             className="object-cover object-[70%_center]"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/85 to-ink/25" />
-          <div className="relative mx-auto flex min-h-[32rem] max-w-6xl items-center px-6 py-20 md:min-h-[38rem] md:py-28">
-            <div className="max-w-3xl">
+          <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/88 to-ink/20" />
+          <div className="relative mx-auto flex min-h-[28rem] max-w-6xl flex-col items-start justify-end gap-8 px-6 py-16 sm:flex-row sm:items-end sm:justify-between md:min-h-[34rem] md:py-20">
+            <div className="max-w-3xl border-l-4 border-accent pl-6">
               <p className="font-display text-sm font-semibold uppercase tracking-[0.22em] text-accent">
-                Affiliate programs
+                {copy.eyebrow}
               </p>
-              <h1 className="mt-6 font-display text-4xl font-bold uppercase leading-[0.95] tracking-tight md:text-6xl">
-                A practical path from a partner’s offer to a qualified
-                opportunity.
+              <h1 className="mt-4 font-display text-4xl font-bold uppercase leading-[0.95] tracking-tight md:text-6xl">
+                {copy.title}
               </h1>
             </div>
+            <a
+              href="#onboarding"
+              className="inline-block shrink-0 bg-accent px-5 py-3 font-display text-sm font-semibold uppercase tracking-wider text-ink transition-colors hover:bg-[#e0b400] sm:mb-1"
+            >
+              {t.applyNow}
+            </a>
           </div>
         </section>
+
+        <section className="border-b border-line bg-white" aria-label={copy.linesLabel}>
+          <ul className="mx-auto grid max-w-6xl grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+            {lines.map((line) => (
+              <li
+                key={line}
+                className="border-b border-line px-6 py-4 font-display text-xs font-semibold uppercase tracking-[0.14em] text-ink last:border-b-0 sm:border-r sm:last:border-r-0 lg:border-b-0"
+              >
+                {line}
+              </li>
+            ))}
+          </ul>
+        </section>
+
         <section className="bg-white">
-          <div className="mx-auto grid max-w-6xl gap-10 px-6 py-16 md:grid-cols-12 md:py-24">
-            <div className="md:col-span-7 space-y-6 text-lg leading-relaxed">
-              <p>
-                Titan Safety Co. connects people with essential products and
-                services—and helps our partners turn that demand into business.
-                Our name reflects that purpose: helping individuals and
-                businesses make confident decisions about the services they rely
-                on.
+          <div className="mx-auto grid max-w-6xl items-start gap-10 px-6 py-12 md:grid-cols-12 md:py-20">
+            <div className="space-y-5 md:col-span-7">
+              <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+                {copy.purpose}
               </p>
-              <p>
-                We bring together safety products, energy solutions, digital
-                media, software development, and insurance affiliates with a
-                practical approach to customer acquisition. Through affiliate
-                and referral programs, we identify prospective customers,
-                introduce relevant offers, and guide interested applicants
-                through signup and onboarding.
+              <p className="text-xl leading-snug md:text-2xl">
+                {copy.purposeLead}
               </p>
-              <p>
-                Insurance is part of that work. We introduce affiliate offers
-                for auto, home, renters, life, health, and business coverage.
-                We are not the insurer. Coverage, eligibility, and price are
-                set by each partner’s program, and an inquiry is not a quote or
-                a promise of coverage.
-              </p>
-              <p>
-                That work follows a clear sequence. Lead scouting finds people
-                whose needs match a partner’s program. Audience research learns
-                who the offer is for, and what a clear decision requires.
-                Digital campaigns present the offer plainly, where that audience
-                already is. Onboarding support guides interested applicants
-                through signup, accurately and completely.
-              </p>
-              <p>
-                Our business earns commissions for qualified leads, approved
-                applications, enrollments, or completed sales, depending on each
-                partner’s program. What we earn is set by that program. It is
-                not a promise that a particular application, enrollment, or sale
-                will be approved.
-              </p>
-              <p>
-                Consent, lead quality, and reliable follow-through are central
-                to how we work. People hear a clear offer and choose whether to
-                continue. Inquiries are matched to partner requirements before
-                they move forward. We stay with the process until the next step
-                is done.
-              </p>
-              <p>
-                Behind that process is our technology. We develop websites,
-                landing pages, intake forms, dashboards, and workflow tools that
-                support campaigns, organize inquiries, and track results. Media
-                connects the message to the audience. Software connects the
-                inquiry to the next step.
-              </p>
-              <p>
-                Titan Safety Co. brings outreach, technology, and customer
-                support together under one roof—creating a clear path from
-                initial interest to a qualified opportunity.
+              <p className="text-lg leading-relaxed text-muted">
+                {copy.purposeBody}
               </p>
             </div>
-            <div className="border-l-4 border-accent bg-canvas px-6 py-8 md:col-span-5">
-              <p className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-accent">
-                Onboarding
+            <aside className="border border-line bg-canvas px-6 py-6 md:col-span-5 md:px-8 md:py-8">
+              <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+                {copy.insurance}
               </p>
-              <h2 className="mt-3 font-display text-2xl font-bold uppercase tracking-wide">
-                Choose a program
+              <p className="mt-4 leading-relaxed">{copy.insuranceBody}</p>
+            </aside>
+          </div>
+        </section>
+
+        <section className="border-y border-line bg-canvas">
+          <div className="mx-auto max-w-6xl px-6 py-12 md:py-20">
+            <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+              {copy.sequence}
+            </p>
+            <h2 className="mt-3 max-w-2xl font-display text-3xl font-bold uppercase tracking-wide">
+              {copy.sequenceTitle}
+            </h2>
+            <ol className="mt-8 grid gap-px bg-line sm:grid-cols-2 lg:grid-cols-4">
+              {sequence.map((step) => (
+                <li key={step.title} className="bg-white px-5 py-6">
+                  <h3 className="font-display text-sm font-semibold uppercase tracking-[0.14em]">
+                    {step.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-muted">{step.text}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        <section className="bg-white">
+          <div className="mx-auto max-w-6xl px-6 py-12 md:py-16">
+            <p className="max-w-3xl border-l-4 border-accent pl-6 text-lg leading-relaxed">
+              {copy.commission}
+            </p>
+          </div>
+        </section>
+
+        <section className="bg-ink text-white">
+          <div className="mx-auto max-w-6xl px-6 py-12 md:py-20">
+            <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+              {copy.standards}
+            </p>
+            <h2 className="mt-3 max-w-2xl font-display text-3xl font-bold uppercase tracking-wide">
+              {copy.standardsTitle}
+            </h2>
+            <ol className="mt-8 grid gap-4 md:grid-cols-3">
+              {standards.map((item) => (
+                <li key={item.title} className="border border-white/15 px-5 py-5">
+                  <h3 className="font-display text-sm font-semibold uppercase tracking-[0.14em] text-accent">
+                    {item.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-white/75">{item.text}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        <section className="bg-white">
+          <div className="mx-auto max-w-6xl px-6 py-12 md:py-20">
+            <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+              {copy.technology}
+            </p>
+            <p className="mt-4 max-w-3xl text-lg leading-relaxed">
+              {copy.technologyBody}
+            </p>
+            <ul className="mt-8 flex flex-wrap gap-2">
+              {tools.map((tool) => (
+                <li
+                  key={tool}
+                  className="border border-line px-3 py-2 font-display text-xs font-semibold uppercase tracking-[0.14em]"
+                >
+                  {tool}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section className="border-t-4 border-accent bg-ink text-white">
+          <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-12 md:flex-row md:items-end md:justify-between md:py-16">
+            <p className="max-w-3xl font-display text-2xl font-bold uppercase leading-snug tracking-wide md:text-3xl">
+              {copy.closer}
+            </p>
+            <a
+              href="#onboarding"
+              className="inline-block shrink-0 bg-accent px-5 py-3 text-center font-display text-sm font-semibold uppercase tracking-wider text-ink transition-colors hover:bg-[#e0b400]"
+            >
+              {t.yourExperience}
+            </a>
+          </div>
+        </section>
+
+        <section id="onboarding" className="bg-canvas">
+          <div className="mx-auto grid max-w-6xl items-start gap-8 px-6 py-12 lg:grid-cols-12 lg:py-20">
+            <div className="lg:col-span-4">
+              <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+                {t.onboarding}
+              </p>
+              <h2 className="mt-3 font-display text-3xl font-bold uppercase tracking-wide">
+                {t.yourExperience}
               </h2>
+            </div>
+            <div className="border border-line bg-white px-5 py-6 sm:px-8 sm:py-8 lg:col-span-8">
               <AffiliateForm programs={programs} />
             </div>
           </div>
         </section>
       </main>
-      <Footer name={site.name} />
+      <Footer name="Titan Safety Co." />
     </>
   );
 }

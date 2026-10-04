@@ -1,22 +1,28 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/auth-form";
 import { Footer } from "@/components/footer";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser, safeNext } from "@/lib/auth";
-import { site } from "@/lib/site";
+import { getLocale } from "@/lib/i18n/locale";
+import { ui } from "@/lib/i18n/ui";
+import { rememberEmailCookie, rememberedEmail } from "@/lib/supabase/remember";
 
-export const metadata: Metadata = {
-  title: "Sign in · Titan Safety Co.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: `${ui(await getLocale()).signIn} · Titan Safety Co.` };
+}
 
 export default async function LoginPage({
   searchParams,
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
-  const next = safeNext((await searchParams).next);
+  const requested = safeNext((await searchParams).next);
+  const next = requested === "/" ? "/dashboard" : requested;
   if (await getCurrentUser()) redirect(next);
+  const t = ui(await getLocale());
+  const remembered = rememberedEmail((await cookies()).get(rememberEmailCookie)?.value);
 
   return (
     <>
@@ -24,15 +30,15 @@ export default async function LoginPage({
       <main className="bg-canvas">
         <div className="mx-auto max-w-md px-6 py-16 md:py-24">
           <p className="font-display text-sm font-semibold uppercase tracking-[0.22em] text-accent">
-            Account
+            {t.account}
           </p>
           <h1 className="mt-3 font-display text-4xl font-bold uppercase tracking-wide">
-            Sign in
+            {t.signIn}
           </h1>
-          <AuthForm mode="login" next={next} />
+          <AuthForm mode="login" next={next} rememberedEmail={remembered} />
         </div>
       </main>
-      <Footer name={site.name} />
+      <Footer name="Titan Safety Co." />
     </>
   );
 }

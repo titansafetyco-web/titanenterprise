@@ -1,157 +1,274 @@
-import { createHmac, randomBytes, scrypt, timingSafeEqual } from "crypto";
-import { promises as fs } from "fs";
-import path from "path";
-import { cookies } from "next/headers";
+import { createClient as createAuthClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
+import { databaseMessage, supabaseConfigured, supabaseUrl } from "@/lib/supabase/env";
 
-const dataDir = path.join(process.cwd(), "data");
-const usersFile = path.join(dataDir, "users.json");
-const secretFile = path.join(dataDir, ".secret");
-const cookieName = "titan_session";
-const sessionDays = 14;
+export type AccountStatus = "pending" | "approved" | "denied";
+export type AccountRole = "agent" | "affiliate" | "admin" | "team" | "member";
 
-export type User = {
+export function accountRole(value: string): AccountRole {
+  if (
+    value === "agent" ||
+    value === "affiliate" ||
+    value === "admin" ||
+    value === "team" ||
+    value === "member"
+  ) {
+    return value;
+  }
+  return "affiliate";
+}
+
+export type Profile = {
   id: string;
   name: string;
   email: string;
-  passwordHash: string;
+  phone: string;
+  status: AccountStatus;
+  role: AccountRole;
+  avatarPath: string;
+  birthDate: string;
+  state: string;
   createdAt: string;
 };
-
-type UserRecord = User;
-
-function scryptHash(password: string, salt: string) {
-  return new Promise<Buffer>((resolve, reject) => {
-    scrypt(password, salt, 64, (error, key) => {
-      if (error) reject(error);
-      else resolve(key);
-    });
-  });
-}
-
-async function readUsers(): Promise<UserRecord[]> {
-  try {
-    const raw = await fs.readFile(usersFile, "utf8");
-    const parsed = JSON.parse(raw) as UserRecord[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-async function writeUsers(users: UserRecord[]) {
-  await fs.mkdir(dataDir, { recursive: true });
-  const temp = `${usersFile}.${process.pid}.tmp`;
-  await fs.writeFile(temp, JSON.stringify(users, null, 2));
-  await fs.rename(temp, usersFile);
-}
-
-async function secret() {
-  try {
-    return (await fs.readFile(secretFile, "utf8")).trim();
-  } catch {
-    await fs.mkdir(dataDir, { recursive: true });
-    const value = randomBytes(32).toString("hex");
-    await fs.writeFile(secretFile, value, { flag: "wx" }).catch(async () => {
-      return;
-    });
-    return (await fs.readFile(secretFile, "utf8")).trim();
-  }
-}
-
-function sign(value: string, key: string) {
-  return createHmac("sha256", key).update(value).digest("hex");
-}
 
 export function safeNext(value: string | undefined) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) return "/";
   return value;
 }
 
-export async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const hash = await scryptHash(password, salt);
-  return `${salt}:${hash.toString("hex")}`;
-}
-
-export async function verifyPassword(password: string, stored: string) {
-  const [salt, hash] = stored.split(":");
-  if (!salt || !hash) return false;
-  const next = await scryptHash(password, salt);
-  const previous = Buffer.from(hash, "hex");
-  if (next.length !== previous.length) return false;
-  return timingSafeEqual(next, previous);
-}
-
-export async function findUserByEmail(email: string) {
-  const users = await readUsers();
-  return users.find((user) => user.email === email.toLowerCase()) ?? null;
-}
-
-export async function createUser(input: {
+type ProfileRow = {
+  id: string;
   name: string;
   email: string;
-  password: string;
-}) {
-  const users = await readUsers();
-  const email = input.email.toLowerCase();
-  if (users.some((user) => user.email === email)) {
-    return {
-      ok: false as const,
-      error: "An account with that email already exists.",
-    };
-  }
+  phone: string;
+  status: AccountStatus;
+  role: AccountRole;
+  avatar_path: string;
+  birth_date: string | null;
+  state: string;
+  created_at: string;
+};
 
-  const user: UserRecord = {
-    id: randomBytes(16).toString("hex"),
-    name: input.name.trim(),
-    email,
-    passwordHash: await hashPassword(input.password),
-    createdAt: new Date().toISOString(),
+function mapProfile(row: ProfileRow): Profile {
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    phone: row.phone,
+    status: row.status,
+    role: row.role,
+    avatarPath: row.avatar_path ?? "",
+    birthDate: row.birth_date ?? "",
+    state: row.state ?? "",
+    createdAt: row.created_at,
   };
-  users.push(user);
-  await writeUsers(users);
-  return { ok: true as const, user };
 }
 
-export async function setSession(userId: string) {
-  const key = await secret();
-  const expires = Date.now() + sessionDays * 24 * 60 * 60 * 1000;
-  const payload = `${userId}.${expires}`;
-  const token = `${payload}.${sign(payload, key)}`;
-  const jar = await cookies();
-  jar.set(cookieName, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: sessionDays * 24 * 60 * 60,
-  });
-}
-
-export async function clearSession() {
-  const jar = await cookies();
-  jar.delete(cookieName);
+export async function getProfile(userId: string) {
+  const supabase = await createClient();
+  if (!supabase) return null;
+  const { data } = await supabase
+    .from("profiles")
+    .select("id, name, email, phone, status, role, avatar_path, birth_date, state, created_at")
+    .eq("id", userId)
+    .maybeSingle();
+  return data ? mapProfile(data as ProfileRow) : null;
 }
 
 export async function getCurrentUser() {
-  const jar = await cookies();
-  const token = jar.get(cookieName)?.value;
-  if (!token) return null;
+  if (!supabaseConfigured()) return null;
+  const supabase = await createClient();
+  if (!supabase) return null;
 
-  const [userId, expires, signature] = token.split(".");
-  if (!userId || !expires || !signature) return null;
-  if (Number(expires) < Date.now()) return null;
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) return null;
 
-  const key = await secret();
-  const expected = sign(`${userId}.${expires}`, key);
-  const actual = Buffer.from(signature);
-  const wanted = Buffer.from(expected);
-  if (actual.length !== wanted.length || !timingSafeEqual(actual, wanted)) {
-    return null;
+  const profile = await getProfile(data.user.id);
+  if (!profile || profile.status === "denied" || profile.status === "pending") return null;
+
+  return {
+    id: profile.id,
+    name: profile.name,
+    email: profile.email,
+    phone: profile.phone,
+    role: profile.role,
+    avatarPath: profile.avatarPath,
+    birthDate: profile.birthDate,
+    state: profile.state,
+  };
+}
+
+export async function currentUserId() {
+  const supabase = await createClient();
+  if (!supabase) return null;
+  const { data } = await supabase.auth.getUser();
+  return data.user?.id ?? null;
+}
+
+export async function claimSubmissions() {
+  const supabase = await createClient();
+  if (!supabase) return;
+  await supabase.rpc("claim_my_submissions");
+}
+
+export async function listProfiles() {
+  if (!supabaseConfigured()) return { items: [] as Profile[], error: databaseMessage };
+  const supabase = await createClient();
+  if (!supabase) return { items: [] as Profile[], error: databaseMessage };
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, name, email, phone, status, role, avatar_path, birth_date, state, created_at")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    const missing = /relation|schema cache|does not exist/i.test(error.message);
+    return {
+      items: [] as Profile[],
+      error: missing ? databaseMessage : "Accounts could not be loaded.",
+    };
   }
 
-  const users = await readUsers();
-  const user = users.find((item) => item.id === userId);
-  if (!user) return null;
-  return { id: user.id, name: user.name, email: user.email };
+  return {
+    items: ((data ?? []) as ProfileRow[]).map(mapProfile),
+    error: "",
+  };
+}
+
+export async function setProfileStatus(id: string, status: AccountStatus) {
+  const supabase = await createClient();
+  if (!supabase) return { ok: false as const, error: databaseMessage };
+
+  const { error } = await supabase.from("profiles").update({ status }).eq("id", id);
+  if (error) return { ok: false as const, error: "That account could not be updated." };
+  return { ok: true as const, error: "" };
+}
+
+export async function signUpAccount(input: {
+  name: string;
+  email: string;
+  password: string;
+  phone: string;
+  role: AccountRole;
+}) {
+  const supabase = await createClient();
+  if (!supabase) return { ok: false as const, error: databaseMessage };
+
+  const { data, error } = await supabase.auth.signUp({
+    email: input.email,
+    password: input.password,
+    options: { data: { name: input.name, role: input.role, phone: input.phone } },
+  });
+
+  if (error) {
+    const taken = /already/i.test(error.message);
+    return {
+      ok: false as const,
+      error: taken
+        ? "An account with that email already exists."
+        : "The account could not be created.",
+    };
+  }
+
+  if (!data.user) {
+    return { ok: false as const, error: "The account could not be created." };
+  }
+
+  const created = await getProfile(data.user.id);
+  if (!created || created.status !== "approved") {
+    await supabase.auth.signOut();
+    return {
+      ok: true as const,
+      approved: false as const,
+      message: "Account created. It is waiting to be approved or denied before you can sign in.",
+    };
+  }
+
+  if (!data.session) {
+    const signedIn = await supabase.auth.signInWithPassword({
+      email: input.email,
+      password: input.password,
+    });
+    if (signedIn.error || !signedIn.data.session) {
+      return {
+        ok: true as const,
+        approved: false as const,
+        message: "Account created. Sign in to open your dashboard.",
+      };
+    }
+  }
+
+  return { ok: true as const, approved: true as const };
+}
+
+export async function createMemberAccount(input: {
+  name: string;
+  email: string;
+  password: string;
+  phone: string;
+  role: "team" | "member";
+}) {
+  if (!supabaseConfigured()) return { ok: false as const, error: databaseMessage };
+  const supabase = createAuthClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
+
+  const { data, error } = await supabase.auth.signUp({
+    email: input.email,
+    password: input.password,
+    options: { data: { name: input.name, role: input.role, phone: input.phone } },
+  });
+
+  if (error) {
+    const taken = /already/i.test(error.message);
+    return {
+      ok: false as const,
+      error: taken
+        ? "An account with that email already exists."
+        : "The account could not be created.",
+    };
+  }
+
+  if (!data.user) return { ok: false as const, error: "The account could not be created." };
+  const approved = await setProfileStatus(data.user.id, "approved");
+  if (!approved.ok) return { ok: false as const, error: approved.error };
+  return { ok: true as const, error: "" };
+}
+
+export async function signInAccount(email: string, password: string) {
+  const supabase = await createClient();
+  if (!supabase) return { ok: false as const, error: databaseMessage };
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error || !data.user) {
+    return { ok: false as const, error: "Email or password is incorrect." };
+  }
+
+  const profile = await getProfile(data.user.id);
+  if (!profile) {
+    await supabase.auth.signOut();
+    return { ok: false as const, error: "The account could not be created." };
+  }
+  if (profile.status === "pending") {
+    await supabase.auth.signOut();
+    return {
+      ok: false as const,
+      error: "This account is waiting for approval. You can sign in after it is approved.",
+    };
+  }
+  if (profile.status === "denied") {
+    await supabase.auth.signOut();
+    return { ok: false as const, error: "This account was not approved." };
+  }
+
+  return { ok: true as const, error: "" };
+}
+
+export async function signOutAccount() {
+  const supabase = await createClient();
+  if (supabase) await supabase.auth.signOut();
 }

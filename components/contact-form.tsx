@@ -2,71 +2,86 @@
 
 import { useActionState, useState } from "react";
 import { sendMessage, type ContactState } from "@/app/contact/actions";
-import { contactTopics } from "@/lib/site";
+import { useLocale } from "@/components/locale-provider";
+import { localizeError } from "@/lib/i18n/errors";
+import { ui } from "@/lib/i18n/ui";
 
 const initialState: ContactState = { error: "", ok: false };
 
-export function ContactForm() {
+export function ContactForm({
+  topics,
+}: {
+  topics: readonly { value: string; label: string }[];
+}) {
   const [formKey, setFormKey] = useState(0);
 
   return (
     <ContactFields
       key={formKey}
+      topics={topics}
       onReset={() => setFormKey((value) => value + 1)}
     />
   );
 }
 
-function ContactFields({ onReset }: { onReset: () => void }) {
+function ContactFields({
+  topics,
+  onReset,
+}: {
+  topics: readonly { value: string; label: string }[];
+  onReset: () => void;
+}) {
+  const locale = useLocale();
+  const t = ui(locale);
   const [state, formAction, pending] = useActionState(sendMessage, initialState);
 
   if (state.ok) {
     return (
       <div className="mt-6 border-l-4 border-accent pl-4" role="status">
         <p className="font-display text-2xl font-bold uppercase tracking-wide">
-          Message received
+          {t.messageReceived}
         </p>
         <p className="mt-3 max-w-xl text-muted">
-          Thanks. Your note is with the team.
+          {t.thanksNote}
         </p>
         <button
           type="button"
           onClick={onReset}
           className="mt-6 border border-accent px-5 py-3 font-display text-sm font-semibold uppercase tracking-wider text-accent transition-colors hover:bg-accent hover:text-ink"
         >
-          Send another
+          {t.sendAnother}
         </button>
       </div>
     );
   }
 
   return (
-    <form action={formAction} className="mt-6 grid gap-5 sm:grid-cols-2">
-      <Field label="Name" name="name" type="text" autoComplete="name" />
-      <Field label="Email" name="email" type="email" autoComplete="email" />
-      <label className="block sm:col-span-2">
+    <form action={formAction} className="mt-3 grid grid-cols-2 gap-3 sm:mt-6 sm:gap-5">
+      <Field label={t.name} name="name" type="text" autoComplete="name" />
+      <Field label={t.email} name="email" type="email" autoComplete="email" />
+      <label className="col-span-2 block">
         <span className="font-display text-xs font-semibold uppercase tracking-[0.16em] text-muted">
-          Subject
+          {t.subject}
         </span>
         <select
           name="interest"
           required
           defaultValue=""
-          className="mt-2 w-full border border-line bg-white px-3 py-3 text-ink outline-none focus-visible:border-accent"
+          className="mt-1 w-full border border-line bg-white px-3 py-2 text-ink outline-none focus-visible:border-accent sm:mt-2 sm:py-3"
         >
           <option value="" disabled>
-            Choose one
+            {t.chooseOne}
           </option>
-          {contactTopics.map((topic) => (
-            <option key={topic} value={topic}>
-              {topic}
+          {topics.map((topic) => (
+            <option key={topic.value} value={topic.value}>
+              {topic.label}
             </option>
           ))}
         </select>
       </label>
-      <label className="block sm:col-span-2">
+      <label className="col-span-2 block">
         <span className="font-display text-xs font-semibold uppercase tracking-[0.16em] text-muted">
-          Message
+          {t.message}
         </span>
         <textarea
           name="message"
@@ -74,21 +89,21 @@ function ContactFields({ onReset }: { onReset: () => void }) {
           rows={5}
           minLength={10}
           maxLength={2000}
-          className="mt-2 w-full resize-y border border-line bg-white px-3 py-3 text-ink outline-none focus-visible:border-accent"
+          className="mt-1 h-20 w-full resize-y border border-line bg-white px-3 py-2 text-ink outline-none focus-visible:border-accent sm:mt-2 sm:h-36 sm:py-3"
         />
       </label>
       {state.error ? (
-        <p role="alert" className="border-l-4 border-accent pl-3 text-sm sm:col-span-2">
-          {state.error}
+        <p role="alert" className="col-span-2 border-l-4 border-accent pl-3 text-sm">
+          {localizeError(locale, state.error)}
         </p>
       ) : null}
-      <div className="sm:col-span-2">
+      <div className="col-span-2">
         <button
           type="submit"
           disabled={pending}
           className="bg-accent px-5 py-3 font-display text-sm font-semibold uppercase tracking-wider text-ink transition-colors hover:bg-[#e0b400] disabled:opacity-60"
         >
-          {pending ? "Please wait" : "Send message"}
+          {pending ? t.pleaseWait : t.sendMessage}
         </button>
       </div>
     </form>
@@ -116,7 +131,7 @@ function Field({
         type={type}
         autoComplete={autoComplete}
         required
-        className="mt-2 w-full border border-line bg-white px-3 py-3 text-ink outline-none focus-visible:border-accent"
+        className="mt-1 w-full border border-line bg-white px-3 py-2 text-ink outline-none focus-visible:border-accent sm:mt-2 sm:py-3"
       />
     </label>
   );

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, Oswald } from "next/font/google";
-import { site } from "@/lib/site";
+import { LocaleProvider } from "@/components/locale-provider";
+import { catalog } from "@/lib/i18n/catalog";
+import { getLocale } from "@/lib/i18n/locale";
 import "./globals.css";
 
 const inter = Inter({
@@ -14,20 +16,25 @@ const oswald = Oswald({
   weight: ["500", "600", "700"],
 });
 
-export const metadata: Metadata = {
-  title: site.name,
-  description: site.description,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { site } = catalog(await getLocale());
+  return {
+    title: site.name,
+    description: site.description,
+  };
+}
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const locale = await getLocale();
+
   return (
     <html
-      lang="en"
+      lang={locale}
       data-scroll-behavior="smooth"
       className={`${inter.variable} ${oswald.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-background font-sans text-foreground">
-        {children}
+        <LocaleProvider locale={locale}>{children}</LocaleProvider>
       </body>
     </html>
   );

@@ -10,10 +10,11 @@ import { Offerings } from "@/components/offerings";
 import { Standards } from "@/components/standards";
 import { Technology } from "@/components/technology";
 import { getCurrentUser } from "@/lib/auth";
+import { supportIsOnline } from "@/lib/maintenance";
 import { site } from "@/lib/site";
 
 export default async function Home() {
-  const account = await getCurrentUser();
+  const [account, online] = await Promise.all([getCurrentUser(), supportIsOnline()]);
 
   return (
     <>
@@ -30,6 +31,7 @@ export default async function Home() {
       <Footer name={site.name} />
       <CookiePrompt />
       <ChatBubble
+        online={online}
         account={
           account ? { name: account.name, email: account.email } : null
         }

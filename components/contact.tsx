@@ -1,30 +1,50 @@
 import { ContactForm } from "@/components/contact-form";
+import { OpenChatButton } from "@/components/open-chat-button";
+import { contactChoices } from "@/lib/i18n/catalog";
+import { getLocale } from "@/lib/i18n/locale";
+import { ui } from "@/lib/i18n/ui";
 import { site } from "@/lib/site";
 
-const notes = ["Outreach", "Technology", "Customer support"] as const;
+export async function Contact({ warm = false }: { warm?: boolean }) {
+  const locale = await getLocale();
+  const t = ui(locale);
 
-export function Contact() {
   return (
-    <section id="contact" className="bg-canvas">
-      <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
-        <div className="grid overflow-hidden border border-line bg-white md:grid-cols-12">
-          <div className="flex h-full flex-col border-l-8 border-accent bg-ink px-6 py-8 text-white md:col-span-5 md:px-10 md:py-12">
-            <h2 className="font-display text-4xl font-bold uppercase tracking-wide">
-              <span className="flex items-center gap-4">
+    <section id="contact" className={warm ? "bg-[#f6f0e4]" : "bg-canvas"}>
+      <div className={`mx-auto max-w-6xl px-6 py-8 sm:py-16 ${warm ? "md:pb-20 md:pt-2" : "md:py-24"}`}>
+        <div
+          className={`grid overflow-hidden md:grid-cols-12 ${
+            warm
+              ? "border border-[#ead9b2] bg-[#fff8ee] shadow-[0_20px_50px_rgba(90,60,10,0.08)]"
+              : "border border-line bg-white"
+          }`}
+        >
+          <div
+            className={`flex h-full flex-col border-l-8 border-accent px-5 py-5 text-white sm:px-6 sm:py-8 md:col-span-5 md:px-10 md:py-12 ${
+              warm ? "bg-[#3a2a14]" : "bg-ink"
+            }`}
+          >
+            <h2 className="font-display text-3xl font-bold uppercase tracking-wide sm:text-4xl">
+              <span className="flex items-center gap-3 sm:gap-4">
                 <ContactIcon />
-                Contact
+                {t.contact}
               </span>
             </h2>
-            <p className="mt-6 font-display text-2xl font-bold uppercase leading-snug tracking-wide">
-              A clear path from initial interest to a qualified opportunity.
+            <p className="mt-3 font-display text-lg font-bold uppercase leading-tight tracking-wide sm:mt-6 sm:text-2xl sm:leading-snug">
+              {t.contactTitle}
             </p>
-            <p className="mt-6 leading-relaxed text-white/75">
-              Titan Safety Co. brings outreach, technology, and customer
-              support together under one roof. Ask about insurance affiliates
-              for auto, home, renters, life, health, and business coverage.
+            <p className="mt-3 text-sm leading-snug text-white/75 sm:mt-6 sm:text-base sm:leading-relaxed">
+              {t.contactBody}
             </p>
-            <ul className="mt-8 grid gap-3 border-t border-white/15 pt-8">
-              {notes.map((note) => (
+            <a
+              href={`mailto:${site.contactEmail}`}
+              className="mt-4 text-base font-semibold text-accent underline-offset-4 hover:underline"
+            >
+              {site.contactEmail}
+            </a>
+            <OpenChatButton label={t.support} />
+            <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-2 border-t border-white/15 pt-4 sm:mt-8 sm:grid sm:gap-3 sm:pt-8">
+              {t.contactNotes.map((note) => (
                 <li
                   key={note}
                   className="flex items-center gap-3 font-display text-sm font-semibold uppercase tracking-wider"
@@ -34,20 +54,12 @@ export function Contact() {
                 </li>
               ))}
             </ul>
-            {site.contactEmail ? (
-              <a
-                href={`mailto:${site.contactEmail}`}
-                className="mt-8 inline-block bg-accent px-5 py-3 font-display text-sm font-semibold uppercase tracking-wider text-ink"
-              >
-                {site.contactEmail}
-              </a>
-            ) : null}
           </div>
-          <div className="px-6 py-8 md:col-span-7 md:px-10 md:py-12">
+          <div className="px-5 py-5 sm:px-6 sm:py-8 md:col-span-7 md:px-10 md:py-12">
             <p className="font-display text-sm font-semibold uppercase tracking-[0.22em] text-accent">
-              Send a note
+              {t.sendNote}
             </p>
-            <ContactForm />
+            <ContactForm topics={contactChoices(locale)} />
           </div>
         </div>
       </div>
@@ -57,7 +69,7 @@ export function Contact() {
 
 function ContactIcon() {
   return (
-    <svg viewBox="0 0 32 32" className="h-10 w-10 text-accent" aria-hidden="true">
+    <svg viewBox="0 0 32 32" className="h-8 w-8 text-accent sm:h-10 sm:w-10" aria-hidden="true">
       <rect
         x="3"
         y="7"

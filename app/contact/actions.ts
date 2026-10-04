@@ -1,7 +1,8 @@
 "use server";
 
+import { sendMailbox } from "@/lib/mail";
 import { saveMessage } from "@/lib/messages";
-import { contactTopics } from "@/lib/site";
+import { contactTopics, site } from "@/lib/site";
 
 export type ContactState = {
   error: string;
@@ -31,6 +32,13 @@ export async function sendMessage(
     return { error: "Keep the note under 2,000 characters.", ok: false };
   }
 
-  await saveMessage({ name, email, interest, message });
+  const saved = await saveMessage({ name, email, interest, message });
+  if (!saved.ok) return { error: saved.error, ok: false };
+  await sendMailbox({
+    to: site.contactEmail,
+    replyTo: email,
+    subject: interest,
+    body: `${name} <${email}>\n\n${message}`,
+  });
   return { error: "", ok: true };
 }

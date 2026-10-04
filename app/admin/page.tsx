@@ -2,17 +2,50 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AdminSidebar } from "@/components/admin-sidebar";
 import { ProgramManager } from "@/components/program-manager";
+import { ReviewButtons } from "@/components/review-buttons";
 import { campaigns, inquiries, type InquiryStage } from "@/lib/admin";
 import { listApplications } from "@/lib/applications";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, listProfiles } from "@/lib/auth";
 import { listChats } from "@/lib/chats";
 import { listMessages } from "@/lib/messages";
+import { contactChoices } from "@/lib/i18n/catalog";
+import { localizeError } from "@/lib/i18n/errors";
+import { getLocale } from "@/lib/i18n/locale";
+import { ui } from "@/lib/i18n/ui";
 import { listPrograms } from "@/lib/programs";
 
-export const metadata: Metadata = {
-  title: "Admin · Titan Safety Co.",
-  description: "Inquiries, onboarding, and campaigns for Titan Safety Co.",
+const esPhrase: Record<string, string> = {
+  "Safety products": "Productos de seguridad",
+  "Energy solutions": "Soluciones de energía",
+  "Digital media": "Medios digitales",
+  "Software development": "Desarrollo de software",
+  Insurance: "Seguros",
+  "Confirm consent and start onboarding": "Confirmar el consentimiento e iniciar la incorporación",
+  "Finish the application": "Terminar la solicitud",
+  "Match the offer to the inquiry": "Relacionar la oferta con la consulta",
+  "Track the completed signup": "Seguir el registro completado",
+  "Review partner requirements": "Revisar los requisitos del socio",
+  "Match the coverage offer to the inquiry": "Relacionar la oferta de cobertura con la consulta",
+  "Safety product signup": "Registro de productos de seguridad",
+  "Energy offer": "Oferta de energía",
+  "Audience landing page": "Página de destino de audiencia",
+  "Intake workflow": "Flujo de ingreso",
+  "Insurance affiliates": "Afiliados de seguros",
+  "Digital campaign": "Campaña digital",
+  Referral: "Referido",
+  Media: "Medios",
+  Software: "Software",
+  Live: "Activa",
+  Review: "Revisión",
+  Building: "En construcción",
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: `${ui(await getLocale()).dashboard} · Titan Safety Co.`,
+    description: ui(await getLocale()).dashboardIntro,
+  };
+}
 
 const stageStyles: Record<InquiryStage, string> = {
   New: "bg-canvas text-foreground",
@@ -22,14 +55,44 @@ const stageStyles: Record<InquiryStage, string> = {
 };
 
 export default async function AdminPage() {
-  if (!(await getCurrentUser())) {
-    redirect("/login?next=/admin");
-  }
+  const viewer = await getCurrentUser();
+  if (!viewer) redirect("/login?next=/admin");
+  if (viewer.role !== "admin") redirect("/dashboard");
 
+  const locale = await getLocale();
+  const t = ui(locale);
+  const show = (text: string) => (locale === "es" ? (esPhrase[text] ?? text) : text);
+  const choice = (text: string) => {
+    const years = ["Less than 1 year", "1 to 3 years", "3 to 5 years", "More than 5 years"];
+    const areas = ["Lead scouting", "Audience research", "Digital campaigns", "Onboarding support"];
+    return text
+      .split(", ")
+      .map((part) => {
+        const year = years.indexOf(part);
+        if (year >= 0) return t.years[year];
+        const area = areas.indexOf(part);
+        if (area >= 0) return t.areaOptions[area];
+        return show(part);
+      })
+      .join(", ");
+  };
+  const topic = (value: string) =>
+    contactChoices(locale).find((item) => item.value === value)?.label ?? value;
+  const stageLabel = (stage: string) =>
+    stage === "New"
+      ? t.stageNew
+      : stage === "Qualified"
+        ? t.stageQualified
+        : stage === "Onboarding"
+          ? t.stageOnboarding
+          : stage === "Enrolled"
+            ? t.stageEnrolled
+            : stage;
   const messages = await listMessages();
   const chats = await listChats();
   const programs = await listPrograms();
   const applications = await listApplications();
+  const accounts = await listProfiles();
 
   const counts = {
     open: inquiries.filter((item) => item.stage !== "Enrolled").length,
@@ -39,10 +102,10 @@ export default async function AdminPage() {
   };
 
   const stats = [
-    { label: "Open inquiries", value: counts.open },
-    { label: "Qualified", value: counts.qualified },
-    { label: "Onboarding", value: counts.onboarding },
-    { label: "Enrolled", value: counts.enrolled },
+    { label: t.openInquiries, value: counts.open },
+    { label: t.qualified, value: counts.qualified },
+    { label: t.onboarding, value: counts.onboarding },
+    { label: t.enrolled, value: counts.enrolled },
   ];
 
   return (
@@ -52,11 +115,10 @@ export default async function AdminPage() {
         <div className="mx-auto max-w-5xl px-6 py-10 md:py-14">
           <section id="overview" className="scroll-mt-6">
             <h1 className="font-display text-4xl font-bold uppercase tracking-wide md:text-5xl">
-              Admin
+              {t.dashboard}
             </h1>
             <p className="mt-4 max-w-2xl leading-relaxed text-muted">
-              Inquiries moving from first interest to a qualified opportunity,
-              plus the campaigns that carry each offer.
+              {t.dashboardIntro}
             </p>
             <ul className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {stats.map((stat) => (
@@ -74,17 +136,19 @@ export default async function AdminPage() {
             <ProgramManager programs={programs} />
           </div>
 
-          <section id="onboarding" className="mt-8 scroll-mt-6 bg-white">
+          <section id="accounts" className="mt-12 scroll-mt-6 bg-white">
             <div className="border-b border-line px-6 py-5">
               <h2 className="font-display text-2xl font-bold uppercase tracking-wide">
-                Affiliate onboarding
+                {t.accounts}
               </h2>
             </div>
-            {applications.length === 0 ? (
-              <p className="px-6 py-8 text-muted">No onboarding forms yet.</p>
+            {accounts.error ? (
+              <p className="px-6 py-8 text-muted">{localizeError(locale, accounts.error)}</p>
+            ) : accounts.items.length === 0 ? (
+              <p className="px-6 py-8 text-muted">{t.noAccounts}</p>
             ) : (
               <ul>
-                {applications.map((item) => (
+                {accounts.items.map((item) => (
                   <li
                     key={item.id}
                     className="border-b border-line px-6 py-5 last:border-0"
@@ -97,22 +161,89 @@ export default async function AdminPage() {
                         dateTime={item.createdAt}
                         className="text-sm text-muted"
                       >
-                        {new Date(item.createdAt).toLocaleString("en-US", {
+                        {new Date(item.createdAt).toLocaleString(locale === "es" ? "es" : "en-US", {
                           dateStyle: "medium",
                           timeStyle: "short",
                         })}
                       </time>
                     </div>
-                    <p className="mt-1 text-sm text-muted">{item.email}</p>
+                    <p className="mt-1 text-sm text-muted">
+                      {item.email}
+                      {item.phone ? ` · ${item.phone}` : ""}
+                      {" · "}
+                      {item.role === "agent"
+                        ? t.roleAgent
+                        : item.role === "admin"
+                          ? t.roleAdmin
+                          : item.role === "team"
+                            ? t.roleTeam
+                            : t.roleAffiliate}
+                    </p>
+                    <ReviewButtons id={item.id} kind="account" status={item.status} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section id="onboarding" className="mt-8 scroll-mt-6 bg-white">
+            <div className="border-b border-line px-6 py-5">
+              <h2 className="font-display text-2xl font-bold uppercase tracking-wide">
+                {t.affiliateOnboarding}
+              </h2>
+            </div>
+            {applications.error ? (
+              <p className="px-6 py-8 text-muted">{localizeError(locale, applications.error)}</p>
+            ) : applications.items.length === 0 ? (
+              <p className="px-6 py-8 text-muted">{t.noForms}</p>
+            ) : (
+              <ul>
+                {applications.items.map((item) => (
+                  <li
+                    key={item.id}
+                    className="border-b border-line px-6 py-5 last:border-0"
+                  >
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <p className="font-display text-lg font-semibold uppercase tracking-wide">
+                        {item.name}
+                      </p>
+                      <time
+                        dateTime={item.createdAt}
+                        className="text-sm text-muted"
+                      >
+                        {new Date(item.createdAt).toLocaleString(locale === "es" ? "es" : "en-US", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}
+                      </time>
+                    </div>
+                    <p className="mt-1 text-sm text-muted">
+                      {item.email}
+                      <span className="mx-2 text-accent">/</span>
+                      {item.phone}
+                    </p>
                     <p className="mt-3 font-display text-sm font-semibold uppercase tracking-[0.12em]">
-                      {item.program}
-                      {item.secondProgram ? ` / ${item.secondProgram}` : ""}
+                      {show(item.program)}
+                      {item.secondProgram ? ` / ${show(item.secondProgram)}` : ""}
+                    </p>
+                    <p className="mt-3 text-sm text-muted">
+                      {choice(item.years)}
+                      <span className="mx-2 text-accent">/</span>
+                      {choice(item.areas)}
+                    </p>
+                    <p className="mt-3 max-w-3xl whitespace-pre-wrap leading-relaxed">
+                      {item.background}
                     </p>
                     {item.note ? (
-                      <p className="mt-3 max-w-3xl whitespace-pre-wrap leading-relaxed">
+                      <p className="mt-3 max-w-3xl whitespace-pre-wrap leading-relaxed text-muted">
                         {item.note}
                       </p>
                     ) : null}
+                    <ReviewButtons
+                      id={item.id}
+                      kind="application"
+                      status={item.status}
+                    />
                   </li>
                 ))}
               </ul>
@@ -122,14 +253,16 @@ export default async function AdminPage() {
           <section id="messages" className="mt-12 scroll-mt-6 bg-white">
             <div className="border-b border-line px-6 py-5">
               <h2 className="font-display text-2xl font-bold uppercase tracking-wide">
-                Contact messages
+                {t.contactMessages}
               </h2>
             </div>
-            {messages.length === 0 ? (
-              <p className="px-6 py-8 text-muted">No messages yet.</p>
+            {messages.error ? (
+              <p className="px-6 py-8 text-muted">{localizeError(locale, messages.error)}</p>
+            ) : messages.items.length === 0 ? (
+              <p className="px-6 py-8 text-muted">{t.noMessages}</p>
             ) : (
               <ul>
-                {messages.map((item) => (
+                {messages.items.map((item) => (
                   <li
                     key={item.id}
                     className="border-b border-line px-6 py-5 last:border-0"
@@ -142,7 +275,7 @@ export default async function AdminPage() {
                         dateTime={item.createdAt}
                         className="text-sm text-muted"
                       >
-                        {new Date(item.createdAt).toLocaleString("en-US", {
+                        {new Date(item.createdAt).toLocaleString(locale === "es" ? "es" : "en-US", {
                           dateStyle: "medium",
                           timeStyle: "short",
                         })}
@@ -151,7 +284,7 @@ export default async function AdminPage() {
                     <p className="mt-1 text-sm text-muted">
                       {item.email}
                       <span className="mx-2 text-accent">/</span>
-                      {item.interest}
+                      {topic(item.interest)}
                     </p>
                     <p className="mt-3 max-w-3xl whitespace-pre-wrap leading-relaxed">
                       {item.message}
@@ -165,14 +298,16 @@ export default async function AdminPage() {
           <section id="chat" className="mt-8 scroll-mt-6 bg-white">
             <div className="border-b border-line px-6 py-5">
               <h2 className="font-display text-2xl font-bold uppercase tracking-wide">
-                Chat support
+                {t.chatSupport}
               </h2>
             </div>
-            {chats.length === 0 ? (
-              <p className="px-6 py-8 text-muted">No chat notes yet.</p>
+            {chats.error ? (
+              <p className="px-6 py-8 text-muted">{localizeError(locale, chats.error)}</p>
+            ) : chats.items.length === 0 ? (
+              <p className="px-6 py-8 text-muted">{t.noChats}</p>
             ) : (
               <ul>
-                {chats.map((item) => (
+                {chats.items.map((item) => (
                   <li
                     key={item.id}
                     className="border-b border-line px-6 py-5 last:border-0"
@@ -185,7 +320,7 @@ export default async function AdminPage() {
                         dateTime={item.createdAt}
                         className="text-sm text-muted"
                       >
-                        {new Date(item.createdAt).toLocaleString("en-US", {
+                        {new Date(item.createdAt).toLocaleString(locale === "es" ? "es" : "en-US", {
                           dateStyle: "medium",
                           timeStyle: "short",
                         })}
@@ -204,17 +339,17 @@ export default async function AdminPage() {
           <section id="inquiries" className="mt-8 scroll-mt-6 bg-white">
             <div className="border-b border-line px-6 py-5">
               <h2 className="font-display text-2xl font-bold uppercase tracking-wide">
-                Inquiries
+                {t.inquiries}
               </h2>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[40rem] text-left">
                 <thead>
                   <tr className="border-b border-line text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-                    <th className="px-6 py-3 font-display">Reference</th>
-                    <th className="px-6 py-3 font-display">Program</th>
-                    <th className="px-6 py-3 font-display">Stage</th>
-                    <th className="px-6 py-3 font-display">Next step</th>
+                    <th className="px-6 py-3 font-display">{t.reference}</th>
+                    <th className="px-6 py-3 font-display">{t.program}</th>
+                    <th className="px-6 py-3 font-display">{t.stage}</th>
+                    <th className="px-6 py-3 font-display">{t.nextStep}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -223,15 +358,15 @@ export default async function AdminPage() {
                       <td className="px-6 py-4 font-display font-semibold tracking-wide">
                         {item.ref}
                       </td>
-                      <td className="px-6 py-4">{item.program}</td>
+                      <td className="px-6 py-4">{show(item.program)}</td>
                       <td className="px-6 py-4">
                         <span
                           className={`inline-block px-2 py-1 font-display text-xs font-semibold uppercase tracking-[0.12em] ${stageStyles[item.stage]}`}
                         >
-                          {item.stage}
+                          {stageLabel(item.stage)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-muted">{item.next}</td>
+                      <td className="px-6 py-4 text-muted">{show(item.next)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -241,19 +376,19 @@ export default async function AdminPage() {
 
           <section id="campaigns" className="mt-8 scroll-mt-6 bg-ink px-6 py-8 text-white md:px-8">
             <h2 className="font-display text-2xl font-bold uppercase tracking-wide">
-              Campaigns
+              {t.campaigns}
               <span className="mt-3 block h-1 w-12 bg-accent" aria-hidden="true" />
             </h2>
             <ul className="mt-8 grid gap-6 md:grid-cols-2">
               {campaigns.map((campaign) => (
                 <li key={campaign.name} className="border-t border-white/15 pt-4">
                   <p className="font-display text-lg font-semibold uppercase tracking-wide">
-                    {campaign.name}
+                    {show(campaign.name)}
                   </p>
                   <p className="mt-2 text-sm text-white/70">
-                    {campaign.channel}
+                    {show(campaign.channel)}
                     <span className="mx-2 text-accent">/</span>
-                    <span className="text-accent">{campaign.status}</span>
+                    <span className="text-accent">{show(campaign.status)}</span>
                   </p>
                 </li>
               ))}

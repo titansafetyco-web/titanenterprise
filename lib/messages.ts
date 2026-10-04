@@ -1,8 +1,6 @@
-import { randomBytes } from "crypto";
-import { promises as fs } from "fs";
-import path from "path";
-
-const file = path.join(process.cwd(), "data", "messages.json");
+import { currentUserId } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
+import { databaseMessage, supabaseConfigured } from "@/lib/supabase/env";
 
 export type ContactMessage = {
   id: string;
@@ -13,37 +11,69 @@ export type ContactMessage = {
   createdAt: string;
 };
 
-async function readMessages(): Promise<ContactMessage[]> {
-  try {
-    const raw = await fs.readFile(file, "utf8");
-    const parsed = JSON.parse(raw) as ContactMessage[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+type MessageRow = {
+  id: string;
+  name: string;
+  email: string;
+  interest: string;
+  message: string;
+  created_at: string;
+};
+
+function mapMessage(row: MessageRow): ContactMessage {
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    interest: row.interest,
+    message: row.message,
+    createdAt: row.created_at,
+  };
+}
+
+function unavailable(error: { message: string }) {
+  return /relation|schema cache|does not exist/i.test(error.message);
 }
 
 export async function listMessages() {
-  const messages = await readMessages();
-  return messages.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+  if (!supabaseConfigured()) {
+    return { items: [] as ContactMessage[], error: databaseMessage };
+  }
+  const supabase = await createClient();
+  if (!supabase) return { items: [] as ContactMessage[], error: databaseMessage };
+
+  const { data, error } = await supabase
+    .from("messages")
+    .select("id, name, email, interest, message, created_at")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    return {
+      items: [] as ContactMessage[],
+      error: unavailable(error) ? databaseMessage : "Messages could not be loaded.",
+    };
+  }
+
+  return { items: ((data ?? []) as MessageRow[]).map(mapMessage), error: "" };
 }
 
-export async function saveMessage(
-  input: Omit<ContactMessage, "id" | "createdAt">,
-) {
-  const messages = await readMessages();
-  const message: ContactMessage = {
-    id: randomBytes(8).toString("hex"),
+export async function saveMessage(input: Omit<ContactMessage, "id" | "createdAt">) {
+  const supabase = await createClient();
+  if (!supabase) return { ok: false as const, error: databaseMessage };
+
+  const { error } = await supabase.from("messages").insert({
     name: input.name,
     email: input.email,
     interest: input.interest,
     message: input.message,
-    createdAt: new Date().toISOString(),
-  };
-  messages.push(message);
-  await fs.mkdir(path.dirname(file), { recursive: true });
-  const temp = `${file}.${process.pid}.tmp`;
-  await fs.writeFile(temp, JSON.stringify(messages, null, 2));
-  await fs.rename(temp, file);
-  return message;
+    user_id: await currentUserId(),
+  });
+
+  if (error) {
+    return {
+      ok: false as const,
+      error: unavailable(error) ? databaseMessage : "The message could not be sent.",
+    };
+  }
+  return { ok: true as const, error: "" };
 }

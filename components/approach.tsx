@@ -1,17 +1,22 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { steps } from "@/lib/site";
+import { useLocale } from "@/components/locale-provider";
+import { catalog } from "@/lib/i18n/catalog";
+import { ui } from "@/lib/i18n/ui";
 
 function DownArrow() {
   return (
-    <svg viewBox="0 0 240 168" className="h-40 w-full" aria-hidden="true">
+    <svg viewBox="0 0 240 168" className="h-16 w-full md:h-40" aria-hidden="true">
       <path fill="currentColor" d="M96 6h48v52h80L120 154 16 58h80V6z" />
     </svg>
   );
 }
 
 export function Approach() {
+  const locale = useLocale();
+  const t = ui(locale);
+  const { steps } = catalog(locale);
   const [open, setOpen] = useState<number | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
@@ -20,7 +25,7 @@ export function Approach() {
   useEffect(() => {
     if (open === null) return;
     const previous = document.activeElement;
-    closeRef.current?.focus();
+    closeRef.current?.focus({ preventScroll: true });
 
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") setOpen(null);
@@ -33,36 +38,29 @@ export function Approach() {
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = earlierOverflow;
-      if (previous instanceof HTMLElement) previous.focus();
+      if (previous instanceof HTMLElement) previous.focus({ preventScroll: true });
     };
   }, [open]);
 
   return (
     <section id="approach" className="bg-canvas">
       <div className="mx-auto grid max-w-6xl md:grid-cols-12">
-        <div className="flex flex-col border-l-8 border-accent bg-ink px-8 pt-14 pb-6 text-white md:col-span-5 md:px-10 md:pt-20 md:pb-8">
-          <h2 className="font-display text-4xl font-bold uppercase tracking-wide">
-            Approach
+        <div className="flex flex-col border-l-8 border-accent bg-ink px-5 pt-6 pb-4 text-white md:col-span-5 md:px-10 md:pt-20 md:pb-8">
+          <h2 className="font-display text-3xl font-bold uppercase tracking-wide md:text-4xl">
+            {t.approach}
           </h2>
-          <p className="mt-6 text-lg leading-relaxed text-white/75">
-            Through affiliate and referral programs, we identify prospective
-            customers, introduce relevant offers, and guide interested
-            applicants through signup and onboarding. That includes insurance
-            affiliates for auto, home, renters, life, health, and business
-            coverage.
+          <p className="mt-3 text-sm leading-snug text-white/75 md:mt-6 md:text-lg md:leading-relaxed">
+            {t.approachLead}
           </p>
-          <p className="mt-10 border-t border-white/15 pt-8 text-sm leading-relaxed text-white/70">
-            We earn commissions for qualified leads, approved applications,
-            enrollments, or completed sales, depending on each partner’s
-            program. We learn the requirements, explain the offer clearly, and
-            help customers finish the process accurately.
+          <p className="mt-4 border-t border-white/15 pt-4 text-sm leading-snug text-white/70 md:mt-10 md:pt-8 md:leading-relaxed">
+            {t.approachPay}
           </p>
           <a
             href="#standards"
-            className="mt-10 flex w-full justify-center text-accent md:mt-auto md:pt-16"
+            className="mt-4 flex w-full justify-center text-accent md:mt-auto md:pt-16"
           >
             <DownArrow />
-            <span className="sr-only">Standards</span>
+            <span className="sr-only">{t.standardsLink}</span>
           </a>
         </div>
         <ol className="border-t border-line bg-white md:col-span-7 md:border-l md:border-t-0">
@@ -74,21 +72,16 @@ export function Approach() {
               <button
                 type="button"
                 onClick={() => setOpen(index)}
-                className="grid w-full grid-cols-[3.5rem_1fr] gap-4 px-8 py-8 text-left md:px-12 md:py-10"
+                className="block w-full px-5 py-4 text-left md:px-12 md:py-10"
               >
-                <span className="font-display text-sm font-bold tracking-[0.16em] text-accent">
-                  {String(index + 1).padStart(2, "0")}
+                <span className="block font-display text-lg font-bold uppercase leading-tight tracking-wide md:text-2xl">
+                  {item.title}
                 </span>
-                <span>
-                  <span className="block font-display text-2xl font-bold uppercase leading-tight tracking-wide">
-                    {item.title}
-                  </span>
-                  <span className="mt-3 block max-w-md leading-relaxed text-muted">
-                    {item.text}
-                  </span>
-                  <span className="mt-4 block font-display text-xs font-semibold uppercase tracking-[0.16em] text-foreground">
-                    Details
-                  </span>
+                <span className="mt-1 block max-w-md text-sm leading-snug text-muted md:mt-3 md:text-base md:leading-relaxed">
+                  {item.text}
+                </span>
+                <span className="mt-2 block font-display text-xs font-semibold uppercase tracking-[0.16em] text-foreground md:mt-4">
+                  {t.details}
                 </span>
               </button>
             </li>
@@ -109,12 +102,9 @@ export function Approach() {
           >
             <div className="h-1 bg-accent" aria-hidden="true" />
             <div className="p-6 md:p-8">
-              <p className="font-display text-sm font-semibold tracking-[0.16em] text-accent">
-                {String(open! + 1).padStart(2, "0")}
-              </p>
               <h3
                 id={titleId}
-                className="mt-3 font-display text-3xl font-bold uppercase tracking-wide"
+                className="font-display text-3xl font-bold uppercase tracking-wide"
               >
                 {step.title}
               </h3>
@@ -137,7 +127,7 @@ export function Approach() {
                 onClick={() => setOpen(null)}
                 className="mt-8 bg-accent px-5 py-3 font-display text-sm font-semibold uppercase tracking-wider text-ink transition-colors hover:bg-[#e0b400]"
               >
-                Close
+                {t.close}
               </button>
             </div>
           </div>
