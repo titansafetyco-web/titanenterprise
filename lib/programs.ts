@@ -14,6 +14,7 @@ const starter: Program[] = [
   { id: "energy-solutions", name: "Energy solutions" },
   { id: "digital-media", name: "Digital media" },
   { id: "software-development", name: "Software development" },
+  { id: "insurance", name: "Insurance" },
 ];
 
 async function readPrograms(): Promise<Program[] | null> {

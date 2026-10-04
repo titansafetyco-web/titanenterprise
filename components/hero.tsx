@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export function Hero() {
   return (
-    <section className="relative isolate min-h-[calc(100svh-5rem)] overflow-hidden bg-ink text-white">
+    <section className="relative isolate overflow-hidden bg-ink text-white">
       <Image
         src="/hero-corporate.jpg"
         alt="Professionals in a dark boardroom overlooking a city skyline."
@@ -12,7 +12,7 @@ export function Hero() {
         className="object-cover object-[70%_center]"
       />
       <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/80 to-ink/20" />
-      <div className="relative mx-auto flex min-h-[calc(100svh-5rem)] max-w-6xl items-center px-6 py-16 md:py-24">
+      <div className="relative mx-auto max-w-6xl px-6 py-10 md:py-12">
         <div className="max-w-2xl">
           <p className="font-display text-sm font-semibold uppercase tracking-[0.22em] text-accent">
             Titan Safety Co.
@@ -21,7 +21,8 @@ export function Hero() {
             A clear path from interest to a qualified opportunity.
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/75">
-            We connect people with essential products and services—and help our
+            We connect people with safety products, energy solutions, digital
+            media, software development, and insurance affiliates—and help our
             partners turn that demand into business.
           </p>
           <div className="mt-10 flex flex-wrap gap-3">

@@ -23,6 +23,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={`${inter.variable} ${oswald.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-background font-sans text-foreground">

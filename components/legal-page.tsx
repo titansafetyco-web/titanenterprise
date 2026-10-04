@@ -23,7 +23,6 @@ export function LegalPage({
           <h1 className="mt-3 font-display text-4xl font-bold uppercase tracking-wide md:text-5xl">
             {title}
           </h1>
-          <p className="mt-4 text-sm text-muted">Last updated October 3, 2026</p>
           <div className="mt-12 space-y-10">{children}</div>
         </article>
       </main>

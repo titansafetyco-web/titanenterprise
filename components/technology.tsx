@@ -8,13 +8,16 @@ export function Technology() {
     <section id="technology" className="bg-white">
       <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
         <h2 className="font-display text-4xl font-bold uppercase tracking-wide">
-          Technology
-          <span className="mt-3 block h-1 w-12 bg-accent" aria-hidden="true" />
+          <span className="flex items-center gap-4">
+            <TechIcon />
+            Technology
+          </span>
         </h2>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed">
           We build the pages and tools that support a campaign, organize
-          inquiries, and track results. Media connects the message to the
-          audience. Software connects the inquiry to the next step.
+          inquiries, and track results, including insurance affiliate
+          inquiries. Media connects the message to the audience. Software
+          connects the inquiry to the next step.
         </p>
 
         <div className="mt-12 overflow-hidden border border-line bg-ink text-white">
@@ -97,6 +100,28 @@ function Node({ children }: { children: ReactNode }) {
     <span className="border border-white/25 bg-ink px-3 py-2 font-display text-sm font-semibold uppercase tracking-[0.12em]">
       {children}
     </span>
+  );
+}
+
+function TechIcon() {
+  return (
+    <svg viewBox="0 0 32 32" className="h-10 w-10 text-accent" aria-hidden="true">
+      <rect
+        x="9"
+        y="9"
+        width="14"
+        height="14"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+      <rect x="13" y="13" width="6" height="6" fill="currentColor" />
+      <path
+        d="M13 4v5M19 4v5M13 23v5M19 23v5M4 13h5M4 19h5M23 13h5M23 19h5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+    </svg>
   );
 }
 

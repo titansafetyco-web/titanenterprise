@@ -32,6 +32,15 @@ export function Header({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  function onHomeClick(event: React.MouseEvent<HTMLAnchorElement>) {
+    if (pathname !== "/") return;
+    event.preventDefault();
+    if (window.location.hash) {
+      window.history.pushState(null, "", "/");
+    }
+    window.scrollTo(0, 0);
+  }
+
   return (
     <header
       className={`sticky top-0 z-20 border-b border-line bg-white transition-shadow duration-200 ${
@@ -39,7 +48,12 @@ export function Header({
       }`}
     >
       <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <Link href="/" className="inline-flex shrink-0 items-center">
+        <Link
+          href="/"
+          scroll
+          onClick={onHomeClick}
+          className="inline-flex shrink-0 items-center"
+        >
           <Image
             src="/logo-mark.png"
             alt={name}
@@ -56,6 +70,8 @@ export function Header({
           {pathname !== "/" ? (
             <Link
               href="/"
+              scroll
+              onClick={onHomeClick}
               className="font-display text-[13px] font-semibold uppercase tracking-[0.14em] text-foreground transition-colors hover:text-accent"
             >
               Home

@@ -13,7 +13,7 @@ type Message = {
 const greeting: Message = {
   id: 0,
   from: "team",
-  text: "Ask about safety products, energy, media, software, or affiliate programs. A note here goes to the team.",
+  text: "Ask about safety products, energy, media, software, insurance affiliates, or other affiliate programs. A note here goes to the team.",
 };
 
 export function ChatBubble({

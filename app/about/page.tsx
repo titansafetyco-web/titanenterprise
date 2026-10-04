@@ -12,11 +12,11 @@ export const metadata: Metadata = {
 const chapters = [
   {
     label: "Purpose",
-    text: "Our name reflects our purpose: helping individuals and businesses make confident decisions about the services they rely on. We bring together safety products, energy solutions, digital media, and software development with a practical approach to customer acquisition.",
+    text: "Our name reflects our purpose: helping individuals and businesses make confident decisions about the services they rely on. We bring together safety products, energy solutions, digital media, software development, and insurance affiliates with a practical approach to customer acquisition.",
   },
   {
     label: "Programs",
-    text: "Through affiliate and referral programs, we identify prospective customers, introduce relevant offers, and guide interested applicants through signup and onboarding. Our business earns commissions for qualified leads, approved applications, enrollments, or completed sales, depending on each partner’s program.",
+    text: "Through affiliate and referral programs, we identify prospective customers, introduce relevant offers, and guide interested applicants through signup and onboarding. That includes insurance affiliates for auto, home, renters, life, health, and business coverage. We are not the insurer. Coverage, eligibility, and price are set by each partner’s program. Our business earns commissions for qualified leads, approved applications, enrollments, or completed sales, depending on that program.",
   },
   {
     label: "Approach",

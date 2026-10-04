@@ -53,10 +53,18 @@ export default async function AffiliatePage() {
               </p>
               <p>
                 We bring together safety products, energy solutions, digital
-                media, and software development with a practical approach to
-                customer acquisition. Through affiliate and referral programs,
-                we identify prospective customers, introduce relevant offers,
-                and guide interested applicants through signup and onboarding.
+                media, software development, and insurance affiliates with a
+                practical approach to customer acquisition. Through affiliate
+                and referral programs, we identify prospective customers,
+                introduce relevant offers, and guide interested applicants
+                through signup and onboarding.
+              </p>
+              <p>
+                Insurance is part of that work. We introduce affiliate offers
+                for auto, home, renters, life, health, and business coverage.
+                We are not the insurer. Coverage, eligibility, and price are
+                set by each partner’s program, and an inquiry is not a quote or
+                a promise of coverage.
               </p>
               <p>
                 That work follows a clear sequence. Lead scouting finds people

@@ -1,125 +1,104 @@
-"use client";
-
 import Image from "next/image";
-import { useEffect, useId, useRef, useState } from "react";
 import { offerings } from "@/lib/site";
 
 export function Offerings() {
-  const [open, setOpen] = useState<number | null>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
-  const titleId = useId();
-  const item = open === null ? null : offerings[open];
-
-  useEffect(() => {
-    if (open === null) return;
-    const previous = document.activeElement;
-    closeRef.current?.focus();
-
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(null);
-    }
-
-    document.addEventListener("keydown", onKey);
-    const earlierOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = earlierOverflow;
-      if (previous instanceof HTMLElement) previous.focus();
-    };
-  }, [open]);
-
   return (
     <section id="work" className="bg-canvas">
       <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
-        <h2 className="font-display text-4xl font-bold uppercase tracking-wide">
-          Work
-          <span className="mt-3 block h-1 w-12 bg-accent" aria-hidden="true" />
-        </h2>
-        <ol className="mt-10 grid gap-4 sm:grid-cols-2">
-          {offerings.map((offering, index) => (
-            <li key={offering.title}>
-              <button
-                type="button"
-                onClick={() => setOpen(index)}
-                className="flex w-full flex-col overflow-hidden border border-line bg-white text-left transition-shadow hover:shadow-[0_12px_30px_rgba(16,24,32,0.08)]"
+        <div className="overflow-hidden border border-line bg-white">
+          <div className="grid gap-6 border-l-8 border-accent px-6 py-8 md:grid-cols-12 md:items-center md:px-10 md:py-10">
+            <h2 className="font-display text-4xl font-bold uppercase tracking-wide md:col-span-4 md:text-5xl">
+              <span className="flex items-center gap-4">
+                <WorkIcon />
+                Work
+              </span>
+            </h2>
+            <p className="text-lg leading-relaxed md:col-span-8">
+              Five practices. Each one introduces a relevant offer and stays
+              with interested applicants through signup and onboarding.
+            </p>
+          </div>
+          <ul className="grid border-t border-line sm:grid-cols-5">
+            {offerings.map((offering, index) => (
+              <li
+                key={offering.title}
+                className={index > 0 ? "border-t border-line sm:border-t-0 sm:border-l" : ""}
               >
-                <span className="relative block h-44 w-full">
-                  <Image
-                    src={offering.image}
-                    alt=""
-                    fill
-                    sizes="(min-width: 640px) 34rem, 100vw"
-                    className="object-cover"
-                  />
-                </span>
-                <span className="block h-1 bg-accent" aria-hidden="true" />
-                <span className="flex flex-col p-6 md:p-8">
-                <span className="font-display text-sm font-semibold tracking-[0.16em] text-accent">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <h3 className="mt-4 font-display text-2xl font-semibold uppercase tracking-wide">
+                <a
+                  href={`#${offeringId(offering.title)}`}
+                  className="block px-4 py-4 font-display text-xs font-semibold uppercase tracking-wider transition-colors hover:bg-accent hover:text-ink"
+                >
+                  {offering.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <ol className="mt-12 space-y-6">
+          {offerings.map((offering, index) => (
+            <li
+              id={offeringId(offering.title)}
+              key={offering.title}
+              className="grid overflow-hidden border border-line bg-white md:grid-cols-12"
+            >
+              <div
+                className={`relative h-56 md:col-span-5 md:h-auto md:min-h-80 ${
+                  index % 2 === 1 ? "md:order-2" : ""
+                }`}
+              >
+                <Image
+                  src={offering.image}
+                  alt=""
+                  fill
+                  sizes="(min-width: 768px) 28rem, 100vw"
+                  className="object-cover"
+                />
+              </div>
+              <div
+                className={`border-t-4 border-accent px-6 py-8 md:col-span-7 md:border-t-0 md:px-10 md:py-10 ${
+                  index % 2 === 1
+                    ? "md:order-1 md:border-r-4"
+                    : "md:border-l-4"
+                }`}
+              >
+                <h3 className="font-display text-3xl font-bold uppercase tracking-wide">
                   {offering.title}
                 </h3>
-                <p className="mt-3 max-w-sm leading-relaxed text-muted">
-                  {offering.text}
+                <p className="mt-4 text-lg leading-relaxed">{offering.text}</p>
+                <p className="mt-4 leading-relaxed text-muted">
+                  {offering.detail}
                 </p>
-                <span className="mt-6 font-display text-xs font-semibold uppercase tracking-[0.16em] text-foreground">
-                  Details
-                </span>
-                </span>
-              </button>
+                <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+                  {offering.points.map((point) => (
+                    <li key={point} className="flex gap-3 text-sm leading-relaxed">
+                      <span
+                        className="mt-2 h-1.5 w-1.5 shrink-0 bg-accent"
+                        aria-hidden="true"
+                      />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </li>
           ))}
         </ol>
       </div>
-      {item ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-6"
-          onClick={() => setOpen(null)}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={titleId}
-            className="max-h-[calc(100svh-3rem)] w-full max-w-lg overflow-y-auto border border-line bg-white shadow-[0_24px_60px_rgba(16,24,32,0.2)]"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="relative h-52 w-full">
-              <Image
-                src={item.image}
-                alt=""
-                fill
-                sizes="32rem"
-                className="object-cover"
-              />
-            </div>
-            <div className="h-1 bg-accent" aria-hidden="true" />
-            <div className="p-6 md:p-8">
-            <p className="font-display text-sm font-semibold tracking-[0.16em] text-accent">
-              {String(open! + 1).padStart(2, "0")}
-            </p>
-            <h3
-              id={titleId}
-              className="mt-3 font-display text-3xl font-bold uppercase tracking-wide"
-            >
-              {item.title}
-            </h3>
-            <p className="mt-4 text-lg leading-relaxed">{item.text}</p>
-            <p className="mt-4 leading-relaxed text-muted">{item.detail}</p>
-            <button
-              ref={closeRef}
-              type="button"
-              onClick={() => setOpen(null)}
-              className="mt-8 bg-accent px-5 py-3 font-display text-sm font-semibold uppercase tracking-wider text-ink transition-colors hover:bg-[#e0b400]"
-            >
-              Close
-            </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </section>
+  );
+}
+
+function offeringId(title: string) {
+  return `work-${title.toLowerCase().replaceAll(" ", "-")}`;
+}
+
+function WorkIcon() {
+  return (
+    <svg viewBox="0 0 32 32" className="h-10 w-10 text-accent" aria-hidden="true">
+      <rect x="3" y="3" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <rect x="18" y="3" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <rect x="3" y="18" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <rect x="18" y="18" width="11" height="11" fill="currentColor" />
+    </svg>
   );
 }

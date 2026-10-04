@@ -29,6 +29,12 @@ export const inquiries = [
     stage: "New",
     next: "Review partner requirements",
   },
+  {
+    ref: "TS-2403",
+    program: "Insurance",
+    stage: "New",
+    next: "Match the coverage offer to the inquiry",
+  },
 ] as const;
 
 export const campaigns = [
@@ -40,6 +46,7 @@ export const campaigns = [
   { name: "Energy offer", channel: "Referral", status: "Review" },
   { name: "Audience landing page", channel: "Media", status: "Live" },
   { name: "Intake workflow", channel: "Software", status: "Building" },
+  { name: "Insurance affiliates", channel: "Referral", status: "Live" },
 ] as const;
 
 export type InquiryStage = (typeof inquiries)[number]["stage"];

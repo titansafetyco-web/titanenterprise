@@ -38,6 +38,13 @@ export default function PrivacyPage() {
           the programs you chose, any note, and the time it was sent. A
           signed-in person can read those forms in the admin view.
         </p>
+        <p>
+          Insurance is one of those programs. If you ask about auto, home,
+          renters, life, health, or business coverage, we keep the same kind of
+          note: your name, email, the program you chose, any message, and the
+          time it was sent. We are not the insurer. We do not use that note to
+          issue a policy, and we do not sell it.
+        </p>
       </LegalSection>
       <LegalSection title="What stays in your browser">
         <p>

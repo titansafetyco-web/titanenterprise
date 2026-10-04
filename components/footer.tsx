@@ -4,6 +4,7 @@ import { site } from "@/lib/site";
 const policies = [
   { href: "/terms", label: "Terms of service" },
   { href: "/privacy", label: "Privacy policy" },
+  { href: "/affiliate-policy", label: "Affiliate policy" },
 ] as const;
 
 export function Footer({ name }: { name: string }) {
@@ -16,8 +17,9 @@ export function Footer({ name }: { name: string }) {
           </p>
           <span className="mt-4 block h-1 w-12 bg-accent" aria-hidden="true" />
           <p className="mt-5 max-w-sm text-sm leading-relaxed text-white/70">
-            Connecting people with essential products and services, and helping
-            partners turn that demand into business.
+            Connecting people with essential products and services, including
+            insurance affiliates, and helping partners turn that demand into
+            business.
           </p>
           <a
             href="https://www.instagram.com/titan.safetyco/"

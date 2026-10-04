@@ -28,8 +28,28 @@ export default function TermsPage() {
         <p>
           We earn commissions for qualified leads, approved applications,
           enrollments, or completed sales, depending on each partner’s program.
-          A page on this site describes that work. It is not a promise that a
-          particular application, enrollment, or sale will be approved.
+          The{" "}
+          <Link href="/affiliate-policy" className="underline">
+            affiliate policy
+          </Link>{" "}
+          describes that work. It is not a promise that a particular
+          application, enrollment, or sale will be approved.
+        </p>
+      </LegalSection>
+      <LegalSection title="Insurance affiliates">
+        <p>
+          We also introduce insurance through affiliate and referral programs.
+          The offers can cover auto, home, renters, life, health, and business
+          insurance. We identify prospective customers, explain the offer, and
+          guide interested applicants through signup and onboarding.
+        </p>
+        <p>
+          Titan Safety Co. is not the insurance company. Coverage, eligibility,
+          and price are set by each partner’s program. A page or form on this
+          site is not a quote, a policy, or a promise that coverage will be
+          offered or approved. Any commission we earn depends on that program:
+          a qualified lead, an approved application, an enrollment, or a
+          completed sale.
         </p>
       </LegalSection>
       <LegalSection title="Accounts">
@@ -57,8 +77,7 @@ export default function TermsPage() {
       </LegalSection>
       <LegalSection title="Changes">
         <p>
-          We may update these terms as the site changes. The date at the top of
-          this page is the latest version. The{" "}
+          We may update these terms as the site changes. The{" "}
           <Link href="/privacy" className="underline">
             privacy policy
           </Link>{" "}

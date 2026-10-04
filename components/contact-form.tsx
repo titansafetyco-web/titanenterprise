@@ -22,11 +22,11 @@ function ContactFields({ onReset }: { onReset: () => void }) {
 
   if (state.ok) {
     return (
-      <div className="mt-10 border-l-4 border-accent pl-4" role="status">
-        <p className="font-display text-2xl font-bold uppercase tracking-wide text-white">
+      <div className="mt-6 border-l-4 border-accent pl-4" role="status">
+        <p className="font-display text-2xl font-bold uppercase tracking-wide">
           Message received
         </p>
-        <p className="mt-3 max-w-xl text-white/75">
+        <p className="mt-3 max-w-xl text-muted">
           Thanks. Your note is with the team.
         </p>
         <button
@@ -41,18 +41,18 @@ function ContactFields({ onReset }: { onReset: () => void }) {
   }
 
   return (
-    <form action={formAction} className="mt-10 grid gap-5 sm:grid-cols-2">
+    <form action={formAction} className="mt-6 grid gap-5 sm:grid-cols-2">
       <Field label="Name" name="name" type="text" autoComplete="name" />
       <Field label="Email" name="email" type="email" autoComplete="email" />
       <label className="block sm:col-span-2">
-        <span className="font-display text-xs font-semibold uppercase tracking-[0.16em] text-white/70">
+        <span className="font-display text-xs font-semibold uppercase tracking-[0.16em] text-muted">
           Subject
         </span>
         <select
           name="interest"
           required
           defaultValue=""
-          className="mt-2 w-full border border-white/20 bg-white px-3 py-3 text-ink outline-none focus-visible:border-accent"
+          className="mt-2 w-full border border-line bg-white px-3 py-3 text-ink outline-none focus-visible:border-accent"
         >
           <option value="" disabled>
             Choose one
@@ -65,7 +65,7 @@ function ContactFields({ onReset }: { onReset: () => void }) {
         </select>
       </label>
       <label className="block sm:col-span-2">
-        <span className="font-display text-xs font-semibold uppercase tracking-[0.16em] text-white/70">
+        <span className="font-display text-xs font-semibold uppercase tracking-[0.16em] text-muted">
           Message
         </span>
         <textarea
@@ -74,11 +74,11 @@ function ContactFields({ onReset }: { onReset: () => void }) {
           rows={5}
           minLength={10}
           maxLength={2000}
-          className="mt-2 w-full resize-y border border-white/20 bg-white px-3 py-3 text-ink outline-none focus-visible:border-accent"
+          className="mt-2 w-full resize-y border border-line bg-white px-3 py-3 text-ink outline-none focus-visible:border-accent"
         />
       </label>
       {state.error ? (
-        <p role="alert" className="border-l-4 border-accent pl-3 text-sm text-white sm:col-span-2">
+        <p role="alert" className="border-l-4 border-accent pl-3 text-sm sm:col-span-2">
           {state.error}
         </p>
       ) : null}
@@ -108,7 +108,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="font-display text-xs font-semibold uppercase tracking-[0.16em] text-white/70">
+      <span className="font-display text-xs font-semibold uppercase tracking-[0.16em] text-muted">
         {label}
       </span>
       <input
@@ -116,7 +116,7 @@ function Field({
         type={type}
         autoComplete={autoComplete}
         required
-        className="mt-2 w-full border border-white/20 bg-white px-3 py-3 text-ink outline-none focus-visible:border-accent"
+        className="mt-2 w-full border border-line bg-white px-3 py-3 text-ink outline-none focus-visible:border-accent"
       />
     </label>
   );
