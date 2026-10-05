@@ -20,6 +20,8 @@ export default async function TeamPage() {
   const locale = await getLocale();
   const t = ui(locale);
   const profiles = await listProfiles();
+  const teamCount = profiles.items.filter((item) => item.role === "admin" || item.role === "team").length;
+  const memberCount = profiles.items.filter((item) => item.role === "affiliate" || item.role === "agent").length;
   const review = profiles.items.filter((item) => item.status === "pending");
   const roleName = (role: string) =>
     role === "admin"
@@ -34,7 +36,7 @@ export default async function TeamPage() {
 
   return (
     <section className="bg-white">
-      <AddMemberForm admin={user.role === "admin"} />
+      <AddMemberForm admin={user.role === "admin"} teamCount={teamCount} memberCount={memberCount} />
       {user.role === "admin" ? (
         <div className="mx-6 mt-6 border border-line bg-canvas">
           <div className="border-b border-line px-6 py-5">

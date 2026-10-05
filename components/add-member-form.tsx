@@ -10,7 +10,15 @@ import { formatPhone } from "@/lib/phone";
 
 const initialState: MemberState = { error: "" };
 
-export function AddMemberForm({ admin }: { admin: boolean }) {
+export function AddMemberForm({
+  admin,
+  teamCount,
+  memberCount,
+}: {
+  admin: boolean;
+  teamCount: number;
+  memberCount: number;
+}) {
   const locale = useLocale();
   const t = ui(locale);
   const router = useRouter();
@@ -36,7 +44,15 @@ export function AddMemberForm({ admin }: { admin: boolean }) {
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line px-6 py-5">
-        <h1 className="font-display text-2xl font-bold uppercase tracking-wide">{t.teamMembers}</h1>
+        <div className="flex flex-wrap items-center gap-6">
+          <p className="font-display text-2xl font-bold" aria-label={t.roleTeam}>
+            {teamCount}
+          </p>
+          <h1 className="font-display text-2xl font-bold uppercase tracking-wide">{t.teamMembers}</h1>
+          <p className="font-display text-2xl font-bold" aria-label={t.members}>
+            {memberCount}
+          </p>
+        </div>
         {admin ? (
           <button
             type="button"

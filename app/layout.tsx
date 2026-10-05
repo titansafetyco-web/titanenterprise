@@ -33,8 +33,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       data-scroll-behavior="smooth"
       className={`${inter.variable} ${oswald.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-background font-sans text-foreground">
-        <LocaleProvider locale={locale}>{children}</LocaleProvider>
+      <body className="min-h-full font-sans text-foreground">
+        <LocaleProvider locale={locale}>
+          <div className="site-lock">{children}</div>
+        </LocaleProvider>
       </body>
     </html>
   );

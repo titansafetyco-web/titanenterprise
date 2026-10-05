@@ -27,7 +27,7 @@ export function CookiePrompt() {
     <div
       role="dialog"
       aria-label={t.cookieChoices}
-      className="fixed bottom-5 left-5 z-30 w-[min(22rem,calc(100vw-6.5rem))] rounded-3xl border border-line bg-white px-5 py-5 text-foreground shadow-[0_16px_40px_rgba(16,24,32,0.16)]"
+      className="site-float-left fixed bottom-5 z-30 w-[min(22rem,calc(100vw-3rem))] rounded-3xl border border-line bg-white px-5 py-5 text-foreground shadow-[0_16px_40px_rgba(16,24,32,0.16)]"
     >
       <div>
         <p className="font-display text-xs font-semibold uppercase tracking-[0.2em] text-accent">

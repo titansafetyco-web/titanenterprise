@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ActivityPages } from "@/components/activity-pages";
 import { localizeError } from "@/lib/i18n/errors";
 import { getLocale } from "@/lib/i18n/locale";
@@ -39,10 +40,12 @@ export async function DashboardOverview({
   jobs,
   activity,
   error,
+  memberCount,
 }: {
   jobs: readonly ChosenJob[];
   activity: readonly Activity[];
   error: string;
+  memberCount: number | null;
 }) {
   const locale = await getLocale();
   const t = ui(locale);
@@ -110,7 +113,7 @@ export async function DashboardOverview({
         <p className="mt-4 text-muted">{error}</p>
       ) : (
         <>
-          <ul className="mt-4 grid gap-4 sm:grid-cols-3">
+          <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {cards.map((card) => (
               <li key={card.label} className="border-t-4 bg-white p-6" style={{ borderColor: card.tone }}>
                 <p className="font-display text-4xl font-bold">{card.value}</p>
@@ -119,6 +122,16 @@ export async function DashboardOverview({
                 </p>
               </li>
             ))}
+            {memberCount !== null ? (
+              <li className="border-t-4 bg-white" style={{ borderColor: "#2c4d86" }}>
+                <Link href="/dashboard/team" className="block p-6 hover:bg-[#e8eaed]">
+                  <p className="font-display text-4xl font-bold">{memberCount}</p>
+                  <p className="mt-2 font-display text-sm font-semibold uppercase tracking-[0.14em] text-muted">
+                    {t.members}
+                  </p>
+                </Link>
+              </li>
+            ) : null}
           </ul>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-[16rem_1fr]">

@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  --site-lock: 72rem;
   --background: #ffffff;
   --foreground: #101820;
   --muted: #6b7280;
@@ -34,9 +35,22 @@ html {
   }
 }
 
+html,
 body {
-  background: var(--background);
+  background: #e4e5e7;
   color: var(--foreground);
+}
+
+.site-lock {
+  width: 100%;
+  max-width: var(--site-lock);
+  min-height: 100%;
+  margin-inline: auto;
+  background: var(--background);
+}
+
+.site-float-left {
+  left: max(1.5rem, calc((100vw - var(--site-lock)) / 2 + 1.5rem));
 }
 
 .sr-only {

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { DashboardOverview } from "@/components/dashboard-overview";
 import { MemberOverview } from "@/components/member-overview";
 import { listApplications } from "@/lib/applications";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, listProfiles } from "@/lib/auth";
 import { listChats } from "@/lib/chats";
 import { contactChoices } from "@/lib/i18n/catalog";
 import { localizeError } from "@/lib/i18n/errors";
@@ -47,6 +47,16 @@ export default async function DashboardPage() {
   const chats = await listChats();
   const applications = await listApplications();
   const jobs = await listChosenJobs();
+  const profiles = await listProfiles();
+  const memberCount = profiles.error
+    ? null
+    : profiles.items.filter(
+        (item) =>
+          item.role === "admin" ||
+          item.role === "team" ||
+          item.role === "affiliate" ||
+          item.role === "agent",
+      ).length;
   const topic = (value: string) =>
     contactChoices(locale).find((item) => item.value === value)?.label ?? value;
   const activity = [
@@ -88,6 +98,7 @@ export default async function DashboardPage() {
         jobs={jobs.error ? [] : jobs.items}
         error={jobs.error ? localizeError(locale, jobs.error) : ""}
         activity={activity}
+        memberCount={memberCount}
       />
     </>
   );

@@ -35,7 +35,7 @@ export async function Hero() {
           <div className="mt-10 flex flex-wrap gap-3">
             <a
               href="#work"
-              className="bg-accent px-5 py-3 font-display text-sm font-semibold uppercase tracking-wider text-ink transition-colors hover:bg-[#e0b400]"
+              className="bg-accent px-5 py-3 font-display text-sm font-semibold uppercase tracking-wider text-ink transition-colors hover:bg-white"
             >
               {t.ourWork}
             </a>

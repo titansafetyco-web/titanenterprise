@@ -142,11 +142,13 @@ export function ChatBubble({
   }
 
   return (
-    <div ref={anchorRef} className="chat-anchor fixed right-5 z-40 flex flex-col items-end gap-3">
+    <div ref={anchorRef} className="chat-anchor pointer-events-none fixed inset-x-0 z-40 flex justify-center">
+      <div className="flex w-full max-w-[var(--site-lock)] justify-end px-6">
+      <div className="pointer-events-auto flex max-w-full flex-col items-end gap-3">
       {open ? (
         <section
           aria-label={t.chat}
-          className="flex w-[min(22rem,calc(100vw-2.5rem))] flex-col border border-white/10 bg-ink text-white shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
+          className="flex w-[min(22rem,calc(100vw-3rem))] max-w-full flex-col border border-white/10 bg-ink text-white shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
         >
           <header className="flex items-center justify-between border-b border-white/10 px-4 py-3">
             <div>
@@ -281,11 +283,21 @@ export function ChatBubble({
         onClick={() => setOpen((current) => !current)}
         aria-expanded={open}
         aria-label={open ? t.closeChat : t.openChat}
-        className="flex h-14 items-center justify-center gap-2 bg-accent px-4 text-ink shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition-colors hover:bg-[#e0b400]"
+        className="group relative h-16 w-[8.5rem] text-ink"
       >
-        <ChatIcon />
-        <span className="font-display text-sm font-semibold uppercase tracking-[0.16em]">{t.chat}</span>
+        <svg viewBox="0 0 200 100" className="absolute inset-0 h-full w-full drop-shadow-[0_8px_18px_rgba(0,0,0,0.28)]" aria-hidden="true">
+          <path
+            className="fill-accent transition-colors group-hover:fill-[#e0b400]"
+            d="M46 4h108c24 0 38 16 38 36v4c0 20-14 34-38 34H96l-20 18 6-18H46C22 78 8 64 8 44v-4C8 20 22 4 46 4z"
+          />
+        </svg>
+        <span className="relative z-10 flex -translate-y-1 items-center justify-center gap-1.5">
+          <ChatIcon />
+          <span className="font-display text-sm font-semibold uppercase tracking-[0.16em]">{t.chat}</span>
+        </span>
       </button>
+      </div>
+      </div>
     </div>
   );
 }
