@@ -91,18 +91,18 @@ export async function DashboardOverview({
   ).filter(([, value]) => value > 0);
 
   return (
-    <section className="mt-10">
-      <h2 className="font-display text-2xl font-bold uppercase tracking-wide">{t.overview}</h2>
+    <section className="mt-6 md:mt-10">
+      <h2 className="font-display text-xl font-bold uppercase tracking-wide md:text-2xl">{t.overview}</h2>
       {wallet.error ? (
         <p className="mt-4 text-muted">{localizeError(locale, wallet.error)}</p>
       ) : (
-        <ul className="mt-6 grid gap-4 sm:grid-cols-3">
+        <ul className="mt-4 grid grid-cols-2 gap-3 sm:mt-6 sm:grid-cols-3 sm:gap-4">
           {moneyCards.map((card) => (
-            <li key={card.label} className="border-t-4 bg-white p-6" style={{ borderColor: card.tone }}>
-              <p className={`font-display text-4xl font-bold ${moneyTone(card.cents)}`}>
+            <li key={card.label} className="border-t-4 bg-white p-4 sm:p-6" style={{ borderColor: card.tone }}>
+              <p className={`font-display text-2xl font-bold sm:text-4xl ${moneyTone(card.cents)}`}>
                 {formatMoney(card.cents, locale)}
               </p>
-              <p className="mt-2 font-display text-sm font-semibold uppercase tracking-[0.14em] text-muted">
+              <p className="mt-1 font-display text-[11px] font-semibold uppercase tracking-[0.14em] text-muted sm:mt-2 sm:text-sm">
                 {card.label}
               </p>
             </li>
@@ -113,20 +113,20 @@ export async function DashboardOverview({
         <p className="mt-4 text-muted">{error}</p>
       ) : (
         <>
-          <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <ul className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             {cards.map((card) => (
-              <li key={card.label} className="border-t-4 bg-white p-6" style={{ borderColor: card.tone }}>
-                <p className="font-display text-4xl font-bold">{card.value}</p>
-                <p className="mt-2 font-display text-sm font-semibold uppercase tracking-[0.14em] text-muted">
+              <li key={card.label} className="border-t-4 bg-white p-4 sm:p-6" style={{ borderColor: card.tone }}>
+                <p className="font-display text-2xl font-bold sm:text-4xl">{card.value}</p>
+                <p className="mt-1 font-display text-[11px] font-semibold uppercase tracking-[0.14em] text-muted sm:mt-2 sm:text-sm">
                   {card.label}
                 </p>
               </li>
             ))}
             {memberCount !== null ? (
               <li className="border-t-4 bg-white" style={{ borderColor: "#2c4d86" }}>
-                <Link href="/dashboard/team" className="block p-6 hover:bg-[#e8eaed]">
-                  <p className="font-display text-4xl font-bold">{memberCount}</p>
-                  <p className="mt-2 font-display text-sm font-semibold uppercase tracking-[0.14em] text-muted">
+                <Link href="/dashboard/team" className="block p-4 hover:bg-[#e8eaed] sm:p-6">
+                  <p className="font-display text-2xl font-bold sm:text-4xl">{memberCount}</p>
+                  <p className="mt-1 font-display text-[11px] font-semibold uppercase tracking-[0.14em] text-muted sm:mt-2 sm:text-sm">
                     {t.members}
                   </p>
                 </Link>
@@ -134,9 +134,9 @@ export async function DashboardOverview({
             ) : null}
           </ul>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-[16rem_1fr]">
-            <div className="flex items-center gap-5 bg-white p-6">
-              <svg viewBox="0 0 120 120" className="h-28 w-28 shrink-0" role="img" aria-label={`${percent}%`}>
+          <div className="mt-4 grid gap-3 sm:gap-4 lg:grid-cols-[16rem_1fr]">
+            <div className="flex items-center gap-4 bg-white p-4 sm:gap-5 sm:p-6">
+              <svg viewBox="0 0 120 120" className="h-24 w-24 shrink-0 sm:h-28 sm:w-28" role="img" aria-label={`${percent}%`}>
                 <circle cx="60" cy="60" r={radius} fill="none" stroke="#e5e7eb" strokeWidth="12" />
                 {slices.map(([key, value]) => {
                   const length = (value / total) * circumference;
@@ -168,24 +168,24 @@ export async function DashboardOverview({
                 </text>
               </svg>
               <div>
-                <p className="font-display text-sm font-semibold uppercase tracking-[0.14em] text-muted">
+                <p className="font-display text-xs font-semibold uppercase tracking-[0.14em] text-muted sm:text-sm">
                   {t.jobProgressLabel}
                 </p>
-                <p className="mt-2 font-display text-3xl font-bold">{percent}%</p>
-                <p className="mt-1 text-sm text-muted">
+                <p className="mt-1 font-display text-2xl font-bold sm:mt-2 sm:text-3xl">{percent}%</p>
+                <p className="mt-1 text-xs text-muted sm:text-sm">
                   {done} / {total}
                 </p>
               </div>
             </div>
 
-            <div className="bg-white p-6">
+            <div className="bg-white p-4 sm:p-6">
               <div className="flex items-baseline justify-between gap-3">
-                <h3 className="font-display text-sm font-semibold uppercase tracking-[0.14em]">
+                <h3 className="font-display text-xs font-semibold uppercase tracking-[0.14em] sm:text-sm">
                   {t.performance}
                 </h3>
-                <p className="text-sm text-muted">{t.last7Days}</p>
+                <p className="text-xs text-muted sm:text-sm">{t.last7Days}</p>
               </div>
-              <div className="mt-6 flex h-36 items-end gap-3">
+              <div className="mt-4 flex h-28 items-end gap-2 sm:mt-6 sm:h-36 sm:gap-3">
                 {days.map((day, index) => (
                   <div key={day} className="flex h-full min-w-0 flex-1 flex-col justify-end">
                     <div

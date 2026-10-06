@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { LegalDocument } from "@/components/legal-document";
 import { getLocale } from "@/lib/i18n/locale";
 import { payoutCopy } from "@/lib/i18n/legal";
+import { ui } from "@/lib/i18n/ui";
 
 export async function generateMetadata(): Promise<Metadata> {
   const copy = payoutCopy(await getLocale());
@@ -12,5 +13,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PayoutPolicyPage() {
-  return <LegalDocument doc={payoutCopy(await getLocale())} />;
+  const locale = await getLocale();
+  return <LegalDocument doc={payoutCopy(locale)} note={ui(locale).footerDisclaimer} />;
 }

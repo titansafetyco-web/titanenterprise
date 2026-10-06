@@ -36,7 +36,7 @@ export function ChosenJobs({ jobs, error }: { jobs: readonly ChosenJob[]; error:
                   </p>
                   <JobFacts job={job} locale={locale} />
                 </div>
-                <div className="flex shrink-0 flex-col gap-2">
+                <div className="flex shrink-0 flex-row flex-wrap items-center gap-2">
                   <form action={setJobProgressAction}>
                     <input type="hidden" name="id" value={job.id} />
                     <label className="block">

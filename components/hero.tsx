@@ -24,28 +24,33 @@ export async function Hero() {
           </p>
           <h1 className="mt-4 font-display text-5xl font-bold uppercase leading-[0.95] tracking-tight text-white md:text-6xl lg:text-7xl">
             {t.heroTitle}
-            <span className="mt-3 block text-accent">{t.heroEarn}</span>
+            <span className="mt-3 block">{t.heroLine2}</span>
+            <span className="mt-3 block text-accent">{t.heroLine3}</span>
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/75">
             {t.heroBody}
           </p>
-          <p className="mt-4 max-w-xl text-lg leading-relaxed text-white/75">
-            {t.heroJobs}
-          </p>
           <div className="mt-10 flex flex-wrap gap-3">
             <a
-              href="#work"
+              href="#opportunities"
               className="bg-accent px-5 py-3 font-display text-sm font-semibold uppercase tracking-wider text-ink transition-colors hover:bg-white"
             >
-              {t.ourWork}
+              {t.exploreOpportunities}
             </a>
             <Link
               href="/affiliate#onboarding"
               className="border border-accent px-5 py-3 font-display text-sm font-semibold uppercase tracking-wider text-accent transition-colors hover:bg-accent hover:text-ink"
             >
-              {t.heroSignUp}
+              {t.becomeMember}
             </Link>
           </div>
+          <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+            {[t.trustVerified, t.trustCompensation, t.trustSubmissions, t.trustPayouts].map((item) => (
+              <li key={item} className="font-display text-xs font-semibold uppercase tracking-[0.14em] text-white/80">
+                {item}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>

@@ -7,19 +7,20 @@ import { ui } from "@/lib/i18n/ui";
 export async function AdminSidebar() {
   const t = ui(await getLocale());
   const links = [
-    { href: "#overview", label: t.overview },
-    { href: "#accounts", label: t.accounts },
-    { href: "#programs", label: t.programs },
-    { href: "#onboarding", label: t.onboarding },
-    { href: "#messages", label: t.messages },
-    { href: "#chat", label: t.chat },
-    { href: "#inquiries", label: t.inquiries },
-    { href: "#campaigns", label: t.campaigns },
+    { href: "/admin#overview", label: t.overview },
+    { href: "/admin#accounts", label: t.accounts },
+    { href: "/admin#programs", label: t.programs },
+    { href: "/admin#onboarding", label: t.onboarding },
+    { href: "/admin#messages", label: t.messages },
+    { href: "/admin#chat", label: t.chat },
+    { href: "/admin#inquiries", label: t.inquiries },
+    { href: "/admin#campaigns", label: t.campaigns },
+    { href: "/admin/payouts", label: t.payoutsNav },
   ];
 
   return (
     <aside className="flex flex-col border-b border-line bg-white lg:sticky lg:top-0 lg:h-svh lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r">
-      <div className="px-6 py-5">
+      <div className="px-4 py-4 md:px-6 md:py-5">
         <Link href="/admin" className="inline-flex">
           <Image
             src="/logo-mark.png"
@@ -36,19 +37,19 @@ export async function AdminSidebar() {
       </div>
       <nav
         aria-label={t.dashboard}
-        className="flex gap-1 overflow-x-auto px-3 pb-4 lg:flex-1 lg:flex-col lg:overflow-visible"
+        className="grid grid-cols-2 gap-2 px-3 pb-4 sm:grid-cols-3 lg:flex lg:flex-1 lg:flex-col lg:gap-1 lg:overflow-visible"
       >
         {links.map((link) => (
           <a
             key={link.href}
             href={link.href}
-            className="shrink-0 px-3 py-2 font-display text-[13px] font-semibold uppercase tracking-[0.12em] text-foreground transition-colors hover:bg-canvas hover:text-accent"
+            className="flex min-h-11 items-center border border-line px-3 py-2 font-display text-[12px] font-semibold uppercase tracking-[0.12em] text-foreground transition-colors hover:bg-canvas hover:text-accent lg:min-h-0 lg:border-0 lg:text-[13px]"
           >
             {link.label}
           </a>
         ))}
       </nav>
-      <div className="flex gap-4 border-t border-line px-6 py-4 lg:flex-col lg:gap-3">
+      <div className="flex flex-col gap-3 border-t border-line px-4 py-4 md:px-6 lg:gap-3">
         <Link
           href="/dashboard"
           className="font-display text-[13px] font-semibold uppercase tracking-[0.12em] text-muted transition-colors hover:text-foreground"

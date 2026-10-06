@@ -38,6 +38,7 @@ export default async function DashboardPage() {
         payouts={payouts.items}
         jobs={jobs.items}
         applications={applications.items}
+        history={wallet.history}
         error={error ? localizeError(locale, error) : ""}
       />
     );

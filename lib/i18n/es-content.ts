@@ -5,9 +5,9 @@ export const esSite = {
   contactEmail: "admin@titansafetystore.com",
   nav: [
     { href: "/about", label: "Acerca de" },
+    { href: "/#opportunities", label: "Oportunidades" },
     { href: "/#work", label: "Trabajo" },
     { href: "/#approach", label: "Enfoque" },
-    { href: "/#contact", label: "Contacto" },
     { href: "/affiliate", label: "Programas de afiliados" },
   ],
 };
@@ -143,6 +143,14 @@ export const esStandards = [
   {
     title: "Seguimiento",
     text: "Permanecemos en el proceso hasta que el siguiente paso está hecho.",
+  },
+  {
+    title: "Compensación transparente",
+    text: "El flujo está diseñado para mostrar el tipo de compensación, el calendario de pago y lo que debe verificarse antes de que un resultado sea pagable.",
+  },
+  {
+    title: "Resultados con seguimiento",
+    text: "El flujo está diseñado para mostrar un envío desde la revisión hasta la aprobación, la reversión o el pago.",
   },
 ];
 

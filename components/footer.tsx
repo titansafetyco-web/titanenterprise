@@ -66,6 +66,9 @@ export async function Footer({ name }: { name: string }) {
           <p className="mt-3 text-sm leading-snug text-white/70">
             {t.footerBlurb}
           </p>
+          <p className="mt-3 text-xs leading-snug text-white/55">
+            {t.footerDisclaimer}
+          </p>
         </div>
         <div className="flex w-full items-center justify-between sm:-my-3 sm:h-full sm:w-auto sm:flex-col sm:self-stretch">
             <ul className="flex justify-center gap-3 sm:translate-y-8" aria-label="Assurances">
@@ -148,6 +151,14 @@ export async function Footer({ name }: { name: string }) {
                 </Link>
               </li>
             ))}
+            <li>
+              <Link
+                href="/login"
+                className="text-sm text-white/80 transition-colors hover:text-accent"
+              >
+                {t.memberLogin}
+              </Link>
+            </li>
           </ul>
         </nav>
         <nav aria-label="Policies">

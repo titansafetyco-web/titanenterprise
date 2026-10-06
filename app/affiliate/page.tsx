@@ -72,6 +72,24 @@ export default async function AffiliatePage() {
           </ul>
         </section>
 
+        <section className="bg-canvas">
+          <div className="mx-auto max-w-6xl px-6 py-12 md:py-16">
+            <p className="max-w-3xl text-lg leading-relaxed">{t.workWithLead}</p>
+            <ul className="mt-8 grid gap-4 md:grid-cols-3">
+              {[
+                { title: t.findTitle, text: t.findText },
+                { title: t.qualifyTitle, text: t.qualifyText },
+                { title: t.earnTitle, text: t.earnText },
+              ].map((card) => (
+                <li key={card.title} className="border-t-4 border-accent bg-white p-6">
+                  <h2 className="font-display text-sm font-semibold uppercase tracking-[0.14em]">{card.title}</h2>
+                  <p className="mt-3 text-sm leading-relaxed text-muted">{card.text}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
         <section className="bg-white">
           <div className="mx-auto grid max-w-6xl items-start gap-10 px-6 py-12 md:grid-cols-12 md:py-20">
             <div className="space-y-5 md:col-span-7">
@@ -183,11 +201,12 @@ export default async function AffiliatePage() {
           <div className="mx-auto grid max-w-6xl items-start gap-8 px-6 py-12 lg:grid-cols-12 lg:py-20">
             <div className="lg:col-span-4">
               <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-accent">
-                {t.onboarding}
+                {t.readyToJoin}
               </p>
               <h2 className="mt-3 font-display text-3xl font-bold uppercase tracking-wide">
-                {t.yourExperience}
+                {t.readyToJoin}
               </h2>
+              <p className="mt-4 leading-relaxed text-muted">{t.readyToJoinLead}</p>
             </div>
             <div className="border border-line bg-white px-5 py-6 sm:px-8 sm:py-8 lg:col-span-8">
               <AffiliateForm programs={programs} />

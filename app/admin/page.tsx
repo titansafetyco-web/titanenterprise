@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AdminSidebar } from "@/components/admin-sidebar";
+import { ApprovalQueue } from "@/components/admin/ApprovalQueue";
 import { ProgramManager } from "@/components/program-manager";
 import { ReviewButtons } from "@/components/review-buttons";
 import { campaigns, inquiries, type InquiryStage } from "@/lib/admin";
@@ -101,6 +102,22 @@ export default async function AdminPage() {
     enrolled: inquiries.filter((item) => item.stage === "Enrolled").length,
   };
 
+  const realStats = [
+    { label: t.totalAccounts, value: accounts.error ? "—" : String(accounts.items.length) },
+    {
+      label: t.approvedAccounts,
+      value: accounts.error ? "—" : String(accounts.items.filter((item) => item.status === "approved").length),
+    },
+    {
+      label: t.pendingAccountCount,
+      value: accounts.error ? "—" : String(accounts.items.filter((item) => item.status === "pending").length),
+    },
+    {
+      label: t.pendingApplications,
+      value: applications.error ? "—" : String(applications.items.filter((item) => item.status === "pending").length),
+    },
+  ];
+
   const stats = [
     { label: t.openInquiries, value: counts.open },
     { label: t.qualified, value: counts.qualified },
@@ -112,9 +129,9 @@ export default async function AdminPage() {
     <div className="min-h-svh bg-canvas lg:flex">
       <AdminSidebar />
       <main className="min-w-0 flex-1">
-        <div className="mx-auto max-w-5xl px-6 py-10 md:py-14">
+        <div className="mx-auto max-w-5xl px-4 py-8 md:px-6 md:py-14">
           <section id="overview" className="scroll-mt-6">
-            <h1 className="font-display text-4xl font-bold uppercase tracking-wide md:text-5xl">
+            <h1 className="font-display text-3xl font-bold uppercase tracking-wide md:text-5xl">
               {t.dashboard}
             </h1>
             <p className="mt-4 max-w-2xl leading-relaxed text-muted">
@@ -130,36 +147,71 @@ export default async function AdminPage() {
                 </li>
               ))}
             </ul>
+            <h2 className="mt-10 font-display text-2xl font-bold uppercase tracking-wide">{t.accountMetrics}</h2>
+            <ul className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {realStats.map((stat) => (
+                <li key={stat.label} className="border-t-4 border-accent bg-white p-6">
+                  <p className="font-display text-4xl font-bold">{stat.value}</p>
+                  <p className="mt-2 font-display text-sm font-semibold uppercase tracking-[0.14em] text-muted">
+                    {stat.label}
+                  </p>
+                </li>
+              ))}
+            </ul>
           </section>
+
+          <ApprovalQueue
+            title={t.approvalQueue}
+            empty={t.noPendingReview}
+            requestLabel={t.requestInfo}
+            rows={[
+              ...accounts.items
+                .filter((item) => item.status === "pending")
+                .map((item) => ({
+                  id: item.id,
+                  name: item.name,
+                  detail: item.email,
+                  kind: "account" as const,
+                })),
+              ...applications.items
+                .filter((item) => item.status === "pending")
+                .map((item) => ({
+                  id: item.id,
+                  name: item.name,
+                  detail: item.program,
+                  kind: "application" as const,
+                })),
+            ]}
+          />
 
           <div id="programs" className="scroll-mt-6">
             <ProgramManager programs={programs} />
           </div>
 
           <section id="accounts" className="mt-12 scroll-mt-6 bg-white">
-            <div className="border-b border-line px-6 py-5">
+            <div className="border-b border-line px-4 py-5 md:px-6">
               <h2 className="font-display text-2xl font-bold uppercase tracking-wide">
                 {t.accounts}
               </h2>
             </div>
             {accounts.error ? (
-              <p className="px-6 py-8 text-muted">{localizeError(locale, accounts.error)}</p>
+              <p className="px-4 py-8 text-muted md:px-6">{localizeError(locale, accounts.error)}</p>
             ) : accounts.items.length === 0 ? (
-              <p className="px-6 py-8 text-muted">{t.noAccounts}</p>
+              <p className="px-4 py-8 text-muted md:px-6">{t.noAccounts}</p>
             ) : (
               <ul>
                 {accounts.items.map((item) => (
                   <li
                     key={item.id}
-                    className="border-b border-line px-6 py-5 last:border-0"
+                    className="border-b border-line px-4 py-5 last:border-0 md:px-6"
                   >
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
-                      <p className="font-display text-lg font-semibold uppercase tracking-wide">
+                      <p className="break-words font-display text-lg font-semibold uppercase tracking-wide">
                         {item.name}
                       </p>
                       <time
                         dateTime={item.createdAt}
-                        className="text-sm text-muted"
+                        className="text-xs text-muted sm:text-sm"
                       >
                         {new Date(item.createdAt).toLocaleString(locale === "es" ? "es" : "en-US", {
                           dateStyle: "medium",
@@ -167,7 +219,7 @@ export default async function AdminPage() {
                         })}
                       </time>
                     </div>
-                    <p className="mt-1 text-sm text-muted">
+                    <p className="mt-1 break-all text-sm text-muted">
                       {item.email}
                       {item.phone ? ` · ${item.phone}` : ""}
                       {" · "}
@@ -187,29 +239,29 @@ export default async function AdminPage() {
           </section>
 
           <section id="onboarding" className="mt-8 scroll-mt-6 bg-white">
-            <div className="border-b border-line px-6 py-5">
+            <div className="border-b border-line px-4 py-5 md:px-6">
               <h2 className="font-display text-2xl font-bold uppercase tracking-wide">
                 {t.affiliateOnboarding}
               </h2>
             </div>
             {applications.error ? (
-              <p className="px-6 py-8 text-muted">{localizeError(locale, applications.error)}</p>
+              <p className="px-4 py-8 text-muted md:px-6">{localizeError(locale, applications.error)}</p>
             ) : applications.items.length === 0 ? (
-              <p className="px-6 py-8 text-muted">{t.noForms}</p>
+              <p className="px-4 py-8 text-muted md:px-6">{t.noForms}</p>
             ) : (
               <ul>
                 {applications.items.map((item) => (
                   <li
                     key={item.id}
-                    className="border-b border-line px-6 py-5 last:border-0"
+                    className="border-b border-line px-4 py-5 last:border-0 md:px-6"
                   >
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
-                      <p className="font-display text-lg font-semibold uppercase tracking-wide">
+                      <p className="break-words font-display text-lg font-semibold uppercase tracking-wide">
                         {item.name}
                       </p>
                       <time
                         dateTime={item.createdAt}
-                        className="text-sm text-muted"
+                        className="text-xs text-muted sm:text-sm"
                       >
                         {new Date(item.createdAt).toLocaleString(locale === "es" ? "es" : "en-US", {
                           dateStyle: "medium",
@@ -217,16 +269,16 @@ export default async function AdminPage() {
                         })}
                       </time>
                     </div>
-                    <p className="mt-1 text-sm text-muted">
+                    <p className="mt-1 break-all text-sm text-muted">
                       {item.email}
                       <span className="mx-2 text-accent">/</span>
                       {item.phone}
                     </p>
-                    <p className="mt-3 font-display text-sm font-semibold uppercase tracking-[0.12em]">
+                    <p className="mt-3 break-words font-display text-sm font-semibold uppercase tracking-[0.12em]">
                       {show(item.program)}
                       {item.secondProgram ? ` / ${show(item.secondProgram)}` : ""}
                     </p>
-                    <p className="mt-3 text-sm text-muted">
+                    <p className="mt-3 break-words text-sm text-muted">
                       {choice(item.years)}
                       <span className="mx-2 text-accent">/</span>
                       {choice(item.areas)}
@@ -251,29 +303,29 @@ export default async function AdminPage() {
           </section>
 
           <section id="messages" className="mt-12 scroll-mt-6 bg-white">
-            <div className="border-b border-line px-6 py-5">
+            <div className="border-b border-line px-4 py-5 md:px-6">
               <h2 className="font-display text-2xl font-bold uppercase tracking-wide">
                 {t.contactMessages}
               </h2>
             </div>
             {messages.error ? (
-              <p className="px-6 py-8 text-muted">{localizeError(locale, messages.error)}</p>
+              <p className="px-4 py-8 text-muted md:px-6">{localizeError(locale, messages.error)}</p>
             ) : messages.items.length === 0 ? (
-              <p className="px-6 py-8 text-muted">{t.noMessages}</p>
+              <p className="px-4 py-8 text-muted md:px-6">{t.noMessages}</p>
             ) : (
               <ul>
                 {messages.items.map((item) => (
                   <li
                     key={item.id}
-                    className="border-b border-line px-6 py-5 last:border-0"
+                    className="border-b border-line px-4 py-5 last:border-0 md:px-6"
                   >
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
-                      <p className="font-display text-lg font-semibold uppercase tracking-wide">
+                      <p className="break-words font-display text-lg font-semibold uppercase tracking-wide">
                         {item.name}
                       </p>
                       <time
                         dateTime={item.createdAt}
-                        className="text-sm text-muted"
+                        className="text-xs text-muted sm:text-sm"
                       >
                         {new Date(item.createdAt).toLocaleString(locale === "es" ? "es" : "en-US", {
                           dateStyle: "medium",
@@ -281,7 +333,7 @@ export default async function AdminPage() {
                         })}
                       </time>
                     </div>
-                    <p className="mt-1 text-sm text-muted">
+                    <p className="mt-1 break-all text-sm text-muted">
                       {item.email}
                       <span className="mx-2 text-accent">/</span>
                       {topic(item.interest)}
@@ -296,29 +348,29 @@ export default async function AdminPage() {
           </section>
 
           <section id="chat" className="mt-8 scroll-mt-6 bg-white">
-            <div className="border-b border-line px-6 py-5">
+            <div className="border-b border-line px-4 py-5 md:px-6">
               <h2 className="font-display text-2xl font-bold uppercase tracking-wide">
                 {t.chatSupport}
               </h2>
             </div>
             {chats.error ? (
-              <p className="px-6 py-8 text-muted">{localizeError(locale, chats.error)}</p>
+              <p className="px-4 py-8 text-muted md:px-6">{localizeError(locale, chats.error)}</p>
             ) : chats.items.length === 0 ? (
-              <p className="px-6 py-8 text-muted">{t.noChats}</p>
+              <p className="px-4 py-8 text-muted md:px-6">{t.noChats}</p>
             ) : (
               <ul>
                 {chats.items.map((item) => (
                   <li
                     key={item.id}
-                    className="border-b border-line px-6 py-5 last:border-0"
+                    className="border-b border-line px-4 py-5 last:border-0 md:px-6"
                   >
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
-                      <p className="font-display text-lg font-semibold uppercase tracking-wide">
+                      <p className="break-words font-display text-lg font-semibold uppercase tracking-wide">
                         {item.name}
                       </p>
                       <time
                         dateTime={item.createdAt}
-                        className="text-sm text-muted"
+                        className="text-xs text-muted sm:text-sm"
                       >
                         {new Date(item.createdAt).toLocaleString(locale === "es" ? "es" : "en-US", {
                           dateStyle: "medium",
@@ -326,7 +378,7 @@ export default async function AdminPage() {
                         })}
                       </time>
                     </div>
-                    <p className="mt-1 text-sm text-muted">{item.email}</p>
+                    <p className="mt-1 break-all text-sm text-muted">{item.email}</p>
                     <p className="mt-3 max-w-3xl whitespace-pre-wrap leading-relaxed">
                       {item.message}
                     </p>
@@ -342,7 +394,23 @@ export default async function AdminPage() {
                 {t.inquiries}
               </h2>
             </div>
-            <div className="overflow-x-auto">
+            <ul className="grid gap-3 p-4 lg:hidden">
+              {inquiries.map((item) => (
+                <li key={item.ref} className="border border-line bg-canvas p-4">
+                  <p className="font-display text-sm font-semibold uppercase tracking-[0.12em]">{item.ref}</p>
+                  <p className="mt-2 text-sm">{show(item.program)}</p>
+                  <p className="mt-2">
+                    <span
+                      className={`inline-block px-2 py-1 font-display text-xs font-semibold uppercase tracking-[0.12em] ${stageStyles[item.stage]}`}
+                    >
+                      {stageLabel(item.stage)}
+                    </span>
+                  </p>
+                  <p className="mt-3 text-sm leading-relaxed text-muted">{show(item.next)}</p>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden overflow-x-auto lg:block">
               <table className="w-full min-w-[40rem] text-left">
                 <thead>
                   <tr className="border-b border-line text-xs font-semibold uppercase tracking-[0.14em] text-muted">

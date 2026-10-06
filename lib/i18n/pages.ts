@@ -112,7 +112,7 @@ const aboutEs: typeof aboutEn = {
 
 const affiliateEn = {
   eyebrow: "Affiliate programs",
-  title: "A practical path from a partner’s offer to a qualified opportunity.",
+  title: "Work With Titan",
   alt: "Two professionals reviewing a folder in a bright office.",
   linesLabel: "Lines of business",
   lines: [
@@ -185,7 +185,7 @@ const affiliateEn = {
 
 const affiliateEs: typeof affiliateEn = {
   eyebrow: "Programas de afiliados",
-  title: "Un camino práctico de la oferta de un socio a una oportunidad calificada.",
+  title: "Trabaje con Titan",
   alt: "Dos profesionales revisan una carpeta en una oficina luminosa.",
   linesLabel: "Líneas de negocio",
   lines: [

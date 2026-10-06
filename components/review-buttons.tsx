@@ -23,7 +23,7 @@ export async function ReviewButtons({
           : status;
 
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-3">
+    <div className="mt-4 flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:items-center">
       <span className="font-display text-xs font-semibold uppercase tracking-[0.14em] text-muted">
         {label}
       </span>
@@ -33,7 +33,7 @@ export async function ReviewButtons({
           <input type="hidden" name="decision" value="approved" />
           <button
             type="submit"
-            className="bg-accent px-4 py-2 font-display text-xs font-semibold uppercase tracking-[0.14em] text-ink transition-colors hover:bg-[#e0b400]"
+            className="inline-flex min-h-11 w-full items-center justify-center bg-accent px-4 font-display text-xs font-semibold uppercase tracking-[0.14em] text-ink transition-colors hover:bg-[#e0b400] sm:w-auto"
           >
             {t.approve}
           </button>
@@ -45,7 +45,7 @@ export async function ReviewButtons({
           <input type="hidden" name="decision" value="denied" />
           <button
             type="submit"
-            className="border border-ink px-4 py-2 font-display text-xs font-semibold uppercase tracking-[0.14em] transition-colors hover:bg-ink hover:text-white"
+            className="inline-flex min-h-11 w-full items-center justify-center border border-ink px-4 font-display text-xs font-semibold uppercase tracking-[0.14em] transition-colors hover:bg-ink hover:text-white sm:w-auto"
           >
             {t.deny}
           </button>

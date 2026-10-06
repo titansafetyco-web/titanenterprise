@@ -51,7 +51,7 @@ export function ProgramManager({
       <form
         key={programs.map((program) => program.id).join("-")}
         action={formAction}
-        className="flex flex-wrap items-end gap-3 px-6 py-5"
+        className="flex flex-col gap-3 px-6 py-5 sm:flex-row sm:flex-wrap sm:items-end"
       >
         <label className="min-w-0 flex-1">
           <span className="font-display text-xs font-semibold uppercase tracking-[0.16em] text-muted">
@@ -66,7 +66,7 @@ export function ProgramManager({
         <button
           type="submit"
           disabled={pending}
-          className="bg-accent px-5 py-3 font-display text-sm font-semibold uppercase tracking-wider text-ink transition-colors hover:bg-[#e0b400] disabled:opacity-60"
+          className="inline-flex min-h-11 w-full items-center justify-center bg-accent px-5 py-3 font-display text-sm font-semibold uppercase tracking-wider text-ink transition-colors hover:bg-[#e0b400] disabled:opacity-60 sm:w-auto"
         >
           {t.add}
         </button>
@@ -85,16 +85,16 @@ export function ProgramManager({
           {programs.map((program) => (
             <li
               key={program.id}
-              className="flex items-center justify-between gap-4 border-b border-line px-6 py-4 last:border-0"
+              className="flex flex-col items-start gap-3 border-b border-line px-6 py-4 last:border-0 sm:flex-row sm:items-center sm:justify-between"
             >
-              <p className="font-display text-lg font-semibold uppercase tracking-wide">
+              <p className="min-w-0 break-words font-display text-lg font-semibold uppercase tracking-wide">
                 {programLabel(locale, program)}
               </p>
               <form action={remove}>
                 <input type="hidden" name="id" value={program.id} />
                 <button
                   type="submit"
-                  className="border border-line px-3 py-2 font-display text-xs font-semibold uppercase tracking-[0.14em] transition-colors hover:border-ink"
+                  className="inline-flex min-h-11 items-center border border-line px-3 py-2 font-display text-xs font-semibold uppercase tracking-[0.14em] transition-colors hover:border-ink"
                 >
                   {t.remove}
                 </button>

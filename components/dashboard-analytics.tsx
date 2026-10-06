@@ -165,7 +165,6 @@ export async function DashboardAnalytics({
     <section className="bg-white">
       <div className="border-b border-line px-6 py-5">
         <h2 className="font-display text-2xl font-bold uppercase tracking-wide">{t.analytics}</h2>
-        <p className="mt-2 max-w-2xl text-sm text-muted">{t.analyticsLead}</p>
       </div>
       {errors.length > 0 ? (
         <div className="border-b border-line px-6 py-4">
@@ -177,7 +176,7 @@ export async function DashboardAnalytics({
         </div>
       ) : null}
 
-      <ul className="grid gap-4 bg-canvas p-6 sm:grid-cols-2 lg:grid-cols-4">
+      <ul className="grid grid-cols-2 gap-4 bg-canvas p-6 lg:grid-cols-4">
         {summary.map((card) => (
           <li key={card.label} className="border-t-4 bg-white p-6" style={{ borderColor: card.tone }}>
             <p className="font-display text-4xl font-bold">{card.value}</p>
@@ -188,12 +187,12 @@ export async function DashboardAnalytics({
         ))}
       </ul>
 
-      <div className="border-t border-line px-6 py-6">
+      <div className="border-t border-line px-4 py-5 md:px-6 md:py-6">
         <h3 className="font-display text-lg font-semibold uppercase tracking-wide">{t.userPerformance}</h3>
-        <div className="mt-6 grid gap-8 lg:grid-cols-2">
+        <div className="mt-5 grid gap-5 md:mt-6 md:gap-8 lg:grid-cols-2">
           <div>
             <p className="font-display text-xs font-semibold uppercase tracking-[0.14em] text-muted">{t.roles}</p>
-            <ul className="mt-4 space-y-4">
+            <ul className="mt-3 space-y-3 md:mt-4 md:space-y-4">
               {roleRows.map((row) => (
                 <Bar key={row.label} label={row.label} value={row.value} total={users.length} tone="bg-foreground" />
               ))}
@@ -201,7 +200,7 @@ export async function DashboardAnalytics({
           </div>
           <div>
             <p className="font-display text-xs font-semibold uppercase tracking-[0.14em] text-muted">{t.status}</p>
-            <ul className="mt-4 space-y-4">
+            <ul className="mt-3 space-y-3 md:mt-4 md:space-y-4">
               {statusRows.map((row) => (
                 <Bar key={row.label} label={row.label} value={row.value} total={users.length} tone={row.tone} />
               ))}
@@ -211,7 +210,30 @@ export async function DashboardAnalytics({
         {users.length === 0 ? (
           <p className="mt-6 text-muted">{t.noAccounts}</p>
         ) : (
-          <div className="mt-6 overflow-x-auto border border-line">
+          <>
+            <ul className="mt-5 grid gap-3 lg:hidden">
+              {users.map((person) => {
+                const share = person.selected === 0 ? 0 : Math.round((person.done / person.selected) * 100);
+                return (
+                  <li key={person.id} className="border border-line bg-canvas p-4">
+                    <p className="font-display font-semibold uppercase tracking-wide">{person.name}</p>
+                    <p className="mt-2 text-sm text-muted">
+                      {t.roles}: {roleName(person.role)}
+                    </p>
+                    <p className="mt-1 text-sm text-muted">
+                      {t.status}: {accountStatus(person.status)}
+                    </p>
+                    <p className="mt-1 text-sm text-muted">
+                      {t.jobProgressLabel}: {person.done} / {person.selected} ({share}%)
+                    </p>
+                    <p className={`mt-2 font-display text-sm ${moneyTone(person.madeCents)}`}>
+                      {t.payoutsMade}: {formatMoney(person.madeCents, locale)}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="mt-6 hidden overflow-x-auto border border-line lg:block">
             <table className="w-full min-w-[40rem] text-left">
               <thead>
                 <tr className="border-b border-line font-display text-xs uppercase tracking-[0.14em] text-muted">
@@ -242,7 +264,8 @@ export async function DashboardAnalytics({
                 })}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
       </div>
 

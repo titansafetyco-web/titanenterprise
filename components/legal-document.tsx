@@ -42,7 +42,7 @@ function Block({ block }: { block: LegalBlock }) {
   );
 }
 
-export function LegalDocument({ doc }: { doc: LegalDoc }) {
+export function LegalDocument({ doc, note }: { doc: LegalDoc; note?: string }) {
   return (
     <LegalPage eyebrow={doc.eyebrow} title={doc.title}>
       {doc.sections.map((section) => (
@@ -52,6 +52,7 @@ export function LegalDocument({ doc }: { doc: LegalDoc }) {
           ))}
         </LegalSection>
       ))}
+      {note ? <p className="text-sm leading-relaxed text-muted">{note}</p> : null}
     </LegalPage>
   );
 }

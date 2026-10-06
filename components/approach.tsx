@@ -8,7 +8,7 @@ import { ui } from "@/lib/i18n/ui";
 function DownArrow() {
   return (
     <svg viewBox="0 0 240 168" className="h-16 w-full md:h-40" aria-hidden="true">
-      <path fill="currentColor" d="M96 6h48v52h80L120 154 16 58h80V6z" />
+      <path fill="currentColor" d="M78 6h84v52h62L120 154 16 58h62V6z" />
     </svg>
   );
 }

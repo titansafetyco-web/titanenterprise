@@ -160,6 +160,11 @@ function PrimaryLinks({
   const textLink = `whitespace-nowrap font-display text-[13px] font-semibold uppercase tracking-[0.14em] transition-colors hover:text-accent ${
     stacked ? "block py-2" : ""
   }`;
+  const opportunitiesLink = links.find((link) => link.href === "/#opportunities");
+  const workLink = links.find((link) => link.href === "/#work");
+  const baseLinks = links.filter(
+    (link) => link.href !== "/#opportunities" && link.href !== "/#work",
+  );
 
   return (
     <>
@@ -176,7 +181,69 @@ function PrimaryLinks({
           {t.home}
         </Link>
       ) : null}
-      {links.map((link) =>
+      {stacked ? (
+        <>
+          {opportunitiesLink ? (
+            <Link
+              href={opportunitiesLink.href}
+              aria-current={pathname === opportunitiesLink.href ? "page" : undefined}
+              onClick={onNavigate}
+              className={`${textLink} ${
+                pathname === opportunitiesLink.href ? "text-accent" : "text-foreground"
+              }`}
+            >
+              {opportunitiesLink.label}
+            </Link>
+          ) : null}
+          {workLink ? (
+            <Link
+              href={workLink.href}
+              aria-current={pathname === workLink.href ? "page" : undefined}
+              onClick={onNavigate}
+              className={`${textLink} ${
+                pathname === workLink.href ? "text-accent" : "text-foreground"
+              }`}
+            >
+              {workLink.label}
+            </Link>
+          ) : null}
+        </>
+      ) : opportunitiesLink ? (
+        <div className="group relative">
+          <Link
+            href={opportunitiesLink.href}
+            aria-current={pathname === opportunitiesLink.href ? "page" : undefined}
+            onClick={onNavigate}
+            className={`${textLink} inline-flex items-center gap-1 ${
+              pathname === opportunitiesLink.href ? "text-accent" : "text-foreground"
+            }`}
+          >
+            {opportunitiesLink.label}
+            <svg viewBox="0 0 12 12" className="h-3 w-3" aria-hidden="true">
+              <path d="M2 4.5 6 8l4-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+            </svg>
+          </Link>
+          <div className="invisible absolute left-0 top-full z-20 mt-2 min-w-[13rem] border border-line bg-white p-2 opacity-0 shadow-[0_12px_24px_rgba(16,24,32,0.12)] transition-all duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+            <Link
+              href={opportunitiesLink.href}
+              onClick={onNavigate}
+              className="block px-3 py-2 font-display text-[12px] font-semibold uppercase tracking-[0.12em] text-foreground transition-colors hover:bg-canvas hover:text-accent"
+            >
+              {opportunitiesLink.label}
+            </Link>
+            {workLink ? (
+              <Link
+                href={workLink.href}
+                onClick={onNavigate}
+                className="block px-3 py-2 font-display text-[12px] font-semibold uppercase tracking-[0.12em] text-foreground transition-colors hover:bg-canvas hover:text-accent"
+              >
+                {workLink.label}
+              </Link>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+      {baseLinks.map((link) =>
         link.href === "/affiliate" ? (
           <Link
             key={link.href}

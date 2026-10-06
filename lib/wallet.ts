@@ -180,7 +180,7 @@ export type OwnPayout = {
   id: string;
   method: "ach" | "crypto";
   amountCents: number;
-  status: "pending" | "sent" | "failed";
+  status: "pending" | "processing" | "sent" | "failed";
   hint: string;
   createdAt: string;
 };
@@ -206,7 +206,14 @@ export async function listOwnPayouts() {
     created_at: string;
   }[]) {
     if (row.method !== "ach" && row.method !== "crypto") continue;
-    if (row.status !== "pending" && row.status !== "sent" && row.status !== "failed") continue;
+    if (
+      row.status !== "pending" &&
+      row.status !== "processing" &&
+      row.status !== "sent" &&
+      row.status !== "failed"
+    ) {
+      continue;
+    }
     items.push({
       id: row.id,
       method: row.method,

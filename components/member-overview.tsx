@@ -1,9 +1,12 @@
 import Link from "next/link";
+import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
+import { JobRow } from "@/components/dashboard/JobRow";
+import { QualityScore } from "@/components/dashboard/QualityScore";
 import type { AffiliateApplication } from "@/lib/applications";
 import { getLocale } from "@/lib/i18n/locale";
 import { ui } from "@/lib/i18n/ui";
 import type { ChosenJob, JobProgress } from "@/lib/jobs";
-import { formatMoney } from "@/lib/money";
+import { formatMoney, type WalletEntry } from "@/lib/money";
 import type { OwnPayout } from "@/lib/wallet";
 
 const tones: Record<JobProgress, string> = {
@@ -24,6 +27,7 @@ export async function MemberOverview({
   payouts,
   jobs,
   applications,
+  history,
   error,
 }: {
   name: string;
@@ -31,6 +35,7 @@ export async function MemberOverview({
   payouts: OwnPayout[];
   jobs: ChosenJob[];
   applications: AffiliateApplication[];
+  history: WalletEntry[];
   error: string;
 }) {
   const locale = await getLocale();
@@ -74,6 +79,9 @@ export async function MemberOverview({
             </li>
           ))}
         </ul>
+        <div className="mt-4">
+          <QualityScore label={t.qualityScore} empty={t.notAvailableYet} />
+        </div>
 
         <div className="mt-8 flex flex-wrap items-end justify-between gap-3">
           <h2 className="font-display text-2xl font-bold uppercase tracking-wide">{t.yourJobs}</h2>
@@ -98,19 +106,16 @@ export async function MemberOverview({
           <p className="mt-4 bg-white px-6 py-8 text-sm text-muted">{t.noChosenJobs}</p>
         ) : (
           <ul className="mt-4 border border-line bg-white">
-            {jobs.map((job, index) => (
-              <li
-                key={job.id}
-                className={`flex flex-wrap items-center justify-between gap-3 px-6 py-4 ${index % 2 === 0 ? "bg-canvas" : "bg-white"}`}
-              >
-                <p className="font-display text-sm font-semibold uppercase tracking-wide">{job.title}</p>
-                <p className="font-display text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-                  {job.status === "done" ? t.jobDone : job.status === "incomplete" ? t.jobIncomplete : t.jobProcessing}
-                </p>
-              </li>
+            {jobs.map((job) => (
+              <JobRow key={job.id} title={job.title} status={job.status} locale={locale} />
             ))}
           </ul>
         )}
+
+        <h2 className="mt-8 font-display text-2xl font-bold uppercase tracking-wide">{t.earnings}</h2>
+        <div className="mt-4">
+          <ActivityFeed items={history} locale={locale} empty={history.length === 0 && balanceCents === 0 ? t.noEarnings : t.notAvailableYet} />
+        </div>
 
         <div className="mt-8 flex flex-wrap items-end justify-between gap-3">
           <h2 className="font-display text-2xl font-bold uppercase tracking-wide">{t.yourOnboarding}</h2>

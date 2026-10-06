@@ -35,21 +35,35 @@ export function JobMarket({
         ) : jobs.length === 0 ? (
           <p className="px-6 py-8 text-muted">{t.noJobs}</p>
         ) : (
-          <ul>
+          <ul className="grid gap-3 bg-[#f5efe2] p-3 md:grid-cols-2 md:gap-4 md:p-4 xl:grid-cols-3">
             {jobs.map((job) => {
               const picked = pickedIds.has(job.id);
               return (
-                <li key={job.id} className="border-b border-line px-6 py-5 last:border-0">
-                  <div className="flex flex-wrap items-start justify-between gap-4">
+                <li key={job.id} className="border border-[#d9c79a] bg-[#fffdf8] p-3 shadow-sm md:p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-2 border-b border-[#eadfbe] pb-2.5">
                     <div className="min-w-0 max-w-3xl">
-                      <p className="font-display text-lg font-semibold uppercase tracking-wide">
+                      <p className="font-display text-base font-semibold uppercase tracking-wide md:text-lg">
                         {job.title}
                       </p>
+                      <p className="mt-1 font-display text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+                        {t.jobMarketplace}
+                      </p>
+                    </div>
+                    <div className="inline-flex min-h-8 items-center border border-[#eadfbe] bg-[#fff4d6] px-2.5 font-display text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7a5b00]">
+                      {picked ? t.selectedJob : t.selectJob}
+                    </div>
+                  </div>
+
+                  <div className="mt-2.5">
+                    <div className="min-w-0">
                       <JobFacts job={job} locale={locale} />
                     </div>
-                    <div className="flex shrink-0 flex-col gap-2">
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <div className="flex shrink-0 flex-wrap gap-2">
                       {picked ? (
-                        <p className="px-5 py-3 text-center font-display text-sm font-semibold uppercase tracking-wider text-muted">
+                        <p className="inline-flex min-h-9 items-center border border-[#eadfbe] bg-[#fff4d6] px-3 text-center font-display text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7a5b00]">
                           {t.selectedJob}
                         </p>
                       ) : (
@@ -57,7 +71,7 @@ export function JobMarket({
                           <input type="hidden" name="id" value={job.id} />
                           <button
                             type="submit"
-                            className="bg-accent px-5 py-3 font-display text-sm font-semibold uppercase tracking-wider text-ink hover:bg-[#e0b400]"
+                            className="inline-flex min-h-9 items-center bg-accent px-3 font-display text-[11px] font-semibold uppercase tracking-[0.12em] text-ink hover:bg-[#e0b400]"
                           >
                             {t.selectJob}
                           </button>
@@ -68,7 +82,7 @@ export function JobMarket({
                           <input type="hidden" name="id" value={job.id} />
                           <button
                             type="submit"
-                            className="border border-ink px-5 py-3 font-display text-sm font-semibold uppercase tracking-wider text-ink hover:bg-ink hover:text-white"
+                            className="inline-flex min-h-9 items-center border border-ink px-3 font-display text-[11px] font-semibold uppercase tracking-[0.12em] text-ink hover:bg-ink hover:text-white"
                           >
                             {t.remove}
                           </button>

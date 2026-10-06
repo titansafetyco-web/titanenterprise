@@ -5,8 +5,11 @@ import { Contact } from "@/components/contact";
 import { CookiePrompt } from "@/components/cookie-prompt";
 import { Footer } from "@/components/footer";
 import { SiteHeader } from "@/components/site-header";
+import { DashboardPreview } from "@/components/dashboard-preview";
 import { Hero } from "@/components/hero";
+import { HowTitanWorks } from "@/components/how-titan-works";
 import { Offerings } from "@/components/offerings";
+import { OpportunityPreview } from "@/components/opportunity-preview";
 import { Standards } from "@/components/standards";
 import { Technology } from "@/components/technology";
 import { getCurrentUser } from "@/lib/auth";
@@ -21,10 +24,13 @@ export default async function Home() {
       <SiteHeader />
       <main id="top">
         <Hero />
+        <HowTitanWorks />
+        <OpportunityPreview />
         <About />
         <Offerings />
         <Approach />
         <Standards />
+        <DashboardPreview />
         <Technology />
         <Contact />
       </main>

@@ -5,9 +5,9 @@ export const site = {
   contactEmail: "admin@titansafetystore.com",
   nav: [
     { href: "/about", label: "About" },
+    { href: "/#opportunities", label: "Opportunities" },
     { href: "/#work", label: "Work" },
     { href: "/#approach", label: "Approach" },
-    { href: "/#contact", label: "Contact" },
     { href: "/affiliate", label: "Affiliate programs" },
   ],
 } as const;
@@ -149,6 +149,14 @@ export const standards = [
   {
     title: "Follow-through",
     text: "We stay with the process until the next step is done.",
+  },
+  {
+    title: "Transparent compensation",
+    text: "The workflow is designed to show the compensation type, the payout schedule, and what must be verified before a result is payable.",
+  },
+  {
+    title: "Tracked results",
+    text: "The workflow is designed to show a submission from review through approval, reversal, or payout.",
   },
 ] as const;
 
