@@ -12,13 +12,6 @@ export type PayoutBatchActionState = {
   totalCents: number;
 };
 
-export const initialPayoutBatchActionState: PayoutBatchActionState = {
-  error: "",
-  success: "",
-  processed: 0,
-  totalCents: 0,
-};
-
 async function requireAdmin() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/admin/payouts");
