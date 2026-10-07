@@ -3,6 +3,30 @@ import { NextResponse, type NextRequest } from "next/server";
 import { supabaseConfigured, supabaseUrl } from "@/lib/supabase/env";
 import { authCookieOptions, rememberCookie, remembered } from "@/lib/supabase/remember";
 
+const MAINTENANCE_TTL_MS = 15_000;
+const UPSTREAM_MS = 1_500;
+let maintenanceCache: { at: number; closed: boolean } | null = null;
+
+function withTimeout<T>(work: PromiseLike<T>): Promise<T | undefined> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(undefined), UPSTREAM_MS);
+    Promise.resolve(work).then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      () => {
+        clearTimeout(timer);
+        resolve(undefined);
+      },
+    );
+  });
+}
+
+function hasSession(request: NextRequest) {
+  return request.cookies.getAll().some((cookie) => cookie.name.includes("-auth-token"));
+}
+
 export async function proxy(request: NextRequest) {
   if (!supabaseConfigured()) return NextResponse.next();
 
@@ -29,10 +53,19 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  await supabase.auth.getUser();
+  if (hasSession(request)) await withTimeout(supabase.auth.getUser());
 
-  const status = await supabase.from("site_status").select("maintenance").eq("id", "site").maybeSingle();
-  const closed = Boolean(status.data?.maintenance);
+  const now = Date.now();
+  let closed = maintenanceCache && now - maintenanceCache.at < MAINTENANCE_TTL_MS ? maintenanceCache.closed : false;
+  if (!maintenanceCache || now - maintenanceCache.at >= MAINTENANCE_TTL_MS) {
+    const status = await withTimeout(
+      supabase.from("site_status").select("maintenance").eq("id", "site").maybeSingle(),
+    );
+    if (status) {
+      closed = Boolean(status.data?.maintenance);
+      maintenanceCache = { at: now, closed };
+    }
+  }
   if (closed && !siteOpenPath(request.nextUrl.pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/maintenance";

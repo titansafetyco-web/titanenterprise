@@ -9,9 +9,10 @@ import { ui } from "@/lib/i18n/ui";
 import { listJobs, listSelections } from "@/lib/jobs";
 import { listMessages } from "@/lib/messages";
 import { listWalletRecords } from "@/lib/wallet";
+import { site } from "@/lib/site";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: `${ui(await getLocale()).analytics} · Titan Safety Co.` };
+  return { title: `${ui(await getLocale()).analytics} · ${site.name}` };
 }
 
 export default async function AnalyticsPage() {

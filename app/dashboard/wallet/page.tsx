@@ -9,9 +9,10 @@ import { listChosenJobs } from "@/lib/jobs";
 import { loadBankAccount, loadCryptoHoldings, loadCryptoWallet, refreshBankAccount } from "@/lib/payouts";
 import { listOwnPayouts, loadWallet } from "@/lib/wallet";
 import { formatMoney, type WalletEntry } from "@/lib/money";
+import { site } from "@/lib/site";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: `${ui(await getLocale()).wallet} · Titan Safety Co.` };
+  return { title: `${ui(await getLocale()).wallet} · ${site.name}` };
 }
 
 export default async function WalletPage({
@@ -54,6 +55,7 @@ export default async function WalletPage({
     <section className="bg-[#f7f1e6]">
       <div className="border-b border-[#e6d7c3] px-6 py-5">
         <h1 className="font-display text-2xl font-bold uppercase tracking-wide">{t.wallet}</h1>
+        <p className="mt-2 max-w-2xl text-sm text-[#8a6a3d]">{t.walletNote}</p>
       </div>
       {wallet.error ? (
         <p className="border-b border-line px-6 py-8 text-[#8a6a3d]">{localizeError(locale, wallet.error)}</p>
@@ -88,7 +90,11 @@ export default async function WalletPage({
                   <p className="font-display text-sm font-semibold uppercase tracking-wide">{job.title}</p>
                   <p className="bg-[#fff3c4] px-2 py-0.5 font-display text-xs font-semibold uppercase tracking-wider text-[#7a5b10]">
                     {job.payCents > 0 ? `${formatMoney(job.payCents, locale)} · ` : ""}
-                    {job.pay === "weekly" ? t.payWeekly : t.payBiweekly}
+                    {job.customPayDays
+                      ? `${locale === "es" ? "Cada" : "Every"} ${job.customPayDays} ${locale === "es" ? "días" : "days"}`
+                      : job.pay === "weekly"
+                        ? t.payWeekly
+                        : t.payBiweekly}
                   </p>
                 </li>
               ))}

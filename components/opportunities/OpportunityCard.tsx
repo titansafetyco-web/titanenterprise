@@ -4,15 +4,22 @@ import type { Opportunity } from "@/types/titan";
 function categoryTone(category: string) {
   switch (category.toLowerCase()) {
     case "energy":
+    case "energía":
       return "border-[#0f766e]/30 bg-[#ccfbf1] text-[#0f766e]";
     case "safety":
+    case "seguridad":
       return "border-[#a16207]/30 bg-[#fef3c7] text-[#a16207]";
     case "media":
+    case "medios":
       return "border-[#1d4ed8]/30 bg-[#dbeafe] text-[#1d4ed8]";
     case "software":
       return "border-[#7c3aed]/30 bg-[#ede9fe] text-[#7c3aed]";
     case "insurance":
+    case "seguros":
       return "border-[#b91c1c]/30 bg-[#fee2e2] text-[#b91c1c]";
+    case "onboarding":
+    case "incorporación":
+      return "border-[#0f4c5c]/30 bg-[#e0f2f1] text-[#0f4c5c]";
     default:
       return "border-line bg-canvas text-accent";
   }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { login, signup, type AuthState } from "@/app/login/actions";
+import { AgentOnboardingFields } from "@/components/agent-onboarding-fields";
 import { useLocale } from "@/components/locale-provider";
 import { localizeError } from "@/lib/i18n/errors";
 import { ui } from "@/lib/i18n/ui";
@@ -14,10 +15,12 @@ export function AuthForm({
   mode,
   next,
   rememberedEmail = "",
+  programs = [],
 }: {
   mode: "login" | "signup";
   next: string;
   rememberedEmail?: string;
+  programs?: readonly { id: string; name: string }[];
 }) {
   const locale = useLocale();
   const t = ui(locale);
@@ -25,9 +28,8 @@ export function AuthForm({
   const [state, formAction, pending] = useActionState(action, initialState);
   const creating = mode === "signup";
 
-  return (
-    <form action={formAction} className="mt-8 space-y-5">
-      <input type="hidden" name="next" value={next} />
+  const accountFields = (
+    <>
       {creating ? (
         <Field label={t.name} name="name" type="text" autoComplete="name" />
       ) : null}
@@ -47,13 +49,11 @@ export function AuthForm({
           <select
             name="role"
             required
-            defaultValue="affiliate"
+            defaultValue="agent"
             className="mt-2 w-full border border-line bg-white px-3 py-3 text-foreground outline-none focus-visible:border-accent"
           >
             <option value="agent">{t.roleAgent}</option>
             <option value="affiliate">{t.roleAffiliateOption}</option>
-            <option value="admin">{t.roleAdmin}</option>
-            <option value="team">{t.roleTeam}</option>
           </select>
         </label>
       ) : null}
@@ -89,40 +89,85 @@ export function AuthForm({
           </div>
         </>
       )}
-      {state.error ? (
-        <p className="border-l-4 border-accent pl-3 text-sm text-foreground">
-          {localizeError(locale, state.error)}
-        </p>
-      ) : null}
-      {state.message ? (
-        <p role="status" className="border-l-4 border-accent pl-3 text-sm text-foreground">
-          {localizeError(locale, state.message)}
-        </p>
-      ) : null}
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full bg-accent px-5 py-3 font-display text-sm font-semibold uppercase tracking-wider text-ink hover:bg-[#e0b400] disabled:opacity-60"
-      >
-        {pending ? t.pleaseWait : creating ? t.createAccount : t.signIn}
-      </button>
-      <p className="text-sm text-muted">
-        {creating ? (
-          <>
-            {t.already}{" "}
-            <Link href={`/login?next=${encodeURIComponent(next)}`} className="text-foreground underline">
-              {t.signIn}
-            </Link>
-          </>
-        ) : (
-          <>
+    </>
+  );
+
+  return (
+    <form action={formAction} className={creating ? "mt-8" : "mt-8 space-y-5"}>
+      <input type="hidden" name="next" value={next} />
+      {creating ? (
+        <div className="grid items-start gap-5 lg:grid-cols-2 lg:gap-8">
+          <section className="space-y-5 border border-line bg-white p-5 md:p-8">
+            {accountFields}
+            {state.error ? (
+              <p className="border-l-4 border-accent pl-3 text-sm text-foreground">
+                {localizeError(locale, state.error)}
+              </p>
+            ) : null}
+            {state.message ? (
+              <p role="status" className="border-l-4 border-accent pl-3 text-sm text-foreground">
+                {localizeError(locale, state.message)}
+              </p>
+            ) : null}
+            <button
+              type="submit"
+              disabled={pending}
+              className="w-full bg-accent px-5 py-3 font-display text-sm font-semibold uppercase tracking-wider text-ink hover:bg-[#e0b400] disabled:opacity-60"
+            >
+              {pending ? t.pleaseWait : t.createAccount}
+            </button>
+            <p className="text-sm text-muted">
+              {t.already}{" "}
+              <Link href={`/login?next=${encodeURIComponent(next)}`} className="text-foreground underline">
+                {t.signIn}
+              </Link>
+            </p>
+          </section>
+          <section className="border border-line bg-white p-5 md:p-8">
+            <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+              {t.onboarding}
+            </p>
+            <h2 className="mt-2 font-display text-2xl font-bold uppercase tracking-wide">
+              {t.agentOnboarding}
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted">{t.agentOnboardingLead}</p>
+            <div className="mt-6">
+              {programs.length === 0 ? (
+                <p className="text-sm text-muted">{t.noPrograms}</p>
+              ) : (
+                <AgentOnboardingFields programs={programs} />
+              )}
+            </div>
+          </section>
+        </div>
+      ) : (
+        <>
+          {accountFields}
+          {state.error ? (
+            <p className="border-l-4 border-accent pl-3 text-sm text-foreground">
+              {localizeError(locale, state.error)}
+            </p>
+          ) : null}
+          {state.message ? (
+            <p role="status" className="border-l-4 border-accent pl-3 text-sm text-foreground">
+              {localizeError(locale, state.message)}
+            </p>
+          ) : null}
+          <button
+            type="submit"
+            disabled={pending}
+            className="w-full bg-accent px-5 py-3 font-display text-sm font-semibold uppercase tracking-wider text-ink hover:bg-[#e0b400] disabled:opacity-60"
+          >
+            {pending ? t.pleaseWait : t.signIn}
+          </button>
+          <p className="text-sm text-muted">
             {t.newHere}{" "}
             <Link href={`/signup?next=${encodeURIComponent(next)}`} className="text-foreground underline">
               {t.createAccount}
             </Link>
-          </>
-        )}
-      </p>
+          </p>
+        </>
+      )}
     </form>
   );
 }

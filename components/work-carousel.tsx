@@ -19,34 +19,17 @@ export function WorkCarousel({
   showLess,
   previousLabel,
   nextLabel,
-  tabsLabel,
 }: {
   items: readonly OfferingItem[];
   learnMore: string;
   showLess: string;
   previousLabel: string;
   nextLabel: string;
-  tabsLabel: string;
 }) {
   const railRef = useRef<HTMLOListElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [openCardId, setOpenCardId] = useState<string | null>(null);
   const openItem = openCardId ? items.find((item) => item.id === openCardId) ?? null : null;
-
-  function slide(direction: "prev" | "next") {
-    const node = railRef.current;
-    if (!node) return;
-    const amount = Math.max(280, Math.round(node.clientWidth * 0.82));
-    const nextIndex = Math.max(
-      0,
-      Math.min(items.length - 1, activeIndex + (direction === "next" ? 1 : -1)),
-    );
-    setActiveIndex(nextIndex);
-    node.scrollBy({
-      left: direction === "next" ? amount : -amount,
-      behavior: "smooth",
-    });
-  }
 
   function jumpTo(index: number) {
     const node = railRef.current;
@@ -54,7 +37,15 @@ export function WorkCarousel({
     const target = node.children.item(index) as HTMLElement | null;
     if (!target) return;
     setActiveIndex(index);
-    target.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
+    node.scrollTo({ left: target.offsetLeft, behavior: "smooth" });
+  }
+
+  function slide(direction: "prev" | "next") {
+    const nextIndex = Math.max(
+      0,
+      Math.min(items.length - 1, activeIndex + (direction === "next" ? 1 : -1)),
+    );
+    jumpTo(nextIndex);
   }
 
   function toggleCard(id: string) {
@@ -62,28 +53,7 @@ export function WorkCarousel({
   }
 
   return (
-    <div className="relative z-20 mt-8 md:mt-12">
-      <ul
-        aria-label={tabsLabel}
-        className="grid border border-line bg-white sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5"
-      >
-        {items.map((item, index) => (
-          <li key={`tab-${item.id}`} className={index > 0 ? "border-t border-line sm:border-l sm:border-t-0" : ""}>
-            <button
-              type="button"
-              onClick={() => jumpTo(index)}
-              className={`block w-full px-4 py-4 text-left font-display text-xs font-semibold uppercase tracking-wider transition-colors ${
-                index === activeIndex
-                  ? "bg-accent text-ink"
-                  : "hover:bg-accent hover:text-ink"
-              }`}
-            >
-              {item.title}
-            </button>
-          </li>
-        ))}
-      </ul>
-
+    <div className="relative mt-8 md:mt-12">
       <ol ref={railRef} className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 md:gap-5">
         {items.map((offering) => (
           <li
@@ -91,11 +61,12 @@ export function WorkCarousel({
             key={offering.id}
             className="group relative flex w-[85%] min-w-[85%] snap-start flex-col overflow-hidden border border-line bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md sm:w-[70%] sm:min-w-[70%] md:w-[48%] md:min-w-[48%] lg:w-[38%] lg:min-w-[38%]"
           >
-            <div className="relative h-52">
+            <div className="relative h-52 bg-[#e7e1d6]">
               <Image
                 src={offering.image}
                 alt=""
                 fill
+                unoptimized
                 sizes="(min-width: 1280px) 22rem, (min-width: 768px) 50vw, 100vw"
                 className="object-cover"
               />

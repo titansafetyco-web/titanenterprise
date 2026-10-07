@@ -54,7 +54,7 @@ function lastDays() {
 
 function moneyTone(cents: number) {
   return cents > 0
-    ? "font-semibold text-[#22c55e] [text-shadow:0_0_8px_#22c55e,0_0_18px_rgba(34,197,94,0.85)]"
+    ? "font-semibold text-[#22c55e]"
     : "text-muted";
 }
 

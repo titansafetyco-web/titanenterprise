@@ -4,9 +4,10 @@ import { Footer } from "@/components/footer";
 import { SiteHeader } from "@/components/site-header";
 import { getLocale } from "@/lib/i18n/locale";
 import { ui } from "@/lib/i18n/ui";
+import { site } from "@/lib/site";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: `${ui(await getLocale()).forgotPassword} · Titan Safety Co.` };
+  return { title: `${ui(await getLocale()).forgotPassword} · ${site.name}` };
 }
 
 export default async function ForgotPage() {
@@ -27,7 +28,7 @@ export default async function ForgotPage() {
           <ForgotForm />
         </div>
       </main>
-      <Footer name="Titan Safety Co." />
+      <Footer name={site.name} />
     </>
   );
 }

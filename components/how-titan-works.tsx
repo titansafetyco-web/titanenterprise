@@ -5,11 +5,11 @@ import { ui } from "@/lib/i18n/ui";
 export async function HowTitanWorks() {
   const t = ui(await getLocale());
   const items = [
-    { id: "browse", title: t.howBrowse, text: t.howBrowseText },
-    { id: "accept", title: t.howAccept, text: t.howAcceptText },
-    { id: "complete", title: t.howComplete, text: t.howCompleteText },
-    { id: "verify", title: t.howVerify, text: t.howVerifyText },
-    { id: "paid", title: t.howPaid, text: t.howPaidText },
+    { id: "browse", title: t.howBrowse, text: t.howBrowseText, points: t.howBrowsePoints },
+    { id: "accept", title: t.howAccept, text: t.howAcceptText, points: t.howAcceptPoints },
+    { id: "complete", title: t.howComplete, text: t.howCompleteText, points: t.howCompletePoints },
+    { id: "verify", title: t.howVerify, text: t.howVerifyText, points: t.howVerifyPoints },
+    { id: "paid", title: t.howPaid, text: t.howPaidText, points: t.howPaidPoints },
   ];
 
   return (
@@ -24,6 +24,8 @@ export async function HowTitanWorks() {
           detailLabel={t.details}
           nextStepLabel={t.nextStep}
           learnMoreLabel={t.learnMore}
+          continueLabel={t.howContinue}
+          progressLabel={t.howProgress}
         />
       </div>
     </section>

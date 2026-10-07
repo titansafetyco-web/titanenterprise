@@ -8,11 +8,12 @@ import { getLocale } from "@/lib/i18n/locale";
 import { affiliateCopy } from "@/lib/i18n/pages";
 import { ui } from "@/lib/i18n/ui";
 import { listPrograms } from "@/lib/programs";
+import { site } from "@/lib/site";
 
 export async function generateMetadata(): Promise<Metadata> {
   const copy = affiliateCopy(await getLocale());
   return {
-    title: `${copy.eyebrow} · Titan Safety Co.`,
+    title: `${copy.eyebrow} · ${site.name}`,
     description: copy.purposeBody,
   };
 }
@@ -214,7 +215,7 @@ export default async function AffiliatePage() {
           </div>
         </section>
       </main>
-      <Footer name="Titan Safety Co." />
+      <Footer name={site.name} />
     </>
   );
 }

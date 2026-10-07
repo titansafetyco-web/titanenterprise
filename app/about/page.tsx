@@ -9,7 +9,7 @@ import { site } from "@/lib/site";
 export async function generateMetadata(): Promise<Metadata> {
   const copy = aboutCopy(await getLocale());
   return {
-    title: `${copy.eyebrow} · Titan Safety Co.`,
+    title: `${copy.eyebrow} · ${site.name}`,
     description: site.description,
   };
 }

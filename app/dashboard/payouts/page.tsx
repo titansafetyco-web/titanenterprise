@@ -10,9 +10,10 @@ import { getCurrentUser } from "@/lib/auth";
 import { localizeError } from "@/lib/i18n/errors";
 import { getLocale } from "@/lib/i18n/locale";
 import { ui } from "@/lib/i18n/ui";
+import { site } from "@/lib/site";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: `${ui(await getLocale()).payoutsTitle} · Titan Safety Co.` };
+  return { title: `${ui(await getLocale()).payoutsTitle} · ${site.name}` };
 }
 
 export default async function PayoutsPage() {
@@ -26,7 +27,7 @@ export default async function PayoutsPage() {
   return (
     <section>
       <h1 className="font-display text-4xl font-bold uppercase tracking-wide">{t.payoutsTitle}</h1>
-      <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted">{t.footerDisclaimer}</p>
+      <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted">{t.payoutsIntro}</p>
       <Link href="/payout-policy" className="mt-3 inline-flex min-h-11 items-center font-display text-xs font-semibold uppercase tracking-[0.14em] text-accent">
         {t.viewPayoutPolicy}
       </Link>

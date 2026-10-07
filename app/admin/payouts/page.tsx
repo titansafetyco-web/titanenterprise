@@ -7,9 +7,10 @@ import { ADMIN_PAYOUT_THRESHOLD_CENTS, loadAdminPayoutQueue } from "@/lib/api/pa
 import { getCurrentUser } from "@/lib/auth";
 import { getLocale } from "@/lib/i18n/locale";
 import { ui } from "@/lib/i18n/ui";
+import { site } from "@/lib/site";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: `${ui(await getLocale()).payoutsTitle} · Titan Safety Co.` };
+  return { title: `${ui(await getLocale()).payoutsTitle} · ${site.name}` };
 }
 
 export default async function AdminPayoutsPage() {

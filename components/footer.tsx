@@ -57,10 +57,11 @@ export async function Footer({ name }: { name: string }) {
       <div className="mx-auto grid max-w-6xl items-center gap-8 px-6 py-6 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:gap-10">
         <div className="mx-auto flex max-w-sm flex-col items-center text-center sm:mx-0 sm:items-start sm:text-left">
           <Image
-            src="/logo-landscape.webp"
+            src="/logo-mark.png"
             alt={name}
-            width={1024}
-            height={401}
+            width={787}
+            height={271}
+            unoptimized
             className="h-28 w-auto max-w-full bg-transparent"
           />
           <p className="mt-3 text-sm leading-snug text-white/70">
@@ -136,7 +137,7 @@ export async function Footer({ name }: { name: string }) {
             </ul>
         </div>
         <div className="grid grid-cols-2 gap-6 sm:justify-self-end">
-        <nav aria-label="Footer">
+        <nav aria-label="Footer" className="sm:-translate-x-4">
           <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-accent">
             {t.explore}
           </p>

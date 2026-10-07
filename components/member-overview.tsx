@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { JobRow } from "@/components/dashboard/JobRow";
-import { QualityScore } from "@/components/dashboard/QualityScore";
 import type { AffiliateApplication } from "@/lib/applications";
 import { getLocale } from "@/lib/i18n/locale";
 import { ui } from "@/lib/i18n/ui";
@@ -17,7 +16,7 @@ const tones: Record<JobProgress, string> = {
 
 function moneyTone(cents: number) {
   return cents > 0
-    ? "font-semibold text-[#22c55e] [text-shadow:0_0_8px_#22c55e,0_0_18px_rgba(34,197,94,0.85)]"
+    ? "font-semibold text-[#22c55e]"
     : "text-muted";
 }
 
@@ -79,9 +78,6 @@ export async function MemberOverview({
             </li>
           ))}
         </ul>
-        <div className="mt-4">
-          <QualityScore label={t.qualityScore} empty={t.notAvailableYet} />
-        </div>
 
         <div className="mt-8 flex flex-wrap items-end justify-between gap-3">
           <h2 className="font-display text-2xl font-bold uppercase tracking-wide">{t.yourJobs}</h2>

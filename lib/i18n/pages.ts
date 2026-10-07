@@ -2,9 +2,9 @@ import type { Locale } from "@/lib/i18n/locale";
 
 const aboutEn = {
   eyebrow: "Company bio",
-  hero: "Titan Safety Co. connects people with essential products and services—and helps our partners turn that demand into business.",
+  hero: "Titan Connective connects companies, independent agents, and interested customers.",
   closer:
-    "Titan Safety Co. brings outreach, technology, and customer support together under one roof—creating a clear path from initial interest to a qualified opportunity.",
+    "Connecting businesses, people, and opportunities.",
   work: "Our work",
   chapters: [
     {
@@ -17,7 +17,7 @@ const aboutEn = {
         "Software development",
         "Insurance affiliates",
       ],
-      text: "Our name reflects our purpose: helping individuals and businesses make confident decisions about the services they rely on. We bring together safety products, energy solutions, digital media, software development, and insurance affiliates with a practical approach to customer acquisition.",
+      text: "Titan Connective is a customer acquisition, affiliate, marketing, and technology business. We connect companies, independent agents, and interested customers through safety products, energy solutions, digital media, software development, and insurance affiliates.",
     },
     {
       id: "Programs",
@@ -57,9 +57,9 @@ const aboutEn = {
 
 const aboutEs: typeof aboutEn = {
   eyebrow: "Biografía de la empresa",
-  hero: "Titan Safety Co. conecta a las personas con productos y servicios esenciales, y ayuda a nuestros socios a convertir esa demanda en negocio.",
+  hero: "Titan Connective conecta compañías, agentes independientes y clientes interesados.",
   closer:
-    "Titan Safety Co. reúne alcance, tecnología y atención al cliente bajo un mismo techo, y crea un camino claro del interés inicial a una oportunidad calificada.",
+    "Conectamos empresas, personas y oportunidades.",
   work: "Nuestro trabajo",
   chapters: [
     {
@@ -72,7 +72,7 @@ const aboutEs: typeof aboutEn = {
         "Desarrollo de software",
         "Afiliados de seguros",
       ],
-      text: "Nuestro nombre refleja nuestro propósito: ayudar a personas y empresas a decidir con confianza sobre los servicios de los que dependen. Reunimos productos de seguridad, soluciones de energía, medios digitales, desarrollo de software y afiliados de seguros con un enfoque práctico de captación de clientes.",
+      text: "Titan Connective es un negocio de captación de clientes, afiliados, marketing y tecnología. Conectamos compañías, agentes independientes y clientes interesados mediante productos de seguridad, soluciones de energía, medios digitales, desarrollo de software y afiliados de seguros.",
     },
     {
       id: "Programs",
@@ -111,8 +111,8 @@ const aboutEs: typeof aboutEn = {
 };
 
 const affiliateEn = {
-  eyebrow: "Affiliate programs",
-  title: "Work With Titan",
+  eyebrow: "Partner programs",
+  title: "Partner with Titan",
   alt: "Two professionals reviewing a folder in a bright office.",
   linesLabel: "Lines of business",
   lines: [
@@ -124,9 +124,9 @@ const affiliateEn = {
   ],
   purpose: "Purpose",
   purposeLead:
-    "Titan Safety Co. connects people with essential products and services—and helps our partners turn that demand into business. Our name reflects that purpose: helping individuals and businesses make confident decisions about the services they rely on.",
+    "Titan Connective connects companies, independent agents, and interested customers. Companies offer partner programs. Members review the requirements, and approved participants submit qualifying results.",
   purposeBody:
-    "We bring together safety products, energy solutions, digital media, software development, and insurance affiliates with a practical approach to customer acquisition. Through affiliate and referral programs, we identify prospective customers, introduce relevant offers, and guide interested applicants through signup and onboarding.",
+    "The work covers safety products, energy solutions, digital media, software development, and insurance affiliates. Through affiliate and referral programs, we identify prospective customers, introduce relevant offers, and guide interested applicants through signup and onboarding.",
   insurance: "Insurance",
   insuranceBody:
     "Insurance is part of that work. We introduce affiliate offers for auto, home, renters, life, health, and business coverage. We are not the insurer. Coverage, eligibility, and price are set by each partner’s program, and an inquiry is not a quote or a promise of coverage.",
@@ -180,12 +180,12 @@ const affiliateEn = {
     "Workflow tools",
   ],
   closer:
-    "Titan Safety Co. brings outreach, technology, and customer support together under one roof—creating a clear path from initial interest to a qualified opportunity.",
+    "Connecting businesses, people, and opportunities.",
 };
 
 const affiliateEs: typeof affiliateEn = {
-  eyebrow: "Programas de afiliados",
-  title: "Trabaje con Titan",
+  eyebrow: "Programas de socios",
+  title: "Asóciese con Titan",
   alt: "Dos profesionales revisan una carpeta en una oficina luminosa.",
   linesLabel: "Líneas de negocio",
   lines: [
@@ -197,9 +197,9 @@ const affiliateEs: typeof affiliateEn = {
   ],
   purpose: "Propósito",
   purposeLead:
-    "Titan Safety Co. conecta a las personas con productos y servicios esenciales, y ayuda a nuestros socios a convertir esa demanda en negocio. Nuestro nombre refleja ese propósito: ayudar a personas y empresas a decidir con confianza sobre los servicios de los que dependen.",
+    "Titan Connective conecta compañías, agentes independientes y clientes interesados. Las compañías ofrecen programas de socios. Los miembros revisan los requisitos y los participantes aprobados envían resultados que califican.",
   purposeBody:
-    "Reunimos productos de seguridad, soluciones de energía, medios digitales, desarrollo de software y afiliados de seguros con un enfoque práctico de captación de clientes. Mediante programas de afiliados y referidos, identificamos clientes potenciales, presentamos ofertas pertinentes y guiamos a los solicitantes interesados durante el registro y la incorporación.",
+    "El trabajo cubre productos de seguridad, soluciones de energía, medios digitales, desarrollo de software y afiliados de seguros. Mediante programas de afiliados y referidos, identificamos clientes potenciales, presentamos ofertas pertinentes y guiamos a los solicitantes interesados durante el registro y la incorporación.",
   insurance: "Seguros",
   insuranceBody:
     "Los seguros forman parte de ese trabajo. Presentamos ofertas de afiliados para cobertura de auto, hogar, inquilinos, vida, salud y negocios. No somos la aseguradora. La cobertura, la elegibilidad y el precio los define el programa de cada socio, y una consulta no es una cotización ni una promesa de cobertura.",
@@ -253,7 +253,7 @@ const affiliateEs: typeof affiliateEn = {
     "Herramientas de flujo",
   ],
   closer:
-    "Titan Safety Co. reúne alcance, tecnología y atención al cliente bajo un mismo techo, y crea un camino claro del interés inicial a una oportunidad calificada.",
+    "Conectamos empresas, personas y oportunidades.",
 };
 
 export function aboutCopy(locale: Locale) {

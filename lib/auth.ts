@@ -1,5 +1,7 @@
+import { cache } from "react";
 import { createClient as createAuthClient } from "@supabase/supabase-js";
 import { sendAccountNotice } from "@/lib/account-mail";
+import { ratingFromCompletions } from "@/lib/ratings";
 import { createClient } from "@/lib/supabase/server";
 import { databaseMessage, supabaseConfigured, supabaseUrl } from "@/lib/supabase/env";
 
@@ -26,6 +28,7 @@ export type Profile = {
   phone: string;
   status: AccountStatus;
   role: AccountRole;
+  stars: number;
   avatarPath: string;
   birthDate: string;
   state: string;
@@ -58,6 +61,7 @@ function mapProfile(row: ProfileRow): Profile {
     phone: row.phone,
     status: row.status,
     role: row.role,
+    stars: 0,
     avatarPath: row.avatar_path ?? "",
     birthDate: row.birth_date ?? "",
     state: row.state ?? "",
@@ -76,7 +80,7 @@ export async function getProfile(userId: string) {
   return data ? mapProfile(data as ProfileRow) : null;
 }
 
-export async function getCurrentUser() {
+export const getCurrentUser = cache(async function getCurrentUser() {
   if (!supabaseConfigured()) return null;
   const supabase = await createClient();
   if (!supabase) return null;
@@ -97,7 +101,7 @@ export async function getCurrentUser() {
     birthDate: profile.birthDate,
     state: profile.state,
   };
-}
+});
 
 export async function currentUserId() {
   const supabase = await createClient();
@@ -130,17 +134,35 @@ export async function listProfiles() {
     };
   }
 
+  const base = ((data ?? []) as ProfileRow[]).map(mapProfile);
+
+  const doneSelections = await supabase
+    .from("job_selections")
+    .select("user_id")
+    .eq("status", "done");
+  const doneByUser = new Map<string, number>();
+  if (!doneSelections.error) {
+    for (const row of (doneSelections.data ?? []) as { user_id: string }[]) {
+      doneByUser.set(row.user_id, (doneByUser.get(row.user_id) ?? 0) + 1);
+    }
+  }
+
   return {
-    items: ((data ?? []) as ProfileRow[]).map(mapProfile),
+    items: base.map((profile) => ({
+      ...profile,
+      stars: ratingFromCompletions(doneByUser.get(profile.id) ?? 0).stars,
+    })),
     error: "",
   };
 }
 
-export async function setProfileStatus(id: string, status: AccountStatus) {
+export async function setProfileStatus(id: string, status: AccountStatus, role?: AccountRole) {
   const supabase = await createClient();
   if (!supabase) return { ok: false as const, error: databaseMessage };
 
-  const { error } = await supabase.from("profiles").update({ status }).eq("id", id);
+  const patch: { status: AccountStatus; role?: AccountRole } = { status };
+  if (role) patch.role = role;
+  const { error } = await supabase.from("profiles").update(patch).eq("id", id);
   if (error) return { ok: false as const, error: "That account could not be updated." };
   return { ok: true as const, error: "" };
 }
@@ -151,14 +173,17 @@ export async function signUpAccount(input: {
   password: string;
   phone: string;
   role: AccountRole;
+  birth?: string;
+  state?: string;
 }) {
   const supabase = await createClient();
   if (!supabase) return { ok: false as const, error: databaseMessage };
 
+  const signupRole = input.role === "agent" ? "agent" : "affiliate";
   const { data, error } = await supabase.auth.signUp({
     email: input.email,
     password: input.password,
-    options: { data: { name: input.name, role: input.role, phone: input.phone } },
+    options: { data: { name: input.name, role: signupRole, phone: input.phone } },
   });
 
   if (error) {
@@ -173,6 +198,13 @@ export async function signUpAccount(input: {
 
   if (!data.user) {
     return { ok: false as const, error: "The account could not be created." };
+  }
+
+  if (input.birth || input.state) {
+    await supabase.rpc("set_profile_details", {
+      birth: input.birth ?? "",
+      region: input.state ?? "",
+    });
   }
 
   const created = await getProfile(data.user.id);
@@ -244,7 +276,7 @@ export async function createMemberAccount(input: {
   }
 
   if (!data.user) return { ok: false as const, error: "The account could not be created." };
-  const approved = await setProfileStatus(data.user.id, "approved");
+  const approved = await setProfileStatus(data.user.id, "approved", input.role);
   if (!approved.ok) return { ok: false as const, error: approved.error };
   await sendAccountNotice({
     name: input.name,

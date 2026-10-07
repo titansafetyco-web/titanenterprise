@@ -5,7 +5,7 @@ import { getLocale } from "@/lib/i18n/locale";
 import { ui } from "@/lib/i18n/ui";
 import type { JobProgress, ChosenJob } from "@/lib/jobs";
 import { formatMoney } from "@/lib/money";
-import { loadWallet } from "@/lib/wallet";
+import { listOwnPayouts, loadWallet } from "@/lib/wallet";
 
 type Activity = {
   id: string;
@@ -50,13 +50,16 @@ export async function DashboardOverview({
   const locale = await getLocale();
   const t = ui(locale);
   const wallet = await loadWallet();
+  const payouts = await listOwnPayouts();
   const payoutsMade = wallet.history
     .filter((entry) => entry.kind === "in")
     .reduce((total, entry) => total + entry.amountCents, 0);
-  const payoutsPending = 0;
+  const payoutsPending = payouts.items
+    .filter((item) => item.status === "pending")
+    .reduce((total, item) => total + item.amountCents, 0);
   const moneyTone = (cents: number) =>
     cents > 0
-      ? "font-semibold text-[#22c55e] [text-shadow:0_0_8px_#22c55e,0_0_18px_rgba(34,197,94,0.85)]"
+      ? "font-semibold text-[#22c55e]"
       : "text-muted";
   const moneyCards = [
     { label: t.walletBalance, cents: wallet.balanceCents, tone: "#f5c400" },

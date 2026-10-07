@@ -212,7 +212,7 @@ export async function sendMailbox(input: {
   });
   try {
     const sent = await transport.sendMail({
-      from: `"Titan Safety Co." <${mailbox.user}>`,
+      from: `"${site.name}" <${mailbox.user}>`,
       to: input.to,
       replyTo: input.replyTo,
       subject: input.subject,
@@ -222,7 +222,7 @@ export async function sendMailbox(input: {
     await saveNote({
       key: sent.messageId || `sent-${crypto.randomUUID()}`,
       direction: "out",
-      name: "Titan Safety Co.",
+      name: site.name,
       from: mailbox.user,
       to: input.to,
       subject: input.subject,

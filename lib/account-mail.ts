@@ -4,8 +4,7 @@ export type AccountNotice = "review" | "approved" | "denied";
 
 const origin = "https://www.titansafetystore.com";
 const signInUrl = `${origin}/login`;
-const quote =
-  "Connecting people with essential products and services, and helping partners turn that demand into business.";
+const quote = "Connecting businesses, people, and opportunities.";
 
 function escapeHtml(value: string) {
   return value
@@ -17,17 +16,17 @@ function escapeHtml(value: string) {
 
 const copy: Record<AccountNotice, { subject: string; title: string; lead: string }> = {
   review: {
-    subject: "Your Titan Safety Co. account is being reviewed",
+    subject: `Your ${site.name} account is being reviewed`,
     title: "Your account is being reviewed",
     lead: "We received your account. It is being reviewed. We will email you when it is approved.",
   },
   approved: {
-    subject: "Your Titan Safety Co. account is approved",
+    subject: `Your ${site.name} account is approved`,
     title: "Your account is approved",
     lead: "Your account is approved. You can sign in with the email and password from this message.",
   },
   denied: {
-    subject: "Your Titan Safety Co. account was not approved",
+    subject: `Your ${site.name} account was not approved`,
     title: "Your account was not approved",
     lead: "Your account was reviewed and was not approved. You will not be able to sign in.",
   },

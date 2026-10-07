@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/site-header";
 import { loadDashboardAlerts } from "@/lib/alerts";
 import { avatarUrl } from "@/lib/avatar";
 import { claimSubmissions, getCurrentUser } from "@/lib/auth";
+import { site } from "@/lib/site";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
@@ -19,6 +20,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <div className="mx-auto flex min-h-[calc(100svh-6rem)] max-w-6xl flex-col lg:flex-row">
           <DashboardNav
             admin={user.role === "admin"}
+            role={user.role}
             alerts={alerts}
             name={user.name}
             photo={avatarUrl(user.avatarPath)}
@@ -26,7 +28,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <div className="min-w-0 flex-1 px-6 py-10 md:py-14">{children}</div>
         </div>
       </main>
-      <Footer name="Titan Safety Co." />
+      <Footer name={site.name} />
     </>
   );
 }

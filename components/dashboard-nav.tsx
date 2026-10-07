@@ -21,23 +21,35 @@ function AlertDot({ label }: { label: string }) {
 
 export function DashboardNav({
   admin,
+  role,
   alerts,
   name,
   photo,
 }: {
   admin: boolean;
+  role: string;
   alerts: DashboardAlerts;
   name: string;
   photo: string;
 }) {
   const t = ui(useLocale());
+  const roleLabel =
+    role === "admin"
+      ? t.roleAdmin
+      : role === "agent"
+        ? t.roleAgent
+        : role === "team"
+          ? t.roleTeam
+          : role === "member"
+            ? t.roleMember
+            : t.roleAffiliate;
   const pathname = usePathname();
   const [cleared, setCleared] = useState({ messages: false, wallet: false });
   const marketplace = admin
     ? [
         { href: "/dashboard/listing", label: t.addJob },
         { href: "/dashboard/jobs", label: t.yourJobs },
-        { href: "/dashboard/onboarding", label: t.yourOnboarding },
+        { href: "/dashboard/leaderboard", label: t.leaderboard },
       ]
     : [
         { href: "/jobs", label: t.marketplace },
@@ -45,7 +57,7 @@ export function DashboardNav({
         { href: "/dashboard/wallet", label: t.earnings },
         { href: "/dashboard/payouts", label: t.payoutsNav },
         { href: "/dashboard/training", label: t.training },
-        { href: "/dashboard/onboarding", label: t.yourOnboarding },
+        { href: "/dashboard/leaderboard", label: t.leaderboard },
       ];
   const sections = admin
     ? [
@@ -127,7 +139,7 @@ export function DashboardNav({
             <span className="sr-only">{admin ? t.settings : t.profile}</span>
           </Link>
           <p className="justify-self-center text-center font-display text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
-            {admin ? t.roleAdmin : t.roleMember}
+            {roleLabel}
           </p>
           <button
             type="button"
@@ -204,7 +216,7 @@ export function DashboardNav({
                           aria-current={pathname === link.href ? "page" : undefined}
                           className={itemClass(pathname === link.href)}
                         >
-                          {label(link.label, link.href === "/dashboard/onboarding" && lit.onboarding)}
+                          {label(link.label, false)}
                         </Link>
                       ))}
                     </div>
@@ -283,7 +295,7 @@ export function DashboardNav({
                     aria-current={pathname === link.href ? "page" : undefined}
                     className={itemClass(pathname === link.href)}
                   >
-                    {label(link.label, link.href === "/dashboard/onboarding" && lit.onboarding)}
+                    {label(link.label, false)}
                   </Link>
                 ))}
               </div>

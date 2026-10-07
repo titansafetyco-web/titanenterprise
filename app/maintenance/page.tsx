@@ -7,9 +7,10 @@ import { getCurrentUser } from "@/lib/auth";
 import { supportIsOnline } from "@/lib/maintenance";
 import { getLocale } from "@/lib/i18n/locale";
 import { ui } from "@/lib/i18n/ui";
+import { site } from "@/lib/site";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: `${ui(await getLocale()).maintenanceTitle} · Titan Safety Co.` };
+  return { title: `${ui(await getLocale()).maintenanceTitle} · ${site.name}` };
 }
 
 export default async function MaintenancePage() {
@@ -26,11 +27,12 @@ export default async function MaintenancePage() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Image
             src="/logo-mark.png"
-            alt="Titan Safety Co."
-            width={763}
-            height={247}
+            alt={site.name}
+            width={787}
+            height={271}
             priority
-            className="h-14 w-auto"
+            unoptimized
+            className="h-14 w-auto bg-transparent"
           />
           <LanguageToggle />
         </div>
@@ -43,7 +45,7 @@ export default async function MaintenancePage() {
               className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-accent/25 blur-3xl"
             />
             <p className="relative font-display text-sm font-semibold uppercase tracking-[0.22em] text-accent">
-              Titan Safety Co.
+              {site.name}
             </p>
             <h1 className="relative mt-4 font-display text-5xl font-bold uppercase leading-[0.95] tracking-wide md:text-6xl">
               {t.maintenanceTitle}

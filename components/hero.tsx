@@ -24,8 +24,8 @@ export async function Hero() {
           </p>
           <h1 className="mt-4 font-display text-5xl font-bold uppercase leading-[0.95] tracking-tight text-white md:text-6xl lg:text-7xl">
             {t.heroTitle}
-            <span className="mt-3 block">{t.heroLine2}</span>
-            <span className="mt-3 block text-accent">{t.heroLine3}</span>
+            {t.heroLine2 ? <span className="mt-3 block">{t.heroLine2}</span> : null}
+            {t.heroLine3 ? <span className="mt-3 block text-accent">{t.heroLine3}</span> : null}
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/75">
             {t.heroBody}

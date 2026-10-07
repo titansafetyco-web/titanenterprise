@@ -81,22 +81,29 @@ export async function listWalletRecords() {
   const supabase = await createClient();
   if (!supabase) return { ...empty, error: databaseMessage };
 
-  const [wallets, transfers] = await Promise.all([
+  const [wallets, transfers, credits] = await Promise.all([
     supabase.from("wallets").select("user_id, balance_cents"),
     supabase.from("wallet_transfers").select("to_user, amount_cents"),
+    supabase.from("wallet_credits").select("user_id, amount_cents"),
   ]);
 
-  if (wallets.error || transfers.error) return { ...empty, error: "The wallet could not be loaded." };
+  if (wallets.error || transfers.error || credits.error) return { ...empty, error: "The wallet could not be loaded." };
 
   return {
     balances: ((wallets.data ?? []) as { user_id: string; balance_cents: number }[]).map((row) => ({
       userId: row.user_id,
       cents: row.balance_cents,
     })),
-    received: ((transfers.data ?? []) as { to_user: string; amount_cents: number }[]).map((row) => ({
-      userId: row.to_user,
-      cents: row.amount_cents,
-    })),
+    received: [
+      ...((transfers.data ?? []) as { to_user: string; amount_cents: number }[]).map((row) => ({
+        userId: row.to_user,
+        cents: row.amount_cents,
+      })),
+      ...((credits.data ?? []) as { user_id: string; amount_cents: number }[]).map((row) => ({
+        userId: row.user_id,
+        cents: row.amount_cents,
+      })),
+    ],
     error: "",
   };
 }

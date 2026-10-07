@@ -1,14 +1,14 @@
 export const site = {
-  name: "Titan Safety Co.",
+  name: "Titan Connective",
   description:
-    "Titan Safety Co. connects people with essential products and services, including insurance affiliates, and helps partners turn that demand into business.",
+    "Connecting businesses, people, and opportunities. Titan Connective connects companies, independent agents, and interested customers through partner programs, marketing, and technology. titanconnective.com",
   contactEmail: "admin@titansafetystore.com",
   nav: [
     { href: "/about", label: "About" },
     { href: "/#opportunities", label: "Opportunities" },
     { href: "/#work", label: "Work" },
     { href: "/#approach", label: "Approach" },
-    { href: "/affiliate", label: "Affiliate programs" },
+    { href: "/affiliate", label: "Partner programs" },
   ],
 } as const;
 

@@ -29,7 +29,6 @@ export async function Offerings() {
           showLess={t.showLess}
           previousLabel={t.activityPrevious}
           nextLabel={t.activityNext}
-          tabsLabel={t.work}
         />
       </div>
     </section>

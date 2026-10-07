@@ -32,7 +32,7 @@ const privacyEn: LegalDoc = {
     {
       title: "What this covers",
       blocks: [
-        "This policy describes the information the Titan Safety Co. website keeps. It covers accounts, contact messages, the sign-in session, and the cookie notice.",
+        "Titan Connective is the brand name on this website. This policy describes the information the Titan Safety Co. website keeps. It covers accounts, contact messages, the sign-in session, and the cookie notice.",
       ],
     },
     {
@@ -82,7 +82,7 @@ const privacyEs: LegalDoc = {
     {
       title: "Qué cubre esto",
       blocks: [
-        "Esta política describe la información que conserva el sitio de Titan Safety Co. Cubre cuentas, mensajes de contacto, la sesión de inicio y el aviso de cookies.",
+        "Titan Connective es el nombre de marca en este sitio. Esta política describe la información que conserva el sitio de Titan Safety Co. Cubre cuentas, mensajes de contacto, la sesión de inicio y el aviso de cookies.",
       ],
     },
     {
@@ -132,13 +132,13 @@ const termsEn: LegalDoc = {
     {
       title: "The site",
       blocks: [
-        "These terms cover the Titan Safety Co. website. By using the site, you agree to them. If you do not agree, please leave the site.",
+        "Titan Connective is the brand name on this website. These terms cover the Titan Safety Co. website. By using the site, you agree to them. If you do not agree, please leave the site.",
       ],
     },
     {
       title: "What we do",
       blocks: [
-        "Titan Safety Co. connects people with essential products and services and helps partners turn that demand into business. Through affiliate and referral programs, we identify prospective customers, introduce relevant offers, and guide interested applicants through signup and onboarding.",
+        "Titan Safety Co. connects companies, independent agents, and interested customers through customer acquisition, affiliate, marketing, and technology work. Through affiliate and referral programs, we identify prospective customers, introduce relevant offers, and guide interested applicants through signup and onboarding.",
         {
           before: "We earn commissions for qualified leads, approved applications, enrollments, or completed sales, depending on each partner’s program. The ",
           href: "/affiliate-policy",
@@ -194,13 +194,13 @@ const termsEs: LegalDoc = {
     {
       title: "El sitio",
       blocks: [
-        "Estos términos cubren el sitio de Titan Safety Co. Al usar el sitio, usted los acepta. Si no está de acuerdo, deje el sitio.",
+        "Titan Connective es el nombre de marca en este sitio. Estos términos cubren el sitio de Titan Safety Co. Al usar el sitio, usted los acepta. Si no está de acuerdo, deje el sitio.",
       ],
     },
     {
       title: "Qué hacemos",
       blocks: [
-        "Titan Safety Co. conecta a las personas con productos y servicios esenciales y ayuda a los socios a convertir esa demanda en negocio. Mediante programas de afiliados y referidos, identificamos clientes potenciales, presentamos ofertas pertinentes y guiamos a los solicitantes interesados durante el registro y la incorporación.",
+        "Titan Safety Co. conecta compañías, agentes independientes y clientes interesados mediante captación de clientes, afiliados, marketing y tecnología. Mediante programas de afiliados y referidos, identificamos clientes potenciales, presentamos ofertas pertinentes y guiamos a los solicitantes interesados durante el registro y la incorporación.",
         {
           before:
             "Ganamos comisiones por prospectos calificados, solicitudes aprobadas, inscripciones o ventas completadas, según el programa de cada socio. La ",
@@ -257,7 +257,7 @@ const policyEn: LegalDoc = {
     {
       title: "What this covers",
       blocks: [
-        "This policy describes how Titan Safety Co. works through affiliate and referral programs. It covers the programs listed on this site, the onboarding form, and how a commission is earned.",
+        "Titan Connective is the brand name on this website. This policy describes how Titan Safety Co. works through affiliate and referral programs. It covers the programs listed on this site, the onboarding form, and how a commission is earned.",
       ],
     },
     {
@@ -318,7 +318,7 @@ const policyEs: LegalDoc = {
     {
       title: "Qué cubre esto",
       blocks: [
-        "Esta política describe cómo Titan Safety Co. trabaja mediante programas de afiliados y referidos. Cubre los programas listados en este sitio, el formulario de incorporación y cómo se gana una comisión.",
+        "Titan Connective es el nombre de marca en este sitio. Esta política describe cómo Titan Safety Co. trabaja mediante programas de afiliados y referidos. Cubre los programas listados en este sitio, el formulario de incorporación y cómo se gana una comisión.",
       ],
     },
     {
@@ -395,7 +395,7 @@ const payoutEn: LegalDoc = {
     {
       title: "Purpose and scope",
       blocks: [
-        "This policy explains how Titan Safety Co. (“Titan,” “we,” “us,” or “our”) calculates, approves, and pays compensation to participating agents and members for qualifying affiliate results and agreed contractor jobs.",
+        "Titan Connective is the brand name on this website. This policy explains how Titan Safety Co. (“Titan,” “we,” “us,” or “our”) calculates, approves, and pays compensation to participating agents and members for qualifying affiliate results and agreed contractor jobs.",
         "The terms “agent” and “member” describe platform roles and do not determine employment status. Employee wages are handled through a separate payroll process. Applicable legal payment requirements take priority over conflicting provisions in this policy.",
       ],
     },
@@ -432,7 +432,7 @@ const payoutEs: LegalDoc = {
     {
       title: "Propósito y alcance",
       blocks: [
-        "Esta política explica cómo Titan Safety Co. (“Titan”, “nosotros” o “nuestro”) calcula, aprueba y paga la compensación a los agentes y miembros participantes por resultados de afiliados que califican y por trabajos de contratista acordados.",
+        "Titan Connective es el nombre de marca en este sitio. Esta política explica cómo Titan Safety Co. (“Titan”, “nosotros” o “nuestro”) calcula, aprueba y paga la compensación a los agentes y miembros participantes por resultados de afiliados que califican y por trabajos de contratista acordados.",
         "Los términos “agente” y “miembro” describen roles de la plataforma y no determinan la condición de empleo. Los salarios de empleados se gestionan mediante un proceso de nómina separado. Los requisitos legales de pago aplicables tienen prioridad sobre las disposiciones de esta política que entren en conflicto.",
       ],
     },

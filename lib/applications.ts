@@ -1,4 +1,5 @@
 import { currentUserId } from "@/lib/auth";
+import { listPrograms } from "@/lib/programs";
 import { createClient } from "@/lib/supabase/server";
 import { databaseMessage, supabaseConfigured } from "@/lib/supabase/env";
 
@@ -78,6 +79,81 @@ export async function listApplications() {
   return {
     items: ((data ?? []) as ApplicationRow[]).map(mapApplication),
     error: "",
+  };
+}
+
+export const experienceYears = [
+  "Less than 1 year",
+  "1 to 3 years",
+  "3 to 5 years",
+  "More than 5 years",
+] as const;
+
+export const experienceAreas = [
+  "Lead scouting",
+  "Audience research",
+  "Digital campaigns",
+  "Onboarding support",
+] as const;
+
+const yearSet = new Set<string>(experienceYears);
+const areaSet = new Set<string>(experienceAreas);
+
+export type OnboardingDetails = {
+  program: string;
+  secondProgram: string;
+  years: string;
+  areas: string;
+  background: string;
+  note: string;
+};
+
+export async function readOnboarding(formData: FormData): Promise<
+  { ok: true; value: OnboardingDetails } | { ok: false; error: string }
+> {
+  const programId = String(formData.get("program") ?? "").trim();
+  const secondId = String(formData.get("second") ?? "").trim();
+  const years = String(formData.get("years") ?? "").trim();
+  const chosenAreas = formData
+    .getAll("areas")
+    .map((value) => String(value))
+    .filter((value) => areaSet.has(value));
+  const background = String(formData.get("background") ?? "").trim();
+  const note = String(formData.get("note") ?? "").trim();
+  const programs = await listPrograms();
+  const program = programs.find((item) => item.id === programId);
+  const second = secondId ? programs.find((item) => item.id === secondId) : undefined;
+
+  if (!program) return { ok: false, error: "Choose a program." };
+  if (secondId && !second) {
+    return { ok: false, error: "Choose a second program from the list." };
+  }
+  if (second && second.id === program.id) {
+    return { ok: false, error: "Choose a different second program." };
+  }
+  if (!yearSet.has(years)) {
+    return { ok: false, error: "Choose how long you have done this work." };
+  }
+  if (chosenAreas.length === 0) {
+    return { ok: false, error: "Choose at least one area of experience." };
+  }
+  if (background.length < 20) {
+    return { ok: false, error: "Describe your experience in a sentence or two." };
+  }
+  if (background.length > 2000 || note.length > 2000) {
+    return { ok: false, error: "Keep each note under 2,000 characters." };
+  }
+
+  return {
+    ok: true,
+    value: {
+      program: program.name,
+      secondProgram: second?.name ?? "",
+      years,
+      areas: chosenAreas.join(", "),
+      background,
+      note,
+    },
   };
 }
 

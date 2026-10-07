@@ -61,7 +61,7 @@ export function Header({
 
   return (
     <header
-      className={`sticky top-0 z-20 border-b border-line bg-white transition-shadow duration-200 ${
+      className={`sticky top-0 z-40 border-b border-line bg-white transition-shadow duration-200 ${
         scrolled ? "shadow-[0_1px_0_rgba(16,24,32,0.08)]" : "shadow-none"
       }`}
     >
@@ -75,9 +75,10 @@ export function Header({
           <Image
             src="/logo-mark.png"
             alt={name}
-            width={763}
-            height={247}
+            width={787}
+            height={271}
             priority
+            unoptimized
             className="h-14 w-auto bg-transparent lg:h-16"
           />
         </Link>
@@ -117,8 +118,20 @@ export function Header({
           className="absolute inset-x-0 top-full z-30 border-t border-white/40 bg-white/75 px-6 py-4 shadow-[0_18px_40px_rgba(16,24,32,0.12)] backdrop-blur-md lg:hidden"
         >
           <div className="mx-auto flex max-w-6xl flex-col items-start gap-1">
-            <div className="mb-4 border-b border-white/50 pb-4">
+            <div className="mb-4 flex w-full items-start justify-between gap-3 border-b border-white/50 pb-4">
               <LanguageToggle />
+              {account ? (
+                <Link
+                  href="/dashboard"
+                  aria-current={onDashboard ? "page" : undefined}
+                  onClick={() => setOpen(false)}
+                  className={`shrink-0 whitespace-nowrap px-3 py-2 font-display text-[13px] font-semibold uppercase tracking-[0.14em] transition-colors ${
+                    onDashboard ? "bg-ink text-white" : "bg-accent text-ink hover:bg-[#e0b400]"
+                  }`}
+                >
+                  {t.dashboard}
+                </Link>
+              ) : null}
             </div>
             <PrimaryLinks
               links={links}
@@ -128,6 +141,7 @@ export function Header({
               onAdmin={onDashboard}
               signOut={signOut}
               stacked
+              hideDashboard={Boolean(account)}
               onNavigate={() => setOpen(false)}
             />
           </div>
@@ -145,6 +159,7 @@ function PrimaryLinks({
   onAdmin,
   signOut,
   stacked = false,
+  hideDashboard = false,
   onNavigate,
 }: {
   links: readonly NavLink[];
@@ -154,6 +169,7 @@ function PrimaryLinks({
   onAdmin: boolean;
   signOut: () => Promise<void>;
   stacked?: boolean;
+  hideDashboard?: boolean;
   onNavigate?: () => void;
 }) {
   const t = ui(useLocale());
@@ -284,20 +300,22 @@ function PrimaryLinks({
       )}
       {account ? (
         <>
-          <Link
-            href="/dashboard"
-            aria-current={onAdmin ? "page" : undefined}
-            onClick={onNavigate}
-            className={`shrink-0 whitespace-nowrap px-3 py-2 font-display text-[13px] font-semibold uppercase tracking-[0.14em] transition-colors ${
-              stacked ? "my-1" : ""
-            } ${
-              onAdmin
-                ? "bg-ink text-white"
-                : "bg-accent text-ink hover:bg-[#e0b400]"
-            }`}
-          >
-            {t.dashboard}
-          </Link>
+          {!hideDashboard ? (
+            <Link
+              href="/dashboard"
+              aria-current={onAdmin ? "page" : undefined}
+              onClick={onNavigate}
+              className={`shrink-0 whitespace-nowrap px-3 py-2 font-display text-[13px] font-semibold uppercase tracking-[0.14em] transition-colors ${
+                stacked ? "my-1" : ""
+              } ${
+                onAdmin
+                  ? "bg-ink text-white"
+                  : "bg-accent text-ink hover:bg-[#e0b400]"
+              }`}
+            >
+              {t.dashboard}
+            </Link>
+          ) : null}
           <form action={signOut} className="shrink-0">
             <button
               type="submit"

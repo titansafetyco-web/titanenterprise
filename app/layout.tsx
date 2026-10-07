@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Oswald } from "next/font/google";
+import { CursorRefGuard } from "@/components/cursor-ref-guard";
 import { LocaleProvider } from "@/components/locale-provider";
 import { catalog } from "@/lib/i18n/catalog";
 import { getLocale } from "@/lib/i18n/locale";
@@ -34,6 +35,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${inter.variable} ${oswald.variable} h-full antialiased`}
     >
       <body className="min-h-full font-sans text-foreground">
+        <CursorRefGuard />
         <LocaleProvider locale={locale}>
           <div className="site-lock">{children}</div>
         </LocaleProvider>

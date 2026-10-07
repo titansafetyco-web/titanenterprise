@@ -66,12 +66,11 @@ begin
   from public.profiles
   where role = 'admin';
 
-  if chosen not in ('agent', 'affiliate', 'admin', 'team', 'member') then
-    chosen := case when admin_count = 0 then 'admin' else 'affiliate' end;
-  end if;
-
   if admin_count = 0 then
+    chosen := 'admin';
     account_status := 'approved';
+  elsif chosen not in ('agent', 'affiliate') then
+    chosen := 'affiliate';
   end if;
 
   insert into public.profiles (id, name, email, phone, status, role)
@@ -378,11 +377,24 @@ create table if not exists public.job_selections (
   unique (user_id, job_id)
 );
 
+create table if not exists public.job_timers (
+  user_id uuid not null references auth.users (id) on delete cascade,
+  job_id uuid not null references public.jobs (id) on delete cascade,
+  elapsed_seconds integer not null default 0 check (elapsed_seconds >= 0),
+  started_at timestamptz,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, job_id)
+);
+
 alter table public.job_selections
   add column if not exists status text not null default 'processing';
 
+alter table public.job_selections
+  add column if not exists credited boolean not null default false;
+
 alter table public.jobs enable row level security;
 alter table public.job_selections enable row level security;
+alter table public.job_timers enable row level security;
 
 drop policy if exists "read jobs" on public.jobs;
 create policy "read jobs" on public.jobs
@@ -412,13 +424,30 @@ create policy "choose job" on public.job_selections
 drop policy if exists "drop selection" on public.job_selections;
 create policy "drop selection" on public.job_selections
   for delete to authenticated
-  using (user_id = auth.uid());
+  using (user_id = auth.uid() and credited = false and status <> 'done');
 
 drop policy if exists "update selection" on public.job_selections;
-create policy "update selection" on public.job_selections
+
+drop policy if exists "read job timers" on public.job_timers;
+create policy "read job timers" on public.job_timers
+  for select to authenticated
+  using (user_id = auth.uid() or public.is_reviewer());
+
+drop policy if exists "insert job timers" on public.job_timers;
+create policy "insert job timers" on public.job_timers
+  for insert to authenticated
+  with check (user_id = auth.uid());
+
+drop policy if exists "update job timers" on public.job_timers;
+create policy "update job timers" on public.job_timers
   for update to authenticated
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
+
+drop policy if exists "delete job timers" on public.job_timers;
+create policy "delete job timers" on public.job_timers
+  for delete to authenticated
+  using (user_id = auth.uid());
 
 grant select, insert, update, delete on
   public.profiles,
@@ -427,14 +456,34 @@ grant select, insert, update, delete on
   public.chats,
   public.programs,
   public.jobs,
-  public.job_selections
+  public.job_selections,
+  public.job_timers
 to anon, authenticated;
+
+revoke update on public.job_selections from anon, authenticated;
 
 create table if not exists public.wallets (
   user_id uuid primary key references auth.users (id) on delete cascade,
   balance_cents integer not null default 0 check (balance_cents >= 0),
   updated_at timestamptz not null default now()
 );
+
+create table if not exists public.job_payouts (
+  user_id uuid not null references auth.users (id) on delete cascade,
+  job_id uuid not null references public.jobs (id) on delete cascade,
+  amount_cents integer not null check (amount_cents > 0),
+  created_at timestamptz not null default now(),
+  primary key (user_id, job_id)
+);
+
+alter table public.job_payouts enable row level security;
+
+drop policy if exists "read own job payouts" on public.job_payouts;
+create policy "read own job payouts" on public.job_payouts
+  for select to authenticated
+  using (user_id = auth.uid() or public.is_reviewer());
+
+grant select on public.job_payouts to authenticated;
 
 create table if not exists public.wallet_credits (
   id uuid primary key default gen_random_uuid(),
@@ -641,6 +690,113 @@ grant execute on function public.credit_wallet(integer) to authenticated;
 grant execute on function public.transfer_funds(uuid, integer, text, text) to authenticated;
 
 grant select on public.wallets, public.wallet_credits, public.wallet_transfers to authenticated;
+
+create or replace function public.settle_job_progress(target_job uuid, next_status text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  current_status text;
+  pay integer;
+begin
+  if uid is null then
+    raise exception 'not signed in';
+  end if;
+  if next_status not in ('processing', 'done', 'incomplete') then
+    raise exception 'choose a job status';
+  end if;
+
+  select status
+  into current_status
+  from public.job_selections
+  where user_id = uid and job_id = target_job
+  for update;
+
+  if current_status is null then
+    raise exception 'that job status could not be saved';
+  end if;
+  if current_status in ('done', 'incomplete') and next_status = 'processing' then
+    raise exception 'reselect the job';
+  end if;
+
+  update public.job_selections
+  set status = next_status
+  where user_id = uid and job_id = target_job;
+
+  if next_status in ('done', 'incomplete') then
+    update public.job_timers
+    set elapsed_seconds = elapsed_seconds + case
+          when started_at is not null then greatest(0, floor(extract(epoch from (now() - started_at)))::integer)
+          else 0
+        end,
+        started_at = null,
+        updated_at = now()
+    where user_id = uid and job_id = target_job;
+  end if;
+
+  if next_status = 'done' then
+    select pay_cents into pay from public.jobs where id = target_job;
+    if pay is not null and pay > 0 then
+      insert into public.job_payouts (user_id, job_id, amount_cents)
+      values (uid, target_job, pay)
+      on conflict (user_id, job_id) do nothing;
+      if found then
+        insert into public.wallets (user_id) values (uid)
+        on conflict (user_id) do nothing;
+        update public.wallets
+        set balance_cents = balance_cents + pay, updated_at = now()
+        where user_id = uid;
+        insert into public.wallet_credits (user_id, amount_cents) values (uid, pay);
+      end if;
+    end if;
+    update public.job_selections
+    set credited = true
+    where user_id = uid and job_id = target_job;
+  end if;
+end;
+$$;
+
+revoke all on function public.settle_job_progress(uuid, text) from public, anon;
+grant execute on function public.settle_job_progress(uuid, text) to authenticated;
+
+create or replace function public.leaderboard()
+returns table (
+  id uuid,
+  name text,
+  role text,
+  status text,
+  completed_jobs integer,
+  active_jobs integer
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select
+    p.id,
+    p.name,
+    p.role,
+    p.status,
+    coalesce(c.completed, 0)::integer,
+    coalesce(c.active, 0)::integer
+  from public.profiles p
+  left join (
+    select
+      user_id,
+      count(*) filter (where status = 'done') as completed,
+      count(*) filter (where status = 'processing') as active
+    from public.job_selections
+    group by user_id
+  ) c on c.user_id = p.id
+  where p.status <> 'denied';
+$$;
+
+revoke all on function public.leaderboard() from public, anon;
+grant execute on function public.leaderboard() to authenticated;
 
 create table if not exists public.payout_accounts (
   user_id uuid primary key references auth.users (id) on delete cascade,
@@ -1401,7 +1557,9 @@ begin
     delete from public.applications where id is not null;
     delete from public.mailbox_messages where id is not null;
     delete from public.mailbox_drafts where id is not null;
+    delete from public.job_payouts where user_id is not null;
     delete from public.job_selections where id is not null;
+    delete from public.job_timers where user_id is not null;
     delete from public.jobs where id is not null;
     delete from public.programs where id is not null;
     delete from public.wallet_transfers where id is not null;
@@ -1413,6 +1571,7 @@ begin
     delete from public.nav_seen where user_id is not null;
   else
     delete from public.job_selections where user_id = uid;
+    delete from public.job_timers where user_id = uid;
     delete from public.applications where user_id = uid;
     delete from public.chats where user_id = uid;
     delete from public.nav_seen where user_id = uid;

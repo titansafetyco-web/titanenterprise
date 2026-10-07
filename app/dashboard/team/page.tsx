@@ -7,9 +7,10 @@ import { getCurrentUser, listProfiles } from "@/lib/auth";
 import { localizeError } from "@/lib/i18n/errors";
 import { getLocale } from "@/lib/i18n/locale";
 import { ui } from "@/lib/i18n/ui";
+import { site } from "@/lib/site";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: `${ui(await getLocale()).teamMembers} · Titan Safety Co.` };
+  return { title: `${ui(await getLocale()).teamMembers} · ${site.name}` };
 }
 
 export default async function TeamPage() {

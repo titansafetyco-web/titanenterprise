@@ -3,12 +3,13 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
-  accountRole,
   safeNext,
   signInAccount,
   signOutAccount,
   signUpAccount,
 } from "@/lib/auth";
+import { readOnboarding, saveApplication } from "@/lib/applications";
+import { birthDate, stateCode } from "@/lib/profile-details";
 import { formatPhone, phoneDigits } from "@/lib/phone";
 import { rememberCookie, rememberEmailCookie, rememberedEmail, withRemember } from "@/lib/supabase/remember";
 
@@ -72,14 +73,32 @@ export async function signup(
     return { error: "Passwords do not match.", message: "" };
   }
 
+  const date = birthDate(String(formData.get("birth") ?? ""));
+  const region = stateCode(String(formData.get("state") ?? ""));
+  if (date === null || date === "") return { error: "Choose a date of birth.", message: "" };
+  if (region === null || region === "") return { error: "Choose a state.", message: "" };
+
+  const onboarding = await readOnboarding(formData);
+  if (!onboarding.ok) return { error: onboarding.error, message: "" };
+
   const result = await signUpAccount({
     name,
     email,
     password,
     phone,
-    role: accountRole(String(formData.get("role") ?? "")),
+    role: String(formData.get("role") ?? "") === "affiliate" ? "affiliate" : "agent",
+    birth: date,
+    state: region,
   });
   if (!result.ok) return { error: result.error, message: "" };
+
+  await saveApplication({
+    name,
+    email,
+    phone,
+    ...onboarding.value,
+  });
+
   if (result.approved) redirect(readNext(formData));
   return { error: "", message: result.message };
 }

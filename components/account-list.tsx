@@ -16,6 +16,7 @@ type AccountRow = {
   phone: string;
   status: string;
   role: string;
+  stars: number;
   createdAt: string;
 };
 
@@ -57,6 +58,40 @@ function progressName(status: string, t: ReturnType<typeof ui>) {
   return t.jobProcessing;
 }
 
+function formatClock(value: number) {
+  const safe = Math.max(0, Math.floor(value));
+  const hours = Math.floor(safe / 3600);
+  const minutes = Math.floor((safe % 3600) / 60);
+  const seconds = safe % 60;
+  return [hours, minutes, seconds].map((part) => String(part).padStart(2, "0")).join(":");
+}
+
+function levelName(level: string, t: ReturnType<typeof ui>) {
+  if (level === "expert") return t.levelExpert;
+  if (level === "intermediate") return t.levelIntermediate;
+  return t.levelBeginner;
+}
+
+function Stars({ value }: { value: number }) {
+  const lit = Math.max(0, Math.min(5, Math.floor(value)));
+  return (
+    <div className="inline-flex items-center gap-1" aria-label={`${lit} of 5 stars`}>
+      {Array.from({ length: 5 }, (_, index) => {
+        const active = index < lit;
+        return (
+          <span
+            key={index}
+            aria-hidden="true"
+            className={active ? "text-accent" : "text-[#c6c9cf]"}
+          >
+            ★
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 export function AccountList({ accounts }: { accounts: AccountRow[] }) {
   const locale = useLocale();
   const t = ui(locale);
@@ -75,6 +110,7 @@ export function AccountList({ accounts }: { accounts: AccountRow[] }) {
               <div className="flex flex-wrap items-center gap-3">
                 <p className="font-display text-lg font-semibold uppercase tracking-wide">{item.name}</p>
                 <RoleTag role={item.role} label={roleName(item.role, t)} />
+                <Stars value={item.stars} />
               </div>
               <p className="mt-2 text-sm text-muted">
                 {item.email}
@@ -268,6 +304,18 @@ function AccountOverlay({ account, onClose }: { account: AccountRow; onClose: ()
             value={details ? formatMoney(details.earnedCents, locale) : t.pleaseWait}
             tone={details ? (details.earnedCents > 0 ? "glow" : "zero") : undefined}
           />
+          <Detail
+            label={t.points}
+            value={details ? String(details.points) : t.pleaseWait}
+          />
+          <Detail
+            label={t.stars}
+            value={details ? "★".repeat(details.stars) || "—" : t.pleaseWait}
+          />
+          <Detail
+            label={t.level}
+            value={details ? levelName(details.level, t) : t.pleaseWait}
+          />
         </dl>
         {details?.error ? (
           <p className="border-t border-line px-6 py-5 text-sm text-muted">
@@ -276,23 +324,59 @@ function AccountOverlay({ account, onClose }: { account: AccountRow; onClose: ()
         ) : (
           <>
             <div className="border-t border-line px-6 py-5">
-              <h3 className="font-display text-sm font-semibold uppercase tracking-[0.14em]">{t.selectedJobs}</h3>
+              <h3 className="font-display text-sm font-semibold uppercase tracking-[0.14em]">
+                {locale === "es" ? "Trabajos activos" : "Active jobs"}
+              </h3>
               {!details ? (
                 <p className="mt-3 text-sm text-muted">{t.pleaseWait}</p>
               ) : details.jobs.length === 0 ? (
                 <p className="mt-3 text-sm text-muted">{t.noSelectedJobs}</p>
               ) : (
                 <ul className="mt-3">
-                  {details.jobs.map((job) => (
-                    <li key={job.id} className="flex flex-wrap items-baseline justify-between gap-2 py-2">
-                      <p>{job.title}</p>
-                      <p className="text-sm text-muted">
-                        {job.pay === "weekly" ? t.payWeekly : t.payBiweekly}
-                        {" · "}
-                        {progressName(job.status, t)}
-                      </p>
-                    </li>
-                  ))}
+                  {[...details.jobs]
+                    .sort((a, b) => Number(b.status === "processing") - Number(a.status === "processing"))
+                    .map((job) => {
+                      const active = job.status === "processing";
+                      const when = job.startsOn
+                        ? new Date(`${job.startsOn}T12:00:00Z`).toLocaleDateString(locale === "es" ? "es-US" : "en-US", {
+                            dateStyle: "medium",
+                            timeZone: "UTC",
+                          })
+                        : "";
+                      return (
+                        <li key={job.id} className="border-b border-line py-3 last:border-0">
+                          <div className="flex flex-wrap items-baseline justify-between gap-2">
+                            <p className="font-display font-semibold uppercase tracking-wide">{job.title}</p>
+                            <p className="font-display text-sm font-bold [font-variant-numeric:tabular-nums]">
+                              {job.payCents > 0 ? formatMoney(job.payCents, locale) : "—"}
+                            </p>
+                          </div>
+                          <p className="mt-1 text-sm text-muted">
+                            {job.pay === "weekly" ? t.payWeekly : t.payBiweekly}
+                            {" · "}
+                            {progressName(job.status, t)}
+                            {when ? ` · ${locale === "es" ? "Inicia" : "Begins"} ${when}` : ""}
+                          </p>
+                          <p className="mt-1 font-display text-xs font-semibold uppercase tracking-[0.12em] text-foreground">
+                            {locale === "es" ? "Temporizador" : "Timer"} {formatClock(job.timerElapsedSeconds)}
+                            {" · "}
+                            <span className={job.timerRunning ? "text-[#0f766e]" : "text-muted"}>
+                              {job.timerRunning
+                                ? locale === "es"
+                                  ? "En curso"
+                                  : "Running"
+                                : active
+                                  ? locale === "es"
+                                    ? "Detenido"
+                                    : "Stopped"
+                                  : locale === "es"
+                                    ? "Cerrado"
+                                    : "Closed"}
+                            </span>
+                          </p>
+                        </li>
+                      );
+                    })}
                 </ul>
               )}
             </div>
@@ -331,7 +415,7 @@ function Detail({
 }) {
   const valueClass =
     tone === "glow"
-      ? "font-semibold text-[#22c55e] [text-shadow:0_0_8px_#22c55e,0_0_18px_rgba(34,197,94,0.85)]"
+      ? "font-semibold text-[#22c55e]"
       : tone === "zero"
         ? "text-muted"
         : "";

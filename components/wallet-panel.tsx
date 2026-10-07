@@ -480,7 +480,7 @@ export function WalletPanel({
   const peak = Math.max(1, ...totals);
   const moneyTone = (cents: number) =>
     cents > 0
-      ? "font-semibold text-[#22c55e] [text-shadow:0_0_8px_#22c55e,0_0_18px_rgba(34,197,94,0.85)]"
+      ? "font-semibold text-[#22c55e]"
       : "text-[#8a6a3d]";
   const cards = [
     { label: t.walletReceived, cents: received },

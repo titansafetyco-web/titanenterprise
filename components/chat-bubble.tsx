@@ -6,6 +6,7 @@ import { openSupport, sendChat, supportPresence } from "@/app/chat/actions";
 import { useLocale } from "@/components/locale-provider";
 import { localizeError } from "@/lib/i18n/errors";
 import { ui } from "@/lib/i18n/ui";
+import { site } from "@/lib/site";
 
 type Message = {
   id: string;
@@ -44,14 +45,17 @@ export function ChatBubble({
     const foot = footer;
 
     const gap = 20;
+    let lastLift = -1;
     let frame = 0;
 
     function place() {
       frame = 0;
-      const covering = window.innerHeight - foot.getBoundingClientRect().top;
-      const lifted = covering > 0 ? covering + gap : gap;
-      const limit = Math.max(gap, window.innerHeight - box.offsetHeight - gap);
-      box.style.bottom = `${Math.min(lifted, limit)}px`;
+      const overlap = Math.max(0, window.innerHeight - foot.getBoundingClientRect().top);
+      const maxLift = Math.max(0, window.innerHeight - box.offsetHeight - gap);
+      const nextLift = Math.min(Math.round(overlap), maxLift);
+      if (nextLift === lastLift) return;
+      lastLift = nextLift;
+      box.style.setProperty("--chat-lift", `${nextLift}px`);
     }
 
     function schedule() {
@@ -142,7 +146,11 @@ export function ChatBubble({
   }
 
   return (
-    <div ref={anchorRef} className="chat-anchor pointer-events-none fixed inset-x-0 z-40 flex justify-center">
+    <div
+      ref={anchorRef}
+      className="chat-anchor pointer-events-none fixed inset-x-0 bottom-5 z-40 flex justify-center transition-transform duration-150 will-change-transform"
+      style={{ transform: "translateY(calc(var(--chat-lift, 0px) * -1))" }}
+    >
       <div className="flex w-full max-w-[var(--site-lock)] justify-end px-6">
       <div className="pointer-events-auto flex max-w-full flex-col items-end gap-3">
       {open ? (
@@ -164,7 +172,7 @@ export function ChatBubble({
                   }`}
                   aria-hidden="true"
                 />
-                Titan Safety Co.
+                {site.name}
                 <span className="sr-only">{online ? t.adminOnline : t.adminOffline}</span>
               </p>
             </div>

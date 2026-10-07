@@ -16,8 +16,27 @@ import { getCurrentUser } from "@/lib/auth";
 import { supportIsOnline } from "@/lib/maintenance";
 import { site } from "@/lib/site";
 
+function within<T>(work: Promise<T>, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(fallback), 2000);
+    work.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      () => {
+        clearTimeout(timer);
+        resolve(fallback);
+      },
+    );
+  });
+}
+
 export default async function Home() {
-  const [account, online] = await Promise.all([getCurrentUser(), supportIsOnline()]);
+  const [account, online] = await Promise.all([
+    within(getCurrentUser(), null),
+    within(supportIsOnline(), false),
+  ]);
 
   return (
     <>

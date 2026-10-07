@@ -12,9 +12,10 @@ import { ui } from "@/lib/i18n/ui";
 import { listChosenJobs } from "@/lib/jobs";
 import { listMessages } from "@/lib/messages";
 import { listOwnPayouts, loadWallet } from "@/lib/wallet";
+import { site } from "@/lib/site";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: `${ui(await getLocale()).overview} · Titan Safety Co.` };
+  return { title: `${ui(await getLocale()).overview} · ${site.name}` };
 }
 
 export default async function DashboardPage() {

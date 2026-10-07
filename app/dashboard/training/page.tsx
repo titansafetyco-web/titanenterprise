@@ -5,9 +5,10 @@ import { listTraining } from "@/lib/api/training";
 import { getCurrentUser } from "@/lib/auth";
 import { getLocale } from "@/lib/i18n/locale";
 import { ui } from "@/lib/i18n/ui";
+import { site } from "@/lib/site";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: `${ui(await getLocale()).trainingTitle} · Titan Safety Co.` };
+  return { title: `${ui(await getLocale()).trainingTitle} · ${site.name}` };
 }
 
 export default async function TrainingPage() {

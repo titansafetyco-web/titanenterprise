@@ -17,7 +17,7 @@ export async function generateMetadata({
   const { id } = await params;
   const locale = await getLocale();
   const { item } = await getOpportunity(locale, id);
-  return { title: item ? `${item.title} · Titan Safety Co.` : "Titan Safety Co." };
+  return { title: item ? `${item.title} · ${site.name}` : site.name };
 }
 
 export default async function OpportunityPage({

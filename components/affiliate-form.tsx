@@ -98,7 +98,7 @@ function AffiliateFields({
           className="mt-2 w-full border border-line bg-white px-3 py-3 outline-none focus-visible:border-accent"
         />
       </label>
-      <Menu label={t.program} name="program" programs={programs} required emptyLabel={t.chooseOne} />
+        <Menu label={t.applyToProgram} name="program" programs={programs} required emptyLabel={t.chooseOne} />
       <Menu
         label={t.secondProgram}
         name="second"

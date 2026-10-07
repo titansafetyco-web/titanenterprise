@@ -14,6 +14,7 @@ import { localizeError } from "@/lib/i18n/errors";
 import { getLocale } from "@/lib/i18n/locale";
 import { ui } from "@/lib/i18n/ui";
 import { listPrograms } from "@/lib/programs";
+import { site } from "@/lib/site";
 
 const esPhrase: Record<string, string> = {
   "Safety products": "Productos de seguridad",
@@ -43,7 +44,7 @@ const esPhrase: Record<string, string> = {
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: `${ui(await getLocale()).dashboard} · Titan Safety Co.`,
+    title: `${ui(await getLocale()).dashboard} · ${site.name}`,
     description: ui(await getLocale()).dashboardIntro,
   };
 }

@@ -60,6 +60,7 @@ const known: Record<string, keyof Ui> = {
   "Enter a link that starts with https://.": "jobLinkInvalid",
   "The job could not be added.": "jobAddFail",
   "The job could not be removed.": "jobRemoveFail",
+  "A completed job stays on your record.": "completedJobStays",
   "That job could not be selected.": "jobSelectFail",
   "Jobs could not be loaded.": "jobsLoadFail",
   "Choose a job status.": "chooseJobStatus",

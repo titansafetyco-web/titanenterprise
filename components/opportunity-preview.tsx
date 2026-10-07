@@ -1,4 +1,4 @@
-import { OpportunityCard } from "@/components/opportunities/OpportunityCard";
+import { OpportunityRail } from "@/components/opportunity-rail";
 import { listOpportunities } from "@/lib/api/opportunities";
 import { getLocale } from "@/lib/i18n/locale";
 import { ui } from "@/lib/i18n/ui";
@@ -29,13 +29,14 @@ export async function OpportunityPreview() {
         {items.length === 0 ? (
           <p className="mt-5 bg-white px-4 py-5 text-sm text-muted md:px-5 md:py-6">{t.noOpportunity}</p>
         ) : (
-          <ul className="mt-5 grid gap-2.5 md:mt-8 md:gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {items.map((item) => (
-              <li key={item.id}>
-                <OpportunityCard item={item} viewLabel={t.viewOpportunity} acceptLabel={t.signInToAccept} labels={labels} />
-              </li>
-            ))}
-          </ul>
+          <OpportunityRail
+            items={items}
+            viewLabel={t.viewOpportunity}
+            acceptLabel={t.signInToAccept}
+            labels={labels}
+            previousLabel={t.activityPrevious}
+            nextLabel={t.activityNext}
+          />
         )}
       </div>
     </section>

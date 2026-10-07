@@ -3,6 +3,7 @@ import Link from "next/link";
 import { signOut } from "@/app/login/actions";
 import { getLocale } from "@/lib/i18n/locale";
 import { ui } from "@/lib/i18n/ui";
+import { site } from "@/lib/site";
 
 export async function AdminSidebar() {
   const t = ui(await getLocale());
@@ -24,11 +25,12 @@ export async function AdminSidebar() {
         <Link href="/admin" className="inline-flex">
           <Image
             src="/logo-mark.png"
-            alt="Titan Safety Co."
-            width={763}
-            height={247}
+            alt={site.name}
+            width={787}
+            height={271}
             priority
-            className="h-11 w-auto"
+            quality={100}
+            className="h-11 w-auto bg-transparent"
           />
         </Link>
         <p className="mt-4 font-display text-xs font-semibold uppercase tracking-[0.18em] text-accent">

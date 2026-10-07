@@ -8,6 +8,7 @@ export function JobFacts({ job, locale }: { job: Job; locale: Locale }) {
   const labels = locale === "es"
     ? {
         pay: "Pago",
+        qualification: "Calificación",
         due: "Vence",
         progress: "Progreso",
         timeLeft: "Tiempo restante",
@@ -17,6 +18,7 @@ export function JobFacts({ job, locale }: { job: Job; locale: Locale }) {
       }
     : {
         pay: "Pay",
+        qualification: "Qualification",
         due: "Due",
         progress: "Progress",
         timeLeft: "Time left",
@@ -39,9 +41,8 @@ export function JobFacts({ job, locale }: { job: Job; locale: Locale }) {
   const cycleDays = job.pay === "weekly" ? 7 : 14;
   const startDate = job.startsOn ? new Date(`${job.startsOn}T12:00:00Z`) : null;
   const hasStartDate = Boolean(startDate && !Number.isNaN(startDate.getTime()));
-  const dueDate = hasStartDate
-    ? new Date((startDate as Date).getTime() + cycleDays * 24 * 60 * 60 * 1000)
-    : null;
+  const explicitExpiry = job.expiresOn ? new Date(`${job.expiresOn}T12:00:00Z`) : null;
+  const dueDate = explicitExpiry && !Number.isNaN(explicitExpiry.getTime()) ? explicitExpiry : null;
   const now = new Date();
   const progressRatio = hasStartDate && dueDate
     ? Math.max(
@@ -73,88 +74,89 @@ export function JobFacts({ job, locale }: { job: Job; locale: Locale }) {
       })
     : "";
   const payAmount = job.payCents > 0 ? formatMoney(job.payCents, locale) : "";
-  const facts = [
-    program,
-    job.pay === "weekly" ? t.payWeekly : t.payBiweekly,
-    when,
-  ].filter(Boolean);
+  const cadenceLabel = job.customPayDays
+    ? `${locale === "es" ? "Cada" : "Every"} ${job.customPayDays} ${locale === "es" ? "días" : "days"}`
+    : job.pay === "weekly"
+      ? t.payWeekly
+      : t.payBiweekly;
 
   return (
     <>
-      <div className="mt-2 rounded-sm border border-[#d9c79a] bg-[#fff4d6] px-2.5 py-2.5">
-        <p className="font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-[#7a5b00]">
-          {labels.pay}
-        </p>
-        <p className="mt-0.5 font-display text-xl font-bold leading-tight text-foreground">{payAmount || "—"}</p>
-        <p className="text-[11px] font-medium text-[#7a5b00]">
-          {job.pay === "weekly" ? t.payWeekly : t.payBiweekly}
-        </p>
+      <div className="mt-1.5 grid gap-2 md:grid-cols-2">
+        <div className="w-full rounded-sm border border-[#d9c79a] bg-[#fff4d6] px-2.5 py-2">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <span className="-mt-0.5 inline-flex min-h-5 items-center border border-[#d9c79a] px-1.5 font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-[#7a5b00]">
+                {locale === "es" ? "Pago" : "Payout"}
+              </span>
+              <p className="mt-3.5 font-display text-[2.25rem] font-black leading-none tracking-[-0.025em] text-foreground [font-variant-numeric:tabular-nums]">
+                {payAmount || "—"}
+              </p>
+            </div>
+            <div className="mt-0.5 rounded-sm border border-[#d9c79a] bg-[#fff9ea] px-2 py-1 text-right">
+              <p className="font-display text-[10px] font-semibold uppercase tracking-[0.13em] text-[#7a5b00]">
+                {labels.pay}
+              </p>
+              <p className="mt-0.5 font-display text-[14px] font-bold uppercase tracking-[0.13em] text-[#6d5100]">
+                {cadenceLabel}
+              </p>
+            </div>
+          </div>
+          <div className="mt-1.5 flex items-center justify-end gap-1">
+            {program ? (
+              <span className="inline-flex min-h-6 items-center rounded-full border border-[#cda434] bg-white px-2 font-display text-[9px] font-semibold uppercase tracking-[0.1em] text-[#6d5100]">
+                {program}
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="rounded-sm border border-line bg-white px-2.5 py-2">
+          <div className="flex items-center justify-between gap-3">
+            <p className="font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+              {labels.progress}
+            </p>
+            <div className="flex flex-wrap items-center justify-end gap-1">
+              {when ? (
+                <span className="inline-flex min-h-6 items-center border border-line bg-canvas px-1.5 font-display text-[9px] font-semibold uppercase tracking-[0.1em] text-foreground">
+                  {locale === "es" ? "Inicia: " : "Begins: "}
+                  {when}
+                </span>
+              ) : null}
+              <p className="font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+                {labels.due}: {dueText || "—"}
+              </p>
+            </div>
+          </div>
+          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-canvas">
+            <div className="h-full bg-accent transition-all duration-300" style={{ width: `${progressPct}%` }} />
+          </div>
+          <div className="mt-1.5 flex items-center justify-between gap-3">
+            <p className="font-display text-[10px] font-semibold uppercase tracking-[0.11em] text-foreground">
+              {progressPct}%
+            </p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.11em] text-muted">
+              {startsSoon
+                ? labels.startsSoon
+                : isExpired
+                  ? labels.expired
+                  : remainingDays !== null
+                    ? `${labels.timeLeft}: ${remainingDays}${labels.days}`
+                    : "—"}
+            </p>
+          </div>
+        </div>
       </div>
 
-      <ul className="mt-2.5 flex flex-wrap gap-1.5">
-        {facts.map((fact) => (
-          <li
-            key={fact}
-            className="inline-flex min-h-7 items-center border border-line bg-canvas px-2 font-display text-[10px] font-semibold uppercase tracking-[0.1em] text-foreground"
-          >
-            {fact}
-          </li>
-        ))}
-      </ul>
-
-      <div className="mt-2.5 rounded-sm border border-line bg-white px-2.5 py-2.5">
-        <div className="flex items-center justify-between gap-3">
-          <p className="font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
-            {labels.progress}
-          </p>
-          <p className="font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
-            {labels.due}: {dueText || "—"}
-          </p>
-        </div>
-        <div className="mt-2 h-2 overflow-hidden rounded-full bg-canvas">
-          <div className="h-full bg-accent transition-all duration-300" style={{ width: `${progressPct}%` }} />
-        </div>
-        <div className="mt-2 flex items-center justify-between gap-3">
-          <p className="font-display text-[10px] font-semibold uppercase tracking-[0.11em] text-foreground">
-            {progressPct}%
-          </p>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.11em] text-muted">
-            {startsSoon
-              ? labels.startsSoon
-              : isExpired
-                ? labels.expired
-                : remainingDays !== null
-                  ? `${labels.timeLeft}: ${remainingDays}${labels.days}`
-                  : "—"}
-          </p>
-        </div>
-      </div>
-
-      <details className="mt-2.5 rounded-sm border border-line bg-canvas px-2.5 py-2">
+      <details className="mt-2 rounded-sm border border-line bg-canvas px-2.5 py-2">
         <summary className="cursor-pointer list-none font-display text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
           {locale === "es" ? "Resumen del trabajo" : "Job overview"}
         </summary>
-        <p
-          className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground"
-          style={{
-            display: "-webkit-box",
-            WebkitLineClamp: 3,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-          }}
-        >
+        <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
           {job.description}
         </p>
         {job.message ? (
-          <p
-            className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-muted"
-            style={{
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-            }}
-          >
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-muted">
             <span className="font-display text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
               {t.jobMessage}
             </span>{" "}

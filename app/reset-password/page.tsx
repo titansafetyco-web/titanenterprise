@@ -6,9 +6,10 @@ import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { getLocale } from "@/lib/i18n/locale";
 import { ui } from "@/lib/i18n/ui";
+import { site } from "@/lib/site";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: `${ui(await getLocale()).resetTitle} · Titan Safety Co.` };
+  return { title: `${ui(await getLocale()).resetTitle} · ${site.name}` };
 }
 
 export default async function ResetPasswordPage({
@@ -48,7 +49,7 @@ export default async function ResetPasswordPage({
           )}
         </div>
       </main>
-      <Footer name="Titan Safety Co." />
+      <Footer name={site.name} />
     </>
   );
 }
