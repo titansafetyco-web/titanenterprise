@@ -22,6 +22,9 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: site.name,
     description: site.description,
+    other: {
+      "fo-verify": "a7b03f82-d2c6-4ef3-bab6-aedeca8fdaef",
+    },
   };
 }
 
