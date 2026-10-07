@@ -83,6 +83,7 @@ export async function proxy(request: NextRequest) {
 function siteOpenPath(pathname: string) {
   return (
     pathname === "/maintenance" ||
+    pathname === "/ea0ba9b9494a391.html" ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/signup") ||
     pathname.startsWith("/forgot") ||
