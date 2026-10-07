@@ -10,6 +10,7 @@ import type { OwnPayout } from "@/lib/wallet";
 
 const tones: Record<JobProgress, string> = {
   processing: "#101820",
+  review: "#7a5b00",
   done: "#f5c400",
   incomplete: "#6b7280",
 };
@@ -48,11 +49,12 @@ export async function MemberOverview({
   ];
   const counts: Record<JobProgress, number> = {
     processing: jobs.filter((job) => job.status === "processing").length,
+    review: jobs.filter((job) => job.status === "review").length,
     done: jobs.filter((job) => job.status === "done").length,
     incomplete: jobs.filter((job) => job.status === "incomplete").length,
   };
   const jobCards = [
-    { label: t.jobProcessing, value: counts.processing, tone: tones.processing },
+    { label: t.jobProcessing, value: counts.processing + counts.review, tone: tones.processing },
     { label: t.jobDone, value: counts.done, tone: tones.done },
     { label: t.jobIncomplete, value: counts.incomplete, tone: tones.incomplete },
   ];

@@ -39,10 +39,10 @@ export default async function JobsPage() {
           </h1>
           <p className="mt-4 max-w-2xl leading-relaxed text-muted">
             {locale === "es" ? "Elija trabajos de la lista. Los que seleccione permanecen en " : "Choose jobs from the list. The ones you select stay in "}
-            <a href="/dashboard/jobs" className="underline underline-offset-2 hover:text-foreground">
+            <a href="/dashboard/jobs" className="text-accent underline underline-offset-2 hover:text-[#e0b400]">
               {locale === "es" ? "Trabajos" : "Jobs"}
             </a>
-            .
+            . {t.jobPenaltyNote}
           </p>
           <JobMarket
             jobs={jobs.items}

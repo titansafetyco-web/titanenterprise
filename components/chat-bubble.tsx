@@ -156,7 +156,7 @@ export function ChatBubble({
       {open ? (
         <section
           aria-label={t.chat}
-          className="flex w-[min(22rem,calc(100vw-3rem))] max-w-full flex-col border border-white/10 bg-ink text-white shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
+          className="flex w-[min(22rem,calc(100vw-3rem))] max-w-full flex-col border border-white/10 bg-[#3d4854] text-white shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
         >
           <header className="flex items-center justify-between border-b border-white/10 px-4 py-3">
             <div>

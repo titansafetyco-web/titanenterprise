@@ -27,6 +27,7 @@ type ActivityKind = "job" | "message" | "chat" | "onboarding";
 
 const statusTone: Record<JobProgress, string> = {
   processing: "bg-foreground",
+  review: "bg-[#7a5b00]",
   done: "bg-accent",
   incomplete: "bg-muted",
 };
@@ -120,7 +121,7 @@ export async function DashboardAnalytics({
     if (status === "denied") return t.statusDenied;
     return t.statusPending;
   };
-  const processing = selections.filter((item) => item.status === "processing").length;
+  const processing = selections.filter((item) => item.status === "processing" || item.status === "review").length;
   const done = selections.filter((item) => item.status === "done").length;
   const incomplete = selections.filter((item) => item.status === "incomplete").length;
   const selected = processing + done + incomplete;

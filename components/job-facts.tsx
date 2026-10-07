@@ -1,9 +1,39 @@
 import { formatMoney } from "@/lib/money";
 import type { Locale } from "@/lib/i18n/locale";
 import { ui } from "@/lib/i18n/ui";
+import { timerHeat } from "@/lib/job-timer";
 import type { Job } from "@/lib/jobs";
 
-export function JobFacts({ job, locale }: { job: Job; locale: Locale }) {
+const heatFill = {
+  cool: "bg-[#16a34a]",
+  warm: "bg-accent",
+  hot: "bg-[#e11d48]",
+  done: "bg-[#16a34a]",
+  incomplete: "bg-[#e11d48]",
+};
+
+function formatLeft(seconds: number) {
+  const safe = Math.max(0, Math.floor(seconds));
+  if (safe >= 48 * 3600) return `${Math.ceil(safe / 86400)}d`;
+  const hours = Math.floor(safe / 3600);
+  const minutes = Math.floor((safe % 3600) / 60);
+  const remain = safe % 60;
+  return [hours, minutes, remain].map((part) => String(part).padStart(2, "0")).join(":");
+}
+
+export function JobFacts({
+  job,
+  locale,
+  timer,
+}: {
+  job: Job;
+  locale: Locale;
+  timer: {
+    shownSeconds: number;
+    now: number;
+    status: "processing" | "review" | "done" | "incomplete";
+  };
+}) {
   const t = ui(locale);
   const labels = locale === "es"
     ? {
@@ -38,29 +68,30 @@ export function JobFacts({ job, locale }: { job: Job; locale: Locale }) {
             : job.program === "insurance"
               ? t.jobProgramInsurance
               : "";
-  const cycleDays = job.pay === "weekly" ? 7 : 14;
   const startDate = job.startsOn ? new Date(`${job.startsOn}T12:00:00Z`) : null;
-  const hasStartDate = Boolean(startDate && !Number.isNaN(startDate.getTime()));
   const explicitExpiry = job.expiresOn ? new Date(`${job.expiresOn}T12:00:00Z`) : null;
   const dueDate = explicitExpiry && !Number.isNaN(explicitExpiry.getTime()) ? explicitExpiry : null;
-  const now = new Date();
-  const progressRatio = hasStartDate && dueDate
-    ? Math.max(
-        0,
-        Math.min(
-          1,
-          now.getTime() <= (startDate as Date).getTime()
-            ? 0
-            : (now.getTime() - (startDate as Date).getTime()) / (dueDate.getTime() - (startDate as Date).getTime()),
-        ),
-      )
-    : 0;
-  const progressPct = Math.round(progressRatio * 100);
-  const remainingDays = dueDate
-    ? Math.ceil((dueDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
-    : null;
-  const isExpired = remainingDays !== null && remainingDays < 0;
-  const startsSoon = hasStartDate && (startDate as Date).getTime() > now.getTime();
+  const heat = timerHeat(
+    {
+      expiresOn: job.expiresOn,
+      startsOn: job.startsOn,
+      elapsed: timer.shownSeconds,
+      startedAt: "",
+      status: timer.status,
+    },
+    timer.now,
+  );
+  const progressPct = Math.round(heat.ratio * 100);
+  const leftLabel =
+    heat.tone === "done"
+      ? locale === "es"
+        ? "Hecho"
+        : "Done"
+      : heat.tone === "incomplete"
+        ? locale === "es"
+          ? "Incompleto"
+          : "Incomplete"
+        : `${labels.timeLeft}: ${formatLeft(heat.remainingSeconds)}`;
   const dueText = dueDate
     ? dueDate.toLocaleDateString(locale === "es" ? "es-US" : "en-US", {
         dateStyle: "medium",
@@ -128,22 +159,21 @@ export function JobFacts({ job, locale }: { job: Job; locale: Locale }) {
               </p>
             </div>
           </div>
-          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-canvas">
-            <div className="h-full bg-accent transition-all duration-300" style={{ width: `${progressPct}%` }} />
+          <div className="mt-1.5 grid grid-cols-12 gap-0.5" aria-hidden="true">
+            {Array.from({ length: 12 }, (_, index) => {
+              const fill = Math.max(0, Math.min(1, heat.ratio * 12 - index));
+              return (
+                <span key={index} className="h-2 overflow-hidden bg-canvas">
+                  <span className={`block h-full ${heatFill[heat.tone]}`} style={{ width: `${fill * 100}%` }} />
+                </span>
+              );
+            })}
           </div>
           <div className="mt-1.5 flex items-center justify-between gap-3">
             <p className="font-display text-[10px] font-semibold uppercase tracking-[0.11em] text-foreground">
               {progressPct}%
             </p>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.11em] text-muted">
-              {startsSoon
-                ? labels.startsSoon
-                : isExpired
-                  ? labels.expired
-                  : remainingDays !== null
-                    ? `${labels.timeLeft}: ${remainingDays}${labels.days}`
-                    : "—"}
-            </p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.11em] text-muted">{leftLabel}</p>
           </div>
         </div>
       </div>

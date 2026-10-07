@@ -16,6 +16,7 @@ type Activity = {
 
 const tones: Record<JobProgress, string> = {
   processing: "#101820",
+  review: "#7a5b00",
   done: "#f5c400",
   incomplete: "#6b7280",
 };
@@ -66,7 +67,7 @@ export async function DashboardOverview({
     { label: t.payoutsPending, cents: payoutsPending, tone: "#6b7280" },
     { label: t.payoutsMade, cents: payoutsMade, tone: "#22c55e" },
   ];
-  const processing = jobs.filter((job) => job.status === "processing").length;
+  const processing = jobs.filter((job) => job.status === "processing" || job.status === "review").length;
   const done = jobs.filter((job) => job.status === "done").length;
   const incomplete = jobs.filter((job) => job.status === "incomplete").length;
   const total = processing + done + incomplete;

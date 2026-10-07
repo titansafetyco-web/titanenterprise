@@ -56,6 +56,7 @@ const privacyEn: LegalDoc = {
       title: "How we use it",
       blocks: [
         "Account details are used to sign you in. Contact messages and chat notes are used so the team can read what you sent. We do not sell personal information, and this site does not run third-party advertising or analytics.",
+        "If you select a job, we keep that job, its status, the timer, and the decision that verifies the work as finished or unfinished. That record is used to pay verified work or to charge the listed pay when the job is unfinished.",
       ],
     },
     {
@@ -106,6 +107,7 @@ const privacyEs: LegalDoc = {
       title: "Cómo la usamos",
       blocks: [
         "Los datos de la cuenta se usan para iniciar su sesión. Los mensajes de contacto y las notas de chat se usan para que el equipo lea lo que usted envió. No vendemos información personal, y este sitio no ejecuta publicidad ni analítica de terceros.",
+        "Si elige un trabajo, conservamos ese trabajo, su estado, el temporizador y la decisión que verifica el trabajo como terminado o incompleto. Ese registro se usa para pagar el trabajo verificado o para cobrar el pago indicado cuando el trabajo queda incompleto.",
       ],
     },
     {
@@ -174,6 +176,12 @@ const termsEn: LegalDoc = {
       ],
     },
     {
+      title: "Jobs",
+      blocks: [
+        "Selecting a job does not pay that job. Titan Safety Co. pays the listed amount only after it verifies the work as finished. A job verified as unfinished or incomplete is not paid. The agent is charged that job’s listed pay. The charge is recorded once and can reduce the wallet below zero.",
+      ],
+    },
+    {
       title: "Changes",
       blocks: [
         {
@@ -237,6 +245,12 @@ const termsEs: LegalDoc = {
       ],
     },
     {
+      title: "Trabajos",
+      blocks: [
+        "Elegir un trabajo no paga ese trabajo. Titan Safety Co. paga el monto indicado solo después de verificar el trabajo como terminado. Un trabajo verificado como incompleto no se paga. Se cobra al agente el pago indicado de ese trabajo. El cargo se registra una vez y puede dejar la billetera por debajo de cero.",
+      ],
+    },
+    {
       title: "Cambios",
       blocks: [
         {
@@ -285,6 +299,7 @@ const policyEn: LegalDoc = {
       blocks: [
         "Our business earns commissions for qualified leads, approved applications, enrollments, or completed sales, depending on each partner’s program. What counts, and what is paid, is set by that program.",
         "A description on this site is not a promise that a particular application, enrollment, or sale will be approved, or that a commission will be paid.",
+        "Contractor jobs listed on this site follow the same check. Titan Safety Co. pays the listed amount only after it verifies the work as finished. An unfinished or incomplete job is not paid, and the agent is charged that job’s listed pay.",
       ],
     },
     {
@@ -346,6 +361,7 @@ const policyEs: LegalDoc = {
       blocks: [
         "Nuestro negocio gana comisiones por prospectos calificados, solicitudes aprobadas, inscripciones o ventas completadas, según el programa de cada socio. Qué cuenta, y qué se paga, lo define ese programa.",
         "Una descripción en este sitio no es una promesa de que una solicitud, inscripción o venta en particular será aprobada, ni de que se pagará una comisión.",
+        "Los trabajos de contratista publicados en este sitio siguen la misma revisión. Titan Safety Co. paga el monto indicado solo después de verificar el trabajo como terminado. Un trabajo incompleto no se paga, y se cobra al agente el pago indicado de ese trabajo.",
       ],
     },
     {
@@ -418,6 +434,12 @@ const payoutEn: LegalDoc = {
         "Titan records the compensation rate applicable when work is accepted or a qualifying referral is attributed. Later rate changes apply prospectively and do not change compensation for previously accepted work.",
       ],
     },
+    {
+      title: "Verification and cancellation",
+      blocks: [
+        "A job’s listed pay is credited only after Titan Safety Co. verifies the work as finished. Verification as unfinished or incomplete does not pay the job. Titan Safety Co. then charges the agent that job’s listed pay. The charge is applied once, even when the wallet balance is smaller than the listed pay.",
+      ],
+    },
   ],
 };
 
@@ -453,6 +475,12 @@ const payoutEs: LegalDoc = {
         "La compensación puede ser un monto fijo por prospecto calificado, solicitud, inscripción, venta o entregable aceptado. Una oferta también puede prever una compensación porcentual con un cálculo definido con claridad.",
         "Crear una cuenta, enviar un prospecto o completar una solicitud no califica automáticamente a un miembro para el pago. Deben cumplirse los requisitos indicados en la oferta aplicable.",
         "Titan registra la tarifa de compensación aplicable cuando se acepta el trabajo o se atribuye un referido que califica. Los cambios posteriores de tarifa se aplican hacia adelante y no modifican la compensación de trabajo ya aceptado.",
+      ],
+    },
+    {
+      title: "Verificación y cancelación",
+      blocks: [
+        "El pago indicado de un trabajo se acredita solo después de que Titan Safety Co. verifica el trabajo como terminado. La verificación como incompleto no paga el trabajo. Titan Safety Co. entonces cobra al agente el pago indicado de ese trabajo. El cargo se aplica una vez, aunque el saldo de la billetera sea menor que el pago indicado.",
       ],
     },
   ],

@@ -1,12 +1,14 @@
 import { currentUserId } from "@/lib/auth";
+import { timerShouldClose, timerTotalSeconds } from "@/lib/job-timer";
 import { dollarsToCents } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
 import { databaseMessage, supabaseConfigured } from "@/lib/supabase/env";
 
 export type JobPay = "weekly" | "biweekly";
-export type JobProgress = "processing" | "done" | "incomplete";
+export type JobProgress = "processing" | "review" | "done" | "incomplete";
 export type JobProgram = "safety" | "energy" | "media" | "software" | "insurance";
 export type JobQualification = "beginner" | "intermediate" | "expert";
+export type JobWorkMode = "remote" | "field";
 
 export type Job = {
   id: string;
@@ -20,6 +22,7 @@ export type Job = {
   link: string;
   program: JobProgram | "";
   qualification: JobQualification;
+  workMode: JobWorkMode | "";
   customPayDays: number | null;
   messageEnabled: boolean;
   logoPath: string;
@@ -31,6 +34,7 @@ export type ChosenJob = Job & {
   selectedAt: string;
   timerElapsedSeconds: number;
   timerStartedAt: string;
+  timerPausedAt: string;
   timerRunning: boolean;
 };
 
@@ -52,6 +56,7 @@ const JOB_META_PREFIX = "[[job-meta]]";
 
 type JobMeta = {
   qualification: JobQualification;
+  workMode: JobWorkMode | "";
   customPayDays: number | null;
   messageEnabled: boolean;
   expiresOn: string;
@@ -59,9 +64,18 @@ type JobMeta = {
   message: string;
 };
 
+function jobWorkMode(value: unknown): JobWorkMode | "" {
+  return value === "remote" || value === "field" ? value : "";
+}
+
+export function expiresOnFromMessage(raw: string) {
+  return parseJobMeta(raw).expiresOn;
+}
+
 function parseJobMeta(raw: string): JobMeta {
   const fallback: JobMeta = {
     qualification: "beginner",
+    workMode: "",
     customPayDays: null,
     messageEnabled: raw.trim().length > 0,
     expiresOn: "",
@@ -76,6 +90,7 @@ function parseJobMeta(raw: string): JobMeta {
   try {
     const parsed = JSON.parse(head) as {
       qualification?: string;
+      workMode?: string;
       customPayDays?: number | null;
       messageEnabled?: boolean;
       expiresOn?: string;
@@ -98,6 +113,7 @@ function parseJobMeta(raw: string): JobMeta {
         : "";
     return {
       qualification,
+      workMode: jobWorkMode(parsed.workMode),
       customPayDays,
       messageEnabled,
       expiresOn,
@@ -111,6 +127,7 @@ function parseJobMeta(raw: string): JobMeta {
 
 function encodeJobMeta(input: {
   qualification: JobQualification;
+  workMode: JobWorkMode;
   customPayDays: number | null;
   messageEnabled: boolean;
   expiresOn: string;
@@ -119,6 +136,7 @@ function encodeJobMeta(input: {
 }) {
   const head = JSON.stringify({
     qualification: input.qualification,
+    workMode: input.workMode,
     customPayDays: input.customPayDays,
     messageEnabled: input.messageEnabled,
     expiresOn: input.expiresOn,
@@ -128,7 +146,7 @@ function encodeJobMeta(input: {
 }
 
 export function jobProgress(value: string): JobProgress | null {
-  if (value === "processing" || value === "done" || value === "incomplete") return value;
+  if (value === "processing" || value === "review" || value === "done" || value === "incomplete") return value;
   return null;
 }
 
@@ -153,6 +171,7 @@ function mapJob(row: JobRow): Job {
     link: row.link ?? "",
     program: jobProgram(row.program ?? "") ?? "",
     qualification: meta.qualification,
+    workMode: meta.workMode,
     customPayDays: meta.customPayDays,
     messageEnabled: meta.messageEnabled,
     logoPath: meta.logoPath,
@@ -209,17 +228,25 @@ export async function listChosenJobs() {
 
   const timers = await supabase
     .from("job_timers")
-    .select("job_id, elapsed_seconds, started_at")
+    .select("job_id, elapsed_seconds, started_at, updated_at, paused")
     .eq("user_id", userId);
   if (timers.error && !/relation|schema cache|does not exist/i.test(timers.error.message)) {
     return { items: [] as ChosenJob[], error: "Jobs could not be loaded." };
   }
   const timerByJob = new Map(
-    ((timers.data ?? []) as { job_id: string; elapsed_seconds: number | null; started_at: string | null }[]).map((row) => [
+    ((timers.data ?? []) as {
+      job_id: string;
+      elapsed_seconds: number | null;
+      started_at: string | null;
+      updated_at: string | null;
+      paused: boolean | null;
+    }[]).map((row) => [
       row.job_id,
       {
         elapsed: row.elapsed_seconds ?? 0,
         startedAt: row.started_at ?? "",
+        pausedAt: row.started_at ? "" : (row.updated_at ?? ""),
+        paused: Boolean(row.paused),
       },
     ]),
   );
@@ -231,7 +258,7 @@ export async function listChosenJobs() {
       const status = jobProgress(String(row.status ?? ""));
       if (!record || !status) return null;
       const base = mapJob(record);
-      const timer = timerByJob.get(base.id) ?? { elapsed: 0, startedAt: "" };
+      const timer = timerByJob.get(base.id) ?? { elapsed: 0, startedAt: "", pausedAt: "", paused: false };
       const running = status === "processing" && Boolean(timer.startedAt);
       return {
         ...base,
@@ -239,10 +266,51 @@ export async function listChosenJobs() {
         selectedAt: String(row.created_at),
         timerElapsedSeconds: Math.max(0, timer.elapsed ?? 0),
         timerStartedAt: timer.startedAt,
+        timerPausedAt: running || !timer.paused ? "" : timer.pausedAt,
         timerRunning: running,
       };
     })
     .filter((job): job is ChosenJob => job !== null);
+
+  const started = new Date().toISOString();
+  for (const item of items) {
+    if (item.status !== "processing" || item.timerRunning || item.timerPausedAt) continue;
+    const saved = await supabase.from("job_timers").upsert(
+      {
+        user_id: userId,
+        job_id: item.id,
+        elapsed_seconds: item.timerElapsedSeconds,
+        started_at: started,
+        paused: false,
+      },
+      { onConflict: "user_id,job_id" },
+    );
+    if (saved.error) continue;
+    item.timerStartedAt = started;
+    item.timerRunning = true;
+  }
+
+  const now = Date.now();
+  for (const item of items) {
+    if (item.status !== "processing") continue;
+    const shouldClose = timerShouldClose(
+      {
+        expiresOn: item.expiresOn,
+        elapsed: item.timerElapsedSeconds,
+        startedAt: item.timerStartedAt,
+        pausedAt: item.timerPausedAt,
+        running: item.timerRunning,
+      },
+      now,
+    );
+    if (!shouldClose) continue;
+    const closed = await setJobProgress(item.id, "review");
+    if (closed.error) continue;
+    item.status = "review";
+    item.timerElapsedSeconds = timerTotalSeconds(item.timerElapsedSeconds, item.timerStartedAt, now);
+    item.timerStartedAt = "";
+    item.timerRunning = false;
+  }
 
   return { items, error: "" };
 }
@@ -307,6 +375,7 @@ export async function addJob(input: {
   link: string;
   program: string;
   qualification: string;
+  workMode: string;
   customPayDays: string;
   logoPath: string;
 }) {
@@ -319,6 +388,7 @@ export async function addJob(input: {
   const program = jobProgram(input.program);
   const qualification =
     input.qualification === "intermediate" || input.qualification === "expert" ? input.qualification : "beginner";
+  const workMode: JobWorkMode = input.workMode === "field" ? "field" : "remote";
   const customPayDays =
     payKey === "custom"
       ? Number.parseInt(input.customPayDays.trim(), 10)
@@ -375,6 +445,7 @@ export async function addJob(input: {
     pay_cents: payCents,
     message: encodeJobMeta({
       qualification,
+      workMode,
       customPayDays: normalizedCustomDays,
       messageEnabled,
       expiresOn,
@@ -409,6 +480,15 @@ export async function selectJob(jobId: string) {
   if (error && !/duplicate|unique/i.test(error.message)) {
     return { error: "That job could not be selected." };
   }
+  if (!error) {
+    await supabase.from("job_timers").insert({
+      user_id: userId,
+      job_id: jobId,
+      elapsed_seconds: 0,
+      started_at: new Date().toISOString(),
+      paused: false,
+    });
+  }
   return { error: "" };
 }
 
@@ -442,7 +522,12 @@ export async function unselectJob(jobId: string) {
     .eq("user_id", userId)
     .eq("job_id", jobId)
     .maybeSingle();
-  if (existing.data?.credited || existing.data?.status === "done") {
+  if (
+    existing.data?.credited ||
+    existing.data?.status === "done" ||
+    existing.data?.status === "review" ||
+    existing.data?.status === "incomplete"
+  ) {
     return { error: "A completed job stays on your record." };
   }
 

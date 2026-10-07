@@ -3,10 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useState, useTransition } from "react";
 import { deleteDeniedAccount } from "@/app/admin/review-actions";
-import { loadAccountDetails, type AccountDetails } from "@/app/dashboard/team/actions";
+import { loadAccountDetails, verifyJobAction, type AccountDetails } from "@/app/dashboard/team/actions";
 import { useLocale } from "@/components/locale-provider";
 import { localizeError } from "@/lib/i18n/errors";
 import { ui } from "@/lib/i18n/ui";
+import { timerTotalSeconds } from "@/lib/job-timer";
 import { formatMoney } from "@/lib/money";
 
 type AccountRow = {
@@ -54,6 +55,7 @@ function statusName(status: string, t: ReturnType<typeof ui>) {
 
 function progressName(status: string, t: ReturnType<typeof ui>) {
   if (status === "done") return t.jobDone;
+  if (status === "review") return t.jobReview;
   if (status === "incomplete") return t.jobIncomplete;
   return t.jobProcessing;
 }
@@ -64,6 +66,28 @@ function formatClock(value: number) {
   const minutes = Math.floor((safe % 3600) / 60);
   const seconds = safe % 60;
   return [hours, minutes, seconds].map((part) => String(part).padStart(2, "0")).join(":");
+}
+
+function TrueTimer({
+  seconds,
+  startedAt,
+  running,
+}: {
+  seconds: number;
+  startedAt: string;
+  running: boolean;
+}) {
+  const [shown, setShown] = useState(timerTotalSeconds(seconds, running ? startedAt : ""));
+
+  useEffect(() => {
+    const tick = () => setShown(timerTotalSeconds(seconds, running ? startedAt : ""));
+    tick();
+    if (!running) return;
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [running, seconds, startedAt]);
+
+  return <>{formatClock(shown)}</>;
 }
 
 function levelName(level: string, t: ReturnType<typeof ui>) {
@@ -236,6 +260,7 @@ function AccountOverlay({ account, onClose }: { account: AccountRow; onClose: ()
   const t = ui(locale);
   const titleId = useId();
   const [details, setDetails] = useState<AccountDetails | null>(null);
+  const [verifyError, setVerifyError] = useState("");
   const when = new Intl.DateTimeFormat(locale === "es" ? "es-US" : "en-US", {
     dateStyle: "medium",
     timeStyle: "short",
@@ -334,7 +359,7 @@ function AccountOverlay({ account, onClose }: { account: AccountRow; onClose: ()
               ) : (
                 <ul className="mt-3">
                   {[...details.jobs]
-                    .sort((a, b) => Number(b.status === "processing") - Number(a.status === "processing"))
+                    .sort((a, b) => Number(b.status === "processing" || b.status === "review") - Number(a.status === "processing" || a.status === "review"))
                     .map((job) => {
                       const active = job.status === "processing";
                       const when = job.startsOn
@@ -358,7 +383,12 @@ function AccountOverlay({ account, onClose }: { account: AccountRow; onClose: ()
                             {when ? ` · ${locale === "es" ? "Inicia" : "Begins"} ${when}` : ""}
                           </p>
                           <p className="mt-1 font-display text-xs font-semibold uppercase tracking-[0.12em] text-foreground">
-                            {locale === "es" ? "Temporizador" : "Timer"} {formatClock(job.timerElapsedSeconds)}
+                            {locale === "es" ? "Tiempo real" : "True time"}{" "}
+                            <TrueTimer
+                              seconds={job.timerElapsedSeconds}
+                              startedAt={job.timerStartedAt}
+                              running={job.timerRunning}
+                            />
                             {" · "}
                             <span className={job.timerRunning ? "text-[#0f766e]" : "text-muted"}>
                               {job.timerRunning
@@ -374,11 +404,55 @@ function AccountOverlay({ account, onClose }: { account: AccountRow; onClose: ()
                                     : "Closed"}
                             </span>
                           </p>
+                          {job.status === "review" ? (
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {(["done", "incomplete"] as const).map((next) => (
+                                <button
+                                  key={next}
+                                  type="button"
+                                  onClick={async () => {
+                                    const data = new FormData();
+                                    data.set("userId", account.id);
+                                    data.set("jobId", job.jobId);
+                                    data.set("status", next);
+                                    const result = await verifyJobAction(data);
+                                    if (result.error) {
+                                      setVerifyError(result.error);
+                                      return;
+                                    }
+                                    setVerifyError("");
+                                    setDetails((current) =>
+                                      current
+                                        ? {
+                                            ...current,
+                                            jobs: current.jobs.map((item) =>
+                                              item.jobId === job.jobId
+                                                ? { ...item, status: next, timerRunning: false }
+                                                : item,
+                                            ),
+                                          }
+                                        : current,
+                                    );
+                                  }}
+                                  className={
+                                    next === "done"
+                                      ? "inline-flex h-8 items-center border border-[#0f766e] bg-[#dcfce7] px-2.5 font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-[#0f766e] hover:bg-[#bbf7d0]"
+                                      : "inline-flex h-8 items-center border border-[#9f1239] bg-[#ffe4e6] px-2.5 font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-[#9f1239] hover:bg-[#fecdd3]"
+                                  }
+                                >
+                                  {next === "done" ? t.verifyFinished : t.verifyUnfinished}
+                                </button>
+                              ))}
+                            </div>
+                          ) : null}
                         </li>
                       );
                     })}
                 </ul>
               )}
+              {verifyError ? (
+                <p className="mt-3 text-sm text-muted">{localizeError(locale, verifyError)}</p>
+              ) : null}
             </div>
             <div className="border-t border-line px-6 py-5">
               <h3 className="font-display text-sm font-semibold uppercase tracking-[0.14em]">{t.onboarding}</h3>

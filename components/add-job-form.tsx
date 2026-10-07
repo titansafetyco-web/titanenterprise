@@ -20,6 +20,7 @@ export function AddJobForm() {
   const [payMode, setPayMode] = useState<"weekly" | "biweekly" | "custom">("weekly");
   const [customPayDays, setCustomPayDays] = useState(10);
   const [useMessage, setUseMessage] = useState(false);
+  const [workMode, setWorkMode] = useState<"remote" | "field">("remote");
 
   useEffect(() => {
     if (!state.success || pending) return;
@@ -50,9 +51,35 @@ export function AddJobForm() {
       action={formAction}
       className="space-y-5 bg-white px-6 py-6"
     >
-      <div className="mb-2 flex items-start justify-between gap-5">
+      <div className="mb-2 flex items-center justify-between gap-5">
         <h2 className="font-display text-2xl font-bold uppercase tracking-wide">{t.addJob}</h2>
-        {logoPreview ? (
+        <div className="flex shrink-0 items-center gap-4">
+          <div className="flex items-center gap-2.5">
+            <span
+              className={`font-display text-[11px] font-semibold uppercase tracking-[0.14em] ${workMode === "remote" ? "text-ink" : "text-muted"}`}
+            >
+              {t.remote}
+            </span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={workMode === "field"}
+              aria-label={`${t.remote} / ${t.workField}`}
+              onClick={() => setWorkMode((mode) => (mode === "remote" ? "field" : "remote"))}
+              className="relative h-8 w-14 rounded-full border border-line bg-canvas"
+            >
+              <span
+                className={`absolute top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-accent shadow-sm transition-[left] duration-200 ${workMode === "field" ? "left-[calc(100%-1.625rem)]" : "left-0.5"}`}
+              />
+            </button>
+            <span
+              className={`font-display text-[11px] font-semibold uppercase tracking-[0.14em] ${workMode === "field" ? "text-ink" : "text-muted"}`}
+            >
+              {t.workField}
+            </span>
+            <input type="hidden" name="workMode" value={workMode} />
+          </div>
+          {logoPreview ? (
           <div className="shrink-0">
             <div className="grid h-16 w-16 place-items-center rounded-full border border-line bg-canvas p-0.5 shadow-sm">
               <div className="relative h-full w-full overflow-hidden rounded-full bg-white p-1.5">
@@ -67,6 +94,7 @@ export function AddJobForm() {
             </div>
           </div>
         ) : null}
+        </div>
       </div>
       <label className="block">
         <span className={fieldLabel}>{t.jobTitle}</span>

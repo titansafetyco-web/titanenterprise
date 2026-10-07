@@ -372,7 +372,7 @@ create table if not exists public.job_selections (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   job_id uuid not null references public.jobs (id) on delete cascade,
-  status text not null default 'processing' check (status in ('processing', 'done', 'incomplete')),
+  status text not null default 'processing' check (status in ('processing', 'review', 'done', 'incomplete')),
   created_at timestamptz not null default now(),
   unique (user_id, job_id)
 );
@@ -382,15 +382,23 @@ create table if not exists public.job_timers (
   job_id uuid not null references public.jobs (id) on delete cascade,
   elapsed_seconds integer not null default 0 check (elapsed_seconds >= 0),
   started_at timestamptz,
+  paused boolean not null default false,
   updated_at timestamptz not null default now(),
   primary key (user_id, job_id)
 );
+
+alter table public.job_timers add column if not exists paused boolean not null default false;
 
 alter table public.job_selections
   add column if not exists status text not null default 'processing';
 
 alter table public.job_selections
   add column if not exists credited boolean not null default false;
+
+alter table public.job_selections drop constraint if exists job_selections_status_check;
+alter table public.job_selections
+  add constraint job_selections_status_check
+  check (status in ('processing', 'review', 'done', 'incomplete'));
 
 alter table public.jobs enable row level security;
 alter table public.job_selections enable row level security;
@@ -424,7 +432,7 @@ create policy "choose job" on public.job_selections
 drop policy if exists "drop selection" on public.job_selections;
 create policy "drop selection" on public.job_selections
   for delete to authenticated
-  using (user_id = auth.uid() and credited = false and status <> 'done');
+  using (user_id = auth.uid() and credited = false and status = 'processing');
 
 drop policy if exists "update selection" on public.job_selections;
 
@@ -464,7 +472,7 @@ revoke update on public.job_selections from anon, authenticated;
 
 create table if not exists public.wallets (
   user_id uuid primary key references auth.users (id) on delete cascade,
-  balance_cents integer not null default 0 check (balance_cents >= 0),
+  balance_cents integer not null default 0,
   updated_at timestamptz not null default now()
 );
 
@@ -505,6 +513,8 @@ create table if not exists public.wallet_transfers (
 
 create index if not exists wallet_transfers_from_idx on public.wallet_transfers (from_user, created_at desc);
 create index if not exists wallet_transfers_to_idx on public.wallet_transfers (to_user, created_at desc);
+
+alter table public.wallets drop constraint if exists wallets_balance_cents_check;
 
 alter table public.wallets enable row level security;
 alter table public.wallet_credits enable row level security;
@@ -558,6 +568,23 @@ as $$
   order by p.name;
 $$;
 
+create table if not exists public.job_penalties (
+  user_id uuid not null references auth.users (id) on delete cascade,
+  job_id uuid not null references public.jobs (id) on delete cascade,
+  amount_cents integer not null check (amount_cents > 0),
+  created_at timestamptz not null default now(),
+  primary key (user_id, job_id)
+);
+
+alter table public.job_penalties enable row level security;
+
+drop policy if exists "read own job penalties" on public.job_penalties;
+create policy "read own job penalties" on public.job_penalties
+  for select to authenticated
+  using (user_id = auth.uid() or public.is_reviewer());
+
+grant select on public.job_penalties to authenticated;
+
 drop function if exists public.wallet_history();
 
 create function public.wallet_history()
@@ -578,6 +605,10 @@ as $$
   select c.id, 'credit'::text, c.amount_cents, ''::text, c.created_at, ''::text, ''::text
   from public.wallet_credits c
   where c.user_id = auth.uid()
+  union all
+  select p.job_id, 'out'::text, p.amount_cents, 'Cancellation penalty'::text, p.created_at, ''::text, ''::text
+  from public.job_penalties p
+  where p.user_id = auth.uid()
   union all
   select t.id, 'out'::text, t.amount_cents, coalesce(p.name, ''), t.created_at, t.process, t.portal
   from public.wallet_transfers t
@@ -700,12 +731,11 @@ as $$
 declare
   uid uuid := auth.uid();
   current_status text;
-  pay integer;
 begin
   if uid is null then
     raise exception 'not signed in';
   end if;
-  if next_status not in ('processing', 'done', 'incomplete') then
+  if next_status <> 'review' then
     raise exception 'choose a job status';
   end if;
 
@@ -715,52 +745,95 @@ begin
   where user_id = uid and job_id = target_job
   for update;
 
-  if current_status is null then
+  if current_status is distinct from 'processing' then
     raise exception 'that job status could not be saved';
-  end if;
-  if current_status in ('done', 'incomplete') and next_status = 'processing' then
-    raise exception 'reselect the job';
   end if;
 
   update public.job_selections
-  set status = next_status
+  set status = 'review'
   where user_id = uid and job_id = target_job;
 
-  if next_status in ('done', 'incomplete') then
-    update public.job_timers
-    set elapsed_seconds = elapsed_seconds + case
-          when started_at is not null then greatest(0, floor(extract(epoch from (now() - started_at)))::integer)
-          else 0
-        end,
-        started_at = null,
-        updated_at = now()
-    where user_id = uid and job_id = target_job;
-  end if;
-
-  if next_status = 'done' then
-    select pay_cents into pay from public.jobs where id = target_job;
-    if pay is not null and pay > 0 then
-      insert into public.job_payouts (user_id, job_id, amount_cents)
-      values (uid, target_job, pay)
-      on conflict (user_id, job_id) do nothing;
-      if found then
-        insert into public.wallets (user_id) values (uid)
-        on conflict (user_id) do nothing;
-        update public.wallets
-        set balance_cents = balance_cents + pay, updated_at = now()
-        where user_id = uid;
-        insert into public.wallet_credits (user_id, amount_cents) values (uid, pay);
-      end if;
-    end if;
-    update public.job_selections
-    set credited = true
-    where user_id = uid and job_id = target_job;
-  end if;
+  update public.job_timers
+  set elapsed_seconds = elapsed_seconds + case
+        when started_at is not null then greatest(0, floor(extract(epoch from (now() - started_at)))::integer)
+        else 0
+      end,
+      started_at = null,
+      updated_at = now()
+  where user_id = uid and job_id = target_job;
 end;
 $$;
 
 revoke all on function public.settle_job_progress(uuid, text) from public, anon;
 grant execute on function public.settle_job_progress(uuid, text) to authenticated;
+
+create or replace function public.verify_job_progress(target_user uuid, target_job uuid, next_status text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_status text;
+  pay integer;
+begin
+  if not public.is_reviewer() then
+    raise exception 'not allowed';
+  end if;
+  if next_status not in ('done', 'incomplete') then
+    raise exception 'choose a job status';
+  end if;
+
+  select status
+  into current_status
+  from public.job_selections
+  where user_id = target_user and job_id = target_job
+  for update;
+
+  if current_status is distinct from 'review' then
+    raise exception 'that job status could not be saved';
+  end if;
+
+  update public.job_selections
+  set status = next_status
+  where user_id = target_user and job_id = target_job;
+
+  select pay_cents into pay from public.jobs where id = target_job;
+
+  if next_status = 'done' then
+    if pay is not null and pay > 0 then
+      insert into public.job_payouts (user_id, job_id, amount_cents)
+      values (target_user, target_job, pay)
+      on conflict (user_id, job_id) do nothing;
+      if found then
+        insert into public.wallets (user_id) values (target_user)
+        on conflict (user_id) do nothing;
+        update public.wallets
+        set balance_cents = balance_cents + pay, updated_at = now()
+        where user_id = target_user;
+        insert into public.wallet_credits (user_id, amount_cents) values (target_user, pay);
+      end if;
+    end if;
+    update public.job_selections
+    set credited = true
+    where user_id = target_user and job_id = target_job;
+  elsif pay is not null and pay > 0 then
+    insert into public.job_penalties (user_id, job_id, amount_cents)
+    values (target_user, target_job, pay)
+    on conflict (user_id, job_id) do nothing;
+    if found then
+      insert into public.wallets (user_id) values (target_user)
+      on conflict (user_id) do nothing;
+      update public.wallets
+      set balance_cents = balance_cents - pay, updated_at = now()
+      where user_id = target_user;
+    end if;
+  end if;
+end;
+$$;
+
+revoke all on function public.verify_job_progress(uuid, uuid, text) from public, anon;
+grant execute on function public.verify_job_progress(uuid, uuid, text) to authenticated;
 
 create or replace function public.leaderboard()
 returns table (
@@ -1557,6 +1630,7 @@ begin
     delete from public.applications where id is not null;
     delete from public.mailbox_messages where id is not null;
     delete from public.mailbox_drafts where id is not null;
+    delete from public.job_penalties where user_id is not null;
     delete from public.job_payouts where user_id is not null;
     delete from public.job_selections where id is not null;
     delete from public.job_timers where user_id is not null;
@@ -1570,6 +1644,7 @@ begin
     update public.wallets set balance_cents = 0, updated_at = now() where user_id is not null;
     delete from public.nav_seen where user_id is not null;
   else
+    delete from public.job_penalties where user_id = uid;
     delete from public.job_selections where user_id = uid;
     delete from public.job_timers where user_id = uid;
     delete from public.applications where user_id = uid;

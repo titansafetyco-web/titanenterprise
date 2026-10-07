@@ -54,7 +54,7 @@ export default async function AnalyticsPage() {
       id: job.id,
       title: job.title,
       pay: job.pay,
-      processing: chosen.filter((item) => item.status === "processing").length,
+      processing: chosen.filter((item) => item.status === "processing" || item.status === "review").length,
       done: chosen.filter((item) => item.status === "done").length,
       incomplete: chosen.filter((item) => item.status === "incomplete").length,
     };

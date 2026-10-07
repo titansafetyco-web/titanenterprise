@@ -53,7 +53,20 @@ export function WorkCarousel({
   }
 
   return (
-    <div className="relative mt-8 md:mt-12">
+    <div className="mt-8 md:mt-12">
+      {openItem ? (
+        <div className="mb-4 border-t-4 border-accent bg-white px-5 py-6 shadow-[0_18px_34px_rgba(16,24,32,0.24)] md:px-6 md:py-7">
+          <button
+            type="button"
+            onClick={() => setOpenCardId(null)}
+            className="font-display text-xs font-semibold uppercase tracking-[0.14em] text-accent"
+          >
+            {showLess}
+          </button>
+          <p className="mt-3 font-display text-2xl font-bold uppercase tracking-wide">{openItem.title}</p>
+          <WorkDetails detail={openItem.detail} points={openItem.points} />
+        </div>
+      ) : null}
       <ol ref={railRef} className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 md:gap-5">
         {items.map((offering) => (
           <li
@@ -111,19 +124,6 @@ export function WorkCarousel({
           <ChevronRight />
         </button>
       </div>
-      {openItem ? (
-        <div className="absolute left-0 right-0 top-full z-50 mt-2 border-t-4 border-accent bg-white px-5 py-6 shadow-[0_18px_34px_rgba(16,24,32,0.24)] md:px-6 md:py-7">
-          <button
-            type="button"
-            onClick={() => setOpenCardId(null)}
-            className="font-display text-xs font-semibold uppercase tracking-[0.14em] text-accent"
-          >
-            {showLess}
-          </button>
-          <p className="mt-3 font-display text-2xl font-bold uppercase tracking-wide">{openItem.title}</p>
-          <WorkDetails detail={openItem.detail} points={openItem.points} />
-        </div>
-      ) : null}
     </div>
   );
 }

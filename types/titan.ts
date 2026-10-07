@@ -11,7 +11,7 @@ export type JobStatus =
   | "rejected"
   | "reversed";
 
-export type LiveJobStatus = "processing" | "done" | "incomplete";
+export type LiveJobStatus = "processing" | "review" | "done" | "incomplete";
 
 export type Opportunity = {
   id: string;

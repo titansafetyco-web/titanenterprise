@@ -40,12 +40,14 @@ export type AccountDetails = {
   level: "beginner" | "intermediate" | "expert";
   jobs: {
     id: string;
+    jobId: string;
     title: string;
     pay: string;
     payCents: number;
     startsOn: string;
     status: string;
     timerElapsedSeconds: number;
+    timerStartedAt: string;
     timerRunning: boolean;
   }[];
   forms: { id: string; program: string; status: string }[];
@@ -62,6 +64,29 @@ const emptyDetails: AccountDetails = {
   forms: [],
   error: "",
 };
+
+export async function verifyJobAction(formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "admin") return { error: "That job status could not be saved." };
+  const agentId = String(formData.get("userId") ?? "");
+  const jobId = String(formData.get("jobId") ?? "");
+  const status = String(formData.get("status") ?? "");
+  if (!agentId || !jobId || (status !== "done" && status !== "incomplete")) {
+    return { error: "That job status could not be saved." };
+  }
+  const supabase = await createClient();
+  if (!supabase) return { error: databaseMessage };
+  const { error } = await supabase.rpc("verify_job_progress", {
+    target_user: agentId,
+    target_job: jobId,
+    next_status: status,
+  });
+  if (error) return { error: "That job status could not be saved." };
+  revalidatePath("/dashboard/team");
+  revalidatePath("/dashboard/jobs", "page");
+  revalidatePath("/dashboard/wallet");
+  return { error: "" };
+}
 
 export async function loadAccountDetails(id: string): Promise<AccountDetails> {
   const user = await getCurrentUser();
@@ -122,12 +147,14 @@ export async function loadAccountDetails(id: string): Promise<AccountDetails> {
     const running = row.status === "processing" && Boolean(startedAt);
     return [{
       id: row.id,
+      jobId: row.job_id,
       title: job.title,
       pay: job.pay,
       payCents: job.pay_cents ?? 0,
       startsOn: job.starts_on ?? "",
       status: row.status,
       timerElapsedSeconds: Math.max(0, timer?.elapsed_seconds ?? 0),
+      timerStartedAt: startedAt,
       timerRunning: running,
     }];
   });

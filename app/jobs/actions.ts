@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { addJob, removeJob, selectJob, setJobProgress, unselectJob } from "@/lib/jobs";
+import { JOB_OPEN_LIMIT_SECONDS, jobPastExpiration } from "@/lib/job-timer";
+import { addJob, expiresOnFromMessage, removeJob, selectJob, setJobProgress, unselectJob } from "@/lib/jobs";
 import { createClient } from "@/lib/supabase/server";
 import { databaseMessage } from "@/lib/supabase/env";
 
@@ -68,6 +69,7 @@ export async function addJobAction(
     link: String(formData.get("link") ?? ""),
     program: String(formData.get("program") ?? ""),
     qualification: String(formData.get("qualification") ?? "beginner"),
+    workMode: String(formData.get("workMode") ?? "remote"),
     logoPath,
   });
   if (result.error) return { error: result.error, success: false };
@@ -101,6 +103,15 @@ export async function setJobProgressAction(formData: FormData) {
   return result;
 }
 
+async function jobExpiresOn(
+  supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>,
+  jobId: string,
+) {
+  const job = await supabase.from("jobs").select("message").eq("id", jobId).maybeSingle();
+  if (job.error || !job.data) return "";
+  return expiresOnFromMessage(String((job.data as { message: string | null }).message ?? ""));
+}
+
 export async function startJobTimerAction(formData: FormData) {
   const user = await requireUser();
   const jobId = String(formData.get("id") ?? "");
@@ -115,7 +126,7 @@ export async function startJobTimerAction(formData: FormData) {
     .eq("job_id", jobId)
     .maybeSingle();
   const selectionStatus = String(selection.data?.status ?? "");
-  if (selection.error || selectionStatus === "done" || selectionStatus === "incomplete") return;
+  if (selection.error || selectionStatus !== "processing") return;
 
   const existing = await supabase
     .from("job_timers")
@@ -126,17 +137,30 @@ export async function startJobTimerAction(formData: FormData) {
 
   if (existing.error) return;
   const row = existing.data as { elapsed_seconds: number | null; started_at: string | null } | null;
+  const expiresOn = await jobExpiresOn(supabase, jobId);
+  const dated = Boolean(expiresOn);
+  if (dated && jobPastExpiration(expiresOn)) {
+    await setJobProgress(jobId, "review");
+    revalidatePath("/dashboard/jobs", "page");
+    return;
+  }
+  if (!dated && (row?.elapsed_seconds ?? 0) > JOB_OPEN_LIMIT_SECONDS) {
+    await setJobProgress(jobId, "review");
+    revalidatePath("/dashboard/jobs", "page");
+    return;
+  }
   if (!row) {
     await supabase.from("job_timers").insert({
       user_id: user.id,
       job_id: jobId,
       elapsed_seconds: 0,
       started_at: new Date().toISOString(),
+      paused: false,
     });
   } else if (!row.started_at) {
     await supabase
       .from("job_timers")
-      .update({ started_at: new Date().toISOString() })
+      .update({ started_at: new Date().toISOString(), paused: false })
       .eq("user_id", user.id)
       .eq("job_id", jobId);
   }
@@ -162,14 +186,24 @@ export async function stopJobTimerAction(formData: FormData) {
   if (!row.started_at) return;
   const startedMs = Date.parse(row.started_at);
   const delta = Number.isFinite(startedMs) ? Math.max(0, Math.floor((Date.now() - startedMs) / 1000)) : 0;
+  const elapsed = Math.max(0, (row.elapsed_seconds ?? 0) + delta);
   await supabase
     .from("job_timers")
     .update({
-      elapsed_seconds: Math.max(0, (row.elapsed_seconds ?? 0) + delta),
+      elapsed_seconds: elapsed,
       started_at: null,
+      paused: true,
+      updated_at: new Date().toISOString(),
     })
     .eq("user_id", user.id)
     .eq("job_id", jobId);
+
+  const expiresOn = await jobExpiresOn(supabase, jobId);
+  if (expiresOn) {
+    if (jobPastExpiration(expiresOn)) await setJobProgress(jobId, "review");
+  } else if (elapsed > JOB_OPEN_LIMIT_SECONDS) {
+    await setJobProgress(jobId, "review");
+  }
 
   revalidatePath("/dashboard/jobs", "page");
 }
