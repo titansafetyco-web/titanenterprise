@@ -9,6 +9,10 @@ import { localizeError } from "@/lib/i18n/errors";
 import type { Locale } from "@/lib/i18n/locale";
 import { ui } from "@/lib/i18n/ui";
 import type { Job } from "@/lib/jobs";
+
+function jobIsFull(job: Pick<Job, "slots" | "taken">) {
+  return job.slots !== null && job.taken >= job.slots;
+}
 import { formatMoney } from "@/lib/money";
 
 const PAGE_SIZE = 15;
@@ -130,10 +134,17 @@ function JobOpportunityPanel({
         : "—";
   const category = programLabel(job, t);
   const hasLink = job.link.startsWith("https://");
+  const full = jobIsFull(job);
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-sm border border-line bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-md md:p-5">
-      <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-accent/70" />
+    <article
+      className={
+        full
+          ? "relative flex flex-col overflow-hidden rounded-sm border border-line bg-[#f3f4f6] p-4 md:p-5"
+          : "group relative flex flex-col overflow-hidden rounded-sm border border-line bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-md md:p-5"
+      }
+    >
+      {full ? null : <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-accent/70" />}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-3">
@@ -166,10 +177,10 @@ function JobOpportunityPanel({
       </div>
 
       <dl className="mt-4 grid gap-3 lg:grid-cols-[14rem_minmax(0,1fr)]">
-        <div className="rounded-sm border border-accent/30 bg-[#fff7cc] px-3 py-3">
-          <dt className="font-display text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7a5b00]">{t.compensation}</dt>
-          <dd className="mt-1 font-display text-3xl font-bold leading-none text-foreground">{payLabel}</dd>
-          <dd className="mt-1 text-sm font-medium text-[#7a5b00]">{cadenceLabel}</dd>
+        <div className={full ? "rounded-sm border border-line bg-white px-3 py-3" : "rounded-sm border border-accent/30 bg-[#fff7cc] px-3 py-3"}>
+          <dt className={`font-display text-[11px] font-semibold uppercase tracking-[0.12em] ${full ? "text-muted" : "text-[#7a5b00]"}`}>{t.compensation}</dt>
+          <dd className={`mt-1 font-display text-3xl font-bold leading-none ${full ? "text-muted" : "text-foreground"}`}>{payLabel}</dd>
+          <dd className={`mt-1 text-sm font-medium ${full ? "text-muted" : "text-[#7a5b00]"}`}>{cadenceLabel}</dd>
         </div>
         <div className="grid content-start grid-cols-2 gap-2">
           <Fact label={t.payout} value={cadenceLabel} />
@@ -201,6 +212,13 @@ function JobOpportunityPanel({
       <p className="mt-3 text-sm leading-relaxed text-muted">{t.jobPenaltyNote}</p>
 
       <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {full ? (
+          <p role="status" className="border border-line bg-white px-3 py-3 text-sm text-muted sm:col-span-2">
+            <span className="block font-display text-xs font-semibold uppercase tracking-[0.12em] text-foreground">{t.jobUnavailable}</span>
+            <span className="mt-1 block">{t.jobUnavailableNote}</span>
+          </p>
+        ) : (
+          <>
         {hasLink ? (
           <a
             href={job.link}
@@ -212,9 +230,12 @@ function JobOpportunityPanel({
           </a>
         ) : null}
         {picked ? (
-          <div className={`inline-flex min-h-9 w-full items-center justify-center rounded-sm border border-ink px-3 font-display text-[11px] font-semibold uppercase tracking-[0.12em] md:min-h-11 md:px-4 md:text-xs md:tracking-[0.14em] ${hasLink ? "" : "sm:col-span-2"}`}>
+          <Link
+            href="/dashboard/jobs"
+            className={`inline-flex min-h-9 w-full items-center justify-center rounded-sm border border-ink px-3 font-display text-[11px] font-semibold uppercase tracking-[0.12em] transition-colors hover:bg-ink hover:text-white md:min-h-11 md:px-4 md:text-xs md:tracking-[0.14em] ${hasLink ? "" : "sm:col-span-2"}`}
+          >
             {t.selectedJob}
-          </div>
+          </Link>
         ) : (
           <form action={selectJobAction} className={hasLink ? "" : "sm:col-span-2"}>
             <input type="hidden" name="id" value={job.id} />
@@ -225,6 +246,8 @@ function JobOpportunityPanel({
               {t.selectJob}
             </button>
           </form>
+        )}
+          </>
         )}
         {admin ? (
           <div className="flex items-center gap-2 sm:col-span-2">
@@ -331,6 +354,7 @@ export function JobMarket({
           <ul className="grid gap-2.5 bg-[#f5efe2] p-2.5 md:gap-3 md:p-3">
             {pagedJobs.map((job) => {
               const picked = pickedIds.has(job.id);
+              const full = jobIsFull(job);
               const expanded = Boolean(openJobs[job.id]);
               const payLabel = job.payCents > 0 ? formatMoney(job.payCents, locale) : "—";
               const startsLabel = dateLabel(job.startsOn);
@@ -338,7 +362,13 @@ export function JobMarket({
               return (
                 <li
                   key={job.id}
-                  className={expanded ? "" : "border border-[#d9c79a] bg-[#fffdf8] p-2.5 shadow-sm md:p-3"}
+                  className={
+                    expanded
+                      ? ""
+                      : full
+                        ? "border border-line bg-[#f3f4f6] p-2.5 md:p-3"
+                        : "border border-[#d9c79a] bg-[#fffdf8] p-2.5 shadow-sm md:p-3"
+                  }
                 >
                   {expanded ? (
                     <JobOpportunityPanel
@@ -401,7 +431,7 @@ export function JobMarket({
                                   <span className="ml-1.5 font-medium">{expiresLabel}</span>
                                 </p>
                                 <span aria-hidden="true" className="hidden h-3 w-px bg-[#d9c79a] sm:inline-block" />
-                                <p className="font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-[#7a5b00]">
+                                <p className={`font-display text-[10px] font-semibold uppercase tracking-[0.12em] ${full ? "text-muted" : "text-[#7a5b00]"}`}>
                                   {cadenceLabel(job)}
                                 </p>
                               </div>
@@ -410,10 +440,17 @@ export function JobMarket({
                         </div>
                     </div>
                         <div className="flex shrink-0 flex-col items-end">
-                          {picked ? (
-                            <div className="inline-flex min-h-8 items-center border border-[#eadfbe] bg-[#fff4d6] px-2.5 font-display text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7a5b00]">
+                          {full ? (
+                            <p role="status" className="max-w-40 text-right font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+                              {t.jobUnavailable}
+                            </p>
+                          ) : picked ? (
+                            <Link
+                              href="/dashboard/jobs"
+                              className="inline-flex min-h-8 items-center border border-[#eadfbe] bg-[#fff4d6] px-2.5 font-display text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7a5b00] transition-colors hover:border-[#cda434] hover:bg-[#ffe7a3]"
+                            >
                               {t.selectedJob}
-                            </div>
+                            </Link>
                           ) : (
                             <form action={selectJobAction}>
                               <input type="hidden" name="id" value={job.id} />
@@ -425,7 +462,7 @@ export function JobMarket({
                               </button>
                             </form>
                           )}
-                          <p className="mt-5 font-display text-2xl font-bold leading-none text-black [font-variant-numeric:tabular-nums]">
+                          <p className={`mt-5 font-display text-2xl font-bold leading-none [font-variant-numeric:tabular-nums] ${full ? "text-muted" : "text-black"}`}>
                             {payLabel}
                           </p>
                         </div>

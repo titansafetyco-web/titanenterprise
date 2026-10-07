@@ -98,10 +98,10 @@ export function DashboardNav({
   };
 
   function itemClass(active: boolean) {
-    return `inline-flex shrink-0 items-center gap-2 whitespace-nowrap border-l-[3px] px-4 py-2.5 font-display text-[13px] font-semibold uppercase tracking-[0.12em] transition-colors hover:bg-canvas hover:text-foreground ${
+    return `inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md px-3 py-2.5 font-display text-[13px] font-semibold uppercase tracking-[0.12em] transition-colors ${
       active
-        ? "border-accent bg-canvas text-foreground"
-        : "border-transparent text-muted"
+        ? "bg-[#fff4d2] text-[#1c160c] shadow-[inset_3px_0_0_#e0b000]"
+        : "text-[#6e5c43] hover:bg-[#f3e6c8] hover:text-[#2a2116]"
     }`;
   }
 
@@ -117,19 +117,19 @@ export function DashboardNav({
   const settingsActive = pathname === "/dashboard/settings";
 
   return (
-    <aside className="flex flex-col border-b border-line bg-white lg:w-60 lg:shrink-0 lg:self-stretch lg:border-b-0 lg:border-r">
-      <div className="flex flex-col lg:sticky lg:top-24 lg:z-10 lg:max-h-[calc(100svh-6rem)] lg:overflow-y-auto">
-        <p className="hidden px-6 pt-8 font-display text-xs font-semibold uppercase tracking-[0.18em] text-accent lg:block">
+    <aside className="flex flex-col border-b border-[#e7dcc4] bg-[#fbf6ec] lg:w-60 lg:shrink-0 lg:self-stretch lg:border-b-0 lg:border-r">
+      <div className="flex flex-col lg:sticky lg:top-24 lg:z-10 lg:max-h-[calc(100svh-6rem)] lg:min-h-[calc(100svh-6rem)] lg:overflow-y-auto">
+        <p className="hidden px-6 pt-7 font-display text-xs font-semibold uppercase tracking-[0.2em] text-[#9a7200] lg:block">
           {t.dashboard}
         </p>
         <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-3 pt-3 lg:hidden">
           <Link
             href="/dashboard/settings"
             aria-current={settingsActive ? "page" : undefined}
-            className={`inline-flex min-h-11 min-w-11 items-center justify-center justify-self-start rounded-sm px-3 font-display text-[12px] font-semibold uppercase tracking-[0.12em] transition-colors ${
+            className={`inline-flex min-h-11 min-w-11 items-center justify-center justify-self-start rounded-md px-3 font-display text-[12px] font-semibold uppercase tracking-[0.12em] transition-colors ${
               settingsActive
-                ? "bg-canvas text-foreground"
-                : "bg-white text-muted hover:bg-canvas hover:text-foreground"
+                ? "bg-[#fff4d2] text-[#1c160c]"
+                : "bg-[#fffaf1] text-[#6e5c43] hover:bg-[#f3e6c8] hover:text-[#2a2116]"
             }`}
           >
             <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6">
@@ -138,7 +138,7 @@ export function DashboardNav({
             </svg>
             <span className="sr-only">{admin ? t.settings : t.profile}</span>
           </Link>
-          <p className="justify-self-center text-center font-display text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+          <p className="justify-self-center text-center font-display text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6e5c43]">
             {roleLabel}
           </p>
           <button
@@ -166,7 +166,7 @@ export function DashboardNav({
             <nav
               id="dashboard-mobile-menu"
               aria-label={t.dashboard}
-              className="absolute left-3 right-3 top-full z-30 mt-2 border border-line bg-white p-2 shadow-[0_12px_24px_rgba(16,24,32,0.14)]"
+              className="absolute left-3 right-3 top-full z-30 mt-2 rounded-lg border border-[#e7dcc4] bg-[#fbf6ec] p-2 shadow-[0_16px_32px_rgba(62,42,12,0.12)]"
             >
               <div className="flex flex-col gap-1">
                 <Link
@@ -177,7 +177,7 @@ export function DashboardNav({
                   {label(t.overview, false)}
                 </Link>
                 <div>
-                  <div className="flex items-stretch">
+                  <div className="flex items-center gap-1">
                     <Link
                       href="/jobs"
                       aria-current={pathname.startsWith("/jobs") ? "page" : undefined}
@@ -190,7 +190,7 @@ export function DashboardNav({
                       aria-expanded={open}
                       aria-controls="job-marketplace-menu-mobile"
                       onClick={() => setOpen((value) => !value)}
-                      className="shrink-0 border-l-[3px] border-transparent px-2 text-muted transition-colors hover:bg-canvas hover:text-foreground"
+                      className="grid size-8 shrink-0 place-items-center rounded-md text-[#6e5c43] transition-colors hover:bg-[#f3e6c8] hover:text-[#2a2116]"
                     >
                       <span className="sr-only">{open ? t.close : t.menu}</span>
                       <svg
@@ -208,7 +208,7 @@ export function DashboardNav({
                     </button>
                   </div>
                   {open ? (
-                    <div id="job-marketplace-menu-mobile" className="ml-3 flex flex-col border-l border-line">
+                    <div id="job-marketplace-menu-mobile" className="ml-4 mt-1 flex flex-col gap-0.5 border-l border-[#e4d3ae] pl-2">
                       {marketplace.map((link) => (
                         <Link
                           key={link.href}
@@ -253,7 +253,7 @@ export function DashboardNav({
             {label(t.overview, false)}
           </Link>
           <div>
-            <div className="flex items-stretch">
+            <div className="flex items-center gap-1">
               <Link
                 href="/jobs"
                 aria-current={pathname.startsWith("/jobs") ? "page" : undefined}
@@ -266,7 +266,7 @@ export function DashboardNav({
                 aria-expanded={open}
                 aria-controls="job-marketplace-menu"
                 onClick={() => setOpen((value) => !value)}
-                className="shrink-0 border-l-[3px] border-transparent px-2 text-muted transition-colors hover:bg-canvas hover:text-foreground"
+                className="grid size-8 shrink-0 place-items-center rounded-md text-[#6e5c43] transition-colors hover:bg-[#f3e6c8] hover:text-[#2a2116]"
               >
                 <span className="sr-only">{open ? t.close : t.menu}</span>
                 <svg
@@ -286,7 +286,7 @@ export function DashboardNav({
             {open ? (
               <div
                 id="job-marketplace-menu"
-                className="lg:ml-3 lg:flex lg:flex-col lg:border-l lg:border-line"
+                className="ml-4 mt-1 flex flex-col gap-0.5 border-l border-[#e4d3ae] pl-2"
               >
                 {marketplace.map((link) => (
                   <Link
@@ -301,7 +301,7 @@ export function DashboardNav({
               </div>
             ) : null}
           </div>
-          <div className="mx-3 my-2 hidden border-t border-line lg:block" />
+          <div className="mx-3 my-3 hidden border-t border-[#e4d3ae] lg:block" />
           {sections.map((link) => (
             <Link
               key={link.href}
@@ -321,11 +321,11 @@ export function DashboardNav({
         <Link
           href="/dashboard/settings"
           aria-current={settingsActive ? "page" : undefined}
-          className={`mx-3 mb-4 hidden items-center gap-3 px-4 py-2.5 transition-colors hover:bg-canvas lg:flex ${
-            settingsActive ? "border-l-[3px] border-l-accent bg-canvas" : "border-l-[3px] border-l-transparent"
+          className={`mx-3 mb-5 mt-auto hidden items-center gap-3 rounded-lg px-3 py-3 transition-colors lg:flex ${
+            settingsActive ? "bg-[#fff4d2] shadow-[inset_3px_0_0_#e0b000]" : "bg-[#fffaf1] hover:bg-[#f3e6c8]"
           }`}
         >
-          <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-ink font-display text-xs font-semibold tracking-wide text-accent">
+          <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-[#1c160c] font-display text-xs font-semibold tracking-wide text-[#f5c400] ring-2 ring-[#f0c431]">
             {photo ? (
               <Image src={photo} alt="" width={40} height={40} className="size-10 object-cover" />
             ) : (
@@ -333,10 +333,10 @@ export function DashboardNav({
             )}
           </span>
           <span className="min-w-0">
-            <span className="block truncate font-display text-sm font-semibold uppercase tracking-wide">
+            <span className="block truncate font-display text-sm font-semibold uppercase tracking-wide text-[#1c160c]">
               {name}
             </span>
-            <span className="mt-0.5 block text-muted">
+            <span className="mt-0.5 block text-[#6e5c43]">
               <span className="inline-flex lg:hidden" aria-hidden="true">
                 <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6">
                   <path d="M8.9 2h2.2l.5 2a6 6 0 0 1 1.5.6l1.8-1 1.6 1.6-1 1.8c.3.5.5 1 .6 1.5l2 .5v2.2l-2 .5a6 6 0 0 1-.6 1.5l1 1.8-1.6 1.6-1.8-1a6 6 0 0 1-1.5.6l-.5 2H8.9l-.5-2a6 6 0 0 1-1.5-.6l-1.8 1-1.6-1.6 1-1.8a6 6 0 0 1-.6-1.5l-2-.5V8.9l2-.5c.1-.5.3-1 .6-1.5l-1-1.8 1.6-1.6 1.8 1a6 6 0 0 1 1.5-.6z" />

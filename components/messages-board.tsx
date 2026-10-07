@@ -123,12 +123,12 @@ export function MessagesBoard({
   return (
     <>
       {error ? <p className="px-6 py-4 text-sm text-muted">{error}</p> : null}
-      <div className="grid gap-4 px-6 py-6 lg:grid-cols-3">
+      <div className="grid gap-4 px-6 py-6 lg:grid-cols-[repeat(3,minmax(0,1fr))]">
         <Summary label={t.emails} count={emails.length} tone="#f5c400" />
         <Summary label={t.submissionForms} count={forms.length} tone="#101820" />
         <Summary label={t.supportTickets} count={tickets.length} tone="#c4322a" />
       </div>
-      <div className="grid gap-4 px-6 pb-6">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 px-6 pb-6">
         <Card
           title={t.emails}
           action={
@@ -397,13 +397,13 @@ function MailRow({
   remove: ReactNode;
 }) {
   return (
-    <li className={`flex items-stretch ${index % 2 === 0 ? "bg-canvas" : "bg-white"}`}>
+    <li className={`flex min-w-0 items-stretch ${index % 2 === 0 ? "bg-canvas" : "bg-white"}`}>
       <button
         type="button"
         onClick={onOpen}
         className="flex min-w-0 flex-1 items-center gap-3 px-5 py-3 text-left hover:bg-[#f3f0e4]"
       >
-        <span className="shrink-0 font-display text-sm font-semibold uppercase tracking-wide">{name}</span>
+        <span className="min-w-0 max-w-[40%] truncate font-display text-sm font-semibold uppercase tracking-wide">{name}</span>
         <span className="min-w-0 flex-1 truncate text-sm text-muted">{topic}</span>
         <time className="shrink-0 text-xs text-muted">{when}</time>
       </button>
@@ -904,7 +904,7 @@ function EmailOverlay({
 
 function Card({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
   return (
-    <section className="border border-line bg-white">
+    <section className="min-w-0 border border-line bg-white">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-4">
         <h2 className="font-display text-sm font-semibold uppercase tracking-[0.16em]">{title}</h2>
         {action}

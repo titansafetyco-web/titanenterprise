@@ -114,7 +114,7 @@ export async function Footer({ name }: { name: string }) {
             <ul className="flex flex-col items-center gap-2 sm:translate-y-6" aria-label={t.socials}>
               <li>
                 <a
-                  href="https://www.instagram.com/titan.safetyco/"
+                  href="https://www.instagram.com/titan.enterprise_/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-sm text-accent transition-colors hover:text-white"

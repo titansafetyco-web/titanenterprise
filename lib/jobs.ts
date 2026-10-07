@@ -26,8 +26,14 @@ export type Job = {
   customPayDays: number | null;
   messageEnabled: boolean;
   logoPath: string;
+  slots: number | null;
+  taken: number;
   createdAt: string;
 };
+
+export function jobIsFull(job: Pick<Job, "slots" | "taken">) {
+  return job.slots !== null && job.taken >= job.slots;
+}
 
 export type ChosenJob = Job & {
   status: JobProgress;
@@ -48,10 +54,12 @@ type JobRow = {
   message: string | null;
   link: string | null;
   program: string | null;
+  slots: number | null;
+  taken: number | null;
   created_at: string;
 };
 
-const jobColumns = "id, title, description, pay, starts_on, pay_cents, message, link, program, created_at";
+const jobColumns = "id, title, description, pay, starts_on, pay_cents, message, link, program, slots, taken, created_at";
 const JOB_META_PREFIX = "[[job-meta]]";
 
 type JobMeta = {
@@ -175,6 +183,8 @@ function mapJob(row: JobRow): Job {
     customPayDays: meta.customPayDays,
     messageEnabled: meta.messageEnabled,
     logoPath: meta.logoPath,
+    slots: typeof row.slots === "number" && row.slots >= 1 ? Math.round(row.slots) : null,
+    taken: typeof row.taken === "number" && row.taken > 0 ? Math.round(row.taken) : 0,
     createdAt: row.created_at,
   };
 }
@@ -378,6 +388,7 @@ export async function addJob(input: {
   workMode: string;
   customPayDays: string;
   logoPath: string;
+  slots: string;
 }) {
   const title = input.title.trim();
   const description = input.description.trim();
@@ -402,6 +413,8 @@ export async function addJob(input: {
   const expiresOn = input.expiresOn.trim();
   const messageEnabled = input.messageEnabled;
   const logoPath = input.logoPath.trim();
+  const slots = Number.parseInt(input.slots.trim(), 10);
+  if (!Number.isInteger(slots) || slots < 1 || slots > 999) return { error: "Enter at least 1 slot." };
   if (title.length < 2) return { error: "Enter a job title." };
   if (title.length > 80) return { error: "Keep the title under 80 characters." };
   if (!program) return { error: "Choose a program." };
@@ -424,14 +437,15 @@ export async function addJob(input: {
   if (payKey === "custom" && normalizedCustomDays === null) return { error: "Enter custom pay days from 1 to 365." };
   if (messageEnabled && message.length < 2) return { error: "Write a short message." };
   if (message.length > 2000) return { error: "Keep the message under 2,000 characters." };
+  const linkValue = /^[a-z][a-z\d+\-.]*:\/\//i.test(link) ? link : `https://${link}`;
   let parsed: URL;
   try {
-    parsed = new URL(link);
+    parsed = new URL(linkValue);
   } catch {
-    return { error: "Enter a link that starts with https://." };
+    return { error: "Enter a link that starts with https:// or www." };
   }
-  if (parsed.protocol !== "https:" || link.length > 500) {
-    return { error: "Enter a link that starts with https://." };
+  if (parsed.protocol !== "https:" || !parsed.hostname.includes(".") || linkValue.length > 500) {
+    return { error: "Enter a link that starts with https:// or www." };
   }
 
   const supabase = await createClient();
@@ -452,8 +466,9 @@ export async function addJob(input: {
       logoPath,
       message: messageEnabled ? message : "",
     }),
-    link,
+    link: linkValue,
     program,
+    slots,
   });
   if (error) return { error: `The job could not be added. ${error.message}` };
   return { error: "" };
@@ -477,6 +492,9 @@ export async function selectJob(jobId: string) {
     .from("job_selections")
     .insert({ user_id: userId, job_id: jobId });
 
+  if (error && /no longer available/i.test(error.message)) {
+    return { error: "This job is no longer available." };
+  }
   if (error && !/duplicate|unique/i.test(error.message)) {
     return { error: "That job could not be selected." };
   }

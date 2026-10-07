@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useActionState, useEffect, useState } from "react";
 import { addJobAction, type JobState } from "@/app/jobs/actions";
 import { useLocale } from "@/components/locale-provider";
@@ -12,15 +11,33 @@ const fieldLabel = "font-display text-xs font-semibold uppercase tracking-[0.16e
 const fieldClass =
   "mt-2 w-full border border-line bg-white px-3 py-3 text-foreground outline-none focus-visible:border-accent";
 
+function faviconPreviewUrl(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  try {
+    const withProtocol = /^[a-z][a-z\d+\-.]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    const url = new URL(withProtocol);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return "";
+    if (!url.hostname.includes(".")) return "";
+    return `${url.origin}/favicon.ico`;
+  } catch {
+    return "";
+  }
+}
+
 export function AddJobForm() {
   const locale = useLocale();
   const t = ui(locale);
   const [state, formAction, pending] = useActionState(addJobAction, initialState);
   const [logoPreview, setLogoPreview] = useState("");
+  const [logoWebsite, setLogoWebsite] = useState("");
+  const [useLogoWebsite, setUseLogoWebsite] = useState(false);
+  const [hasLogoFile, setHasLogoFile] = useState(false);
   const [payMode, setPayMode] = useState<"weekly" | "biweekly" | "custom">("weekly");
-  const [customPayDays, setCustomPayDays] = useState(10);
+  const [customPayDays, setCustomPayDays] = useState(1);
   const [useMessage, setUseMessage] = useState(false);
   const [workMode, setWorkMode] = useState<"remote" | "field">("remote");
+  const [slots, setSlots] = useState(1);
 
   useEffect(() => {
     if (!state.success || pending) return;
@@ -30,29 +47,83 @@ export function AddJobForm() {
 
   useEffect(() => {
     return () => {
-      if (logoPreview) URL.revokeObjectURL(logoPreview);
+      if (logoPreview.startsWith("blob:")) URL.revokeObjectURL(logoPreview);
     };
   }, [logoPreview]);
 
   function onLogoChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
+    if (logoPreview.startsWith("blob:")) URL.revokeObjectURL(logoPreview);
     if (!file) {
-      if (logoPreview) URL.revokeObjectURL(logoPreview);
-      setLogoPreview("");
+      setHasLogoFile(false);
+      setLogoPreview(useLogoWebsite ? faviconPreviewUrl(logoWebsite) : "");
       return;
     }
-    if (logoPreview) URL.revokeObjectURL(logoPreview);
+    setHasLogoFile(true);
     setLogoPreview(URL.createObjectURL(file));
   }
 
+  function onWebsiteChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const value = event.target.value;
+    setLogoWebsite(value);
+    if (hasLogoFile) return;
+    setLogoPreview(faviconPreviewUrl(value));
+  }
+
+  function onUseLogoWebsite(event: React.ChangeEvent<HTMLInputElement>) {
+    const checked = event.target.checked;
+    setUseLogoWebsite(checked);
+    if (hasLogoFile) return;
+    setLogoPreview(checked ? faviconPreviewUrl(logoWebsite) : "");
+  }
+
   return (
-    <form
-      id="listing"
-      action={formAction}
-      className="space-y-5 bg-white px-6 py-6"
-    >
+    <>
+      <h2 className="mb-5 font-display text-2xl font-bold uppercase tracking-wide">{t.addJob}</h2>
+      <form
+        id="listing"
+        action={formAction}
+        className="space-y-5 bg-white px-6 py-6"
+      >
       <div className="mb-2 flex items-center justify-between gap-5">
-        <h2 className="font-display text-2xl font-bold uppercase tracking-wide">{t.addJob}</h2>
+        <div className="flex items-center gap-4">
+          <label className="shrink-0">
+            <span className={fieldLabel}>{t.jobSlots}</span>
+            <div className="mt-1 flex w-28 overflow-hidden border border-line bg-white">
+              <button
+                type="button"
+                onClick={() => setSlots((value) => Math.max(1, value - 1))}
+                className="inline-flex h-10 w-8 items-center justify-center border-r border-line font-display text-lg text-foreground hover:bg-canvas"
+                aria-label={locale === "es" ? "Quitar un cupo" : "Remove one slot"}
+              >
+                -
+              </button>
+              <input
+                name="slots"
+                type="number"
+                min={1}
+                max={999}
+                required
+                value={slots}
+                onChange={(event) => {
+                  const next = Number.parseInt(event.target.value || "1", 10);
+                  if (Number.isNaN(next)) return;
+                  setSlots(Math.max(1, Math.min(999, next)));
+                }}
+                className="h-10 min-w-0 flex-1 border-0 px-1 text-center text-foreground outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                aria-label={t.jobSlots}
+              />
+              <button
+                type="button"
+                onClick={() => setSlots((value) => Math.min(999, value + 1))}
+                className="inline-flex h-10 w-8 items-center justify-center border-l border-line font-display text-lg text-foreground hover:bg-canvas"
+                aria-label={locale === "es" ? "Agregar un cupo" : "Add one slot"}
+              >
+                +
+              </button>
+            </div>
+          </label>
+        </div>
         <div className="flex shrink-0 items-center gap-4">
           <div className="flex items-center gap-2.5">
             <span
@@ -83,12 +154,21 @@ export function AddJobForm() {
           <div className="shrink-0">
             <div className="grid h-16 w-16 place-items-center rounded-full border border-line bg-canvas p-0.5 shadow-sm">
               <div className="relative h-full w-full overflow-hidden rounded-full bg-white p-1.5">
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={logoPreview}
                   alt={locale === "es" ? "Vista previa del logo" : "Logo preview"}
-                  fill
-                  unoptimized
-                  className="object-contain"
+                  className="h-full w-full object-contain"
+                  onError={() => {
+                    if (!logoPreview.startsWith("http")) return;
+                    try {
+                      const host = new URL(logoPreview).hostname;
+                      const fallback = `https://www.google.com/s2/favicons?sz=128&domain=${encodeURIComponent(host)}`;
+                      if (fallback !== logoPreview) setLogoPreview(fallback);
+                    } catch {
+                      return;
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -111,21 +191,56 @@ export function AddJobForm() {
           <option value="insurance">{t.jobProgramInsurance}</option>
         </select>
       </label>
-      <label className="block">
-        <span className={fieldLabel}>{locale === "es" ? "Logo de la empresa" : "Company logo"}</span>
-        <input
-          name="companyLogo"
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          onChange={onLogoChange}
-          className="mt-2 w-full border border-dashed border-line bg-canvas px-3 py-3 text-sm text-foreground file:mr-3 file:border-0 file:bg-accent file:px-3 file:py-2 file:font-display file:text-xs file:font-semibold file:uppercase file:tracking-[0.12em] file:text-ink hover:file:bg-[#e0b400]"
-        />
-        <p className="mt-1 text-xs text-muted">
-          {locale === "es"
-            ? "Opcional. Usa JPG, PNG o WebP."
-            : "Optional. Use JPG, PNG, or WebP."}
-        </p>
-      </label>
+      <div>
+        <label className="block">
+          <span className={fieldLabel}>{locale === "es" ? "Logo de la empresa" : "Company logo"}</span>
+          <input
+            name="companyLogo"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            onChange={onLogoChange}
+            className="mt-2 w-full border border-dashed border-line bg-canvas px-3 py-3 text-sm text-foreground file:mr-3 file:border-0 file:bg-accent file:px-3 file:py-2 file:font-display file:text-xs file:font-semibold file:uppercase file:tracking-[0.12em] file:text-ink hover:file:bg-[#e0b400]"
+          />
+          <p className="mt-1 text-xs text-muted">
+            {locale === "es"
+              ? "Opcional. Usa JPG, PNG o WebP."
+              : "Optional. Use JPG, PNG, or WebP."}
+          </p>
+        </label>
+        <div className="mt-4 border border-line bg-canvas px-3 py-2.5">
+          <label className="inline-flex items-center gap-2 text-sm text-foreground">
+            <input
+              type="checkbox"
+              checked={useLogoWebsite}
+              onChange={onUseLogoWebsite}
+              className="size-4 border border-line accent-accent"
+            />
+            <span className="font-display text-xs font-semibold uppercase tracking-[0.12em]">
+              {locale === "es" ? "Usar URL del sitio" : "Use website URL"}
+            </span>
+          </label>
+          {useLogoWebsite ? (
+            <label className="mt-3 block">
+              <span className={fieldLabel}>{locale === "es" ? "URL del sitio" : "Website URL"}</span>
+              <input
+                name="logoWebsite"
+                type="text"
+                inputMode="url"
+                autoComplete="off"
+                placeholder="www."
+                value={logoWebsite}
+                onChange={onWebsiteChange}
+                className={fieldClass}
+              />
+              <p className="mt-1 text-xs text-muted">
+                {locale === "es"
+                  ? "Opcional. Usa el favicon del sitio como logo."
+                  : "Optional. Uses the site favicon as the logo."}
+              </p>
+            </label>
+          ) : null}
+        </div>
+      </div>
       <label className="block">
         <span className={fieldLabel}>{t.jobDescription}</span>
         <textarea name="description" required rows={4} className={fieldClass} />
@@ -249,8 +364,8 @@ export function AddJobForm() {
         )}
       </label>
       <label className="block">
-        <span className={fieldLabel}>{t.jobLink}</span>
-        <input name="link" type="url" required placeholder="https://" className={fieldClass} />
+        <span className={fieldLabel}>{locale === "es" ? "Enlace del trabajo" : "Job link"}</span>
+        <input name="link" type="text" inputMode="url" required placeholder="www." className={fieldClass} />
       </label>
       {state.error ? (
         <p role="alert" className="border-l-4 border-accent pl-3 text-sm">
@@ -264,6 +379,7 @@ export function AddJobForm() {
       >
         {pending ? t.pleaseWait : t.addJob}
       </button>
-    </form>
+      </form>
+    </>
   );
 }

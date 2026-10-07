@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
+import { websiteFavicon } from "@/lib/favicon";
 import { JOB_OPEN_LIMIT_SECONDS, jobPastExpiration } from "@/lib/job-timer";
 import { addJob, expiresOnFromMessage, removeJob, selectJob, setJobProgress, unselectJob } from "@/lib/jobs";
 import { createClient } from "@/lib/supabase/server";
@@ -55,6 +56,20 @@ export async function addJobAction(
       });
     // Logo is optional: if upload fails, continue posting the job without blocking submit.
     if (!uploaded.error) logoPath = uploadPath;
+  } else {
+    const logoWebsite = String(formData.get("logoWebsite") ?? "").trim();
+    if (logoWebsite) {
+      const favicon = await websiteFavicon(logoWebsite);
+      if ("error" in favicon) return { error: favicon.error, success: false };
+      const supabase = await createClient();
+      if (!supabase) return { error: databaseMessage, success: false };
+      const uploadPath = `${user.id}/job-logo-${Date.now()}.${favicon.ext}`;
+      const uploaded = await supabase.storage.from("avatars").upload(uploadPath, favicon.bytes, {
+        contentType: favicon.contentType,
+      });
+      if (uploaded.error) return { error: "The logo could not be saved.", success: false };
+      logoPath = uploadPath;
+    }
   }
   const result = await addJob({
     title: String(formData.get("title") ?? ""),
@@ -71,6 +86,7 @@ export async function addJobAction(
     qualification: String(formData.get("qualification") ?? "beginner"),
     workMode: String(formData.get("workMode") ?? "remote"),
     logoPath,
+    slots: String(formData.get("slots") ?? ""),
   });
   if (result.error) return { error: result.error, success: false };
   revalidatePath("/jobs");
@@ -88,9 +104,15 @@ export async function removeJobAction(formData: FormData) {
 
 export async function selectJobAction(formData: FormData) {
   await requireUser();
-  await selectJob(String(formData.get("id") ?? ""));
+  const result = await selectJob(String(formData.get("id") ?? ""));
+  if (result.error) {
+    revalidatePath("/jobs");
+    return;
+  }
   revalidatePath("/jobs");
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/jobs", "page");
+  redirect("/dashboard/jobs");
 }
 
 export async function setJobProgressAction(formData: FormData) {

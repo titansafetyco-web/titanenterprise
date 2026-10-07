@@ -362,6 +362,13 @@ alter table public.jobs add column if not exists pay_cents integer not null defa
 alter table public.jobs add column if not exists message text not null default '';
 alter table public.jobs add column if not exists link text not null default '';
 alter table public.jobs add column if not exists program text not null default '';
+alter table public.jobs add column if not exists slots integer;
+alter table public.jobs add column if not exists taken integer not null default 0;
+
+alter table public.jobs drop constraint if exists jobs_slots_check;
+alter table public.jobs add constraint jobs_slots_check check (slots is null or slots >= 1);
+alter table public.jobs drop constraint if exists jobs_taken_check;
+alter table public.jobs add constraint jobs_taken_check check (taken >= 0);
 
 alter table public.jobs drop constraint if exists jobs_pay_cents_check;
 alter table public.jobs add constraint jobs_pay_cents_check check (pay_cents >= 0);
@@ -394,6 +401,78 @@ alter table public.job_selections
 
 alter table public.job_selections
   add column if not exists credited boolean not null default false;
+
+update public.jobs as job
+set taken = counted.taken
+from (
+  select job_id, count(*)::integer as taken
+  from public.job_selections
+  group by job_id
+) as counted
+where job.id = counted.job_id;
+
+create or replace function public.guard_job_slot()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  slot_limit integer;
+  current_taken integer;
+begin
+  if exists (
+    select 1
+    from public.job_selections
+    where user_id = new.user_id and job_id = new.job_id
+  ) then
+    return new;
+  end if;
+
+  select slots, taken
+  into slot_limit, current_taken
+  from public.jobs
+  where id = new.job_id
+  for update;
+
+  if slot_limit is not null and coalesce(current_taken, 0) >= slot_limit then
+    raise exception 'this job is no longer available';
+  end if;
+
+  return new;
+end;
+$$;
+
+create or replace function public.sync_job_taken()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if tg_op = 'INSERT' then
+    update public.jobs
+    set taken = taken + 1
+    where id = new.job_id;
+    return new;
+  end if;
+
+  update public.jobs
+  set taken = greatest(0, taken - 1)
+  where id = old.job_id;
+  return old;
+end;
+$$;
+
+drop trigger if exists guard_job_slot on public.job_selections;
+create trigger guard_job_slot
+  before insert on public.job_selections
+  for each row execute function public.guard_job_slot();
+
+drop trigger if exists sync_job_taken on public.job_selections;
+create trigger sync_job_taken
+  after insert or delete on public.job_selections
+  for each row execute function public.sync_job_taken();
 
 alter table public.job_selections drop constraint if exists job_selections_status_check;
 alter table public.job_selections

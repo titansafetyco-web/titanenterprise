@@ -25,7 +25,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             name={user.name}
             photo={avatarUrl(user.avatarPath)}
           />
-          <div className="min-w-0 flex-1 px-6 py-10 md:py-14">{children}</div>
+          <div className="min-w-0 flex-1 overflow-x-clip px-6 py-10 md:py-14">{children}</div>
         </div>
       </main>
       <Footer name={site.name} />
