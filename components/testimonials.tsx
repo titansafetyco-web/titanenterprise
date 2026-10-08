@@ -7,7 +7,22 @@ export async function Testimonials() {
   const locale = await getLocale();
   const t = ui(locale);
   const stored = await listPublicTestimonials(locale);
-  const notes = stored ?? t.testimonials.map((item) => ({ ...item, stars: 5, photoUrl: "" }));
+  const fallbackStars = [5, 4, 5, 4, 4, 5];
+  const fallbackPhotos = [
+    "/reviews/jordan-hale.jpg",
+    "",
+    "/reviews/luis-ortega.jpg",
+    "",
+    "/reviews/andre-brooks.jpg",
+    "",
+  ];
+  const notes =
+    stored ??
+    t.testimonials.map((item, index) => ({
+      ...item,
+      stars: fallbackStars[index] ?? 4,
+      photoUrl: fallbackPhotos[index] ?? "",
+    }));
 
   return (
     <section id="testimonials" className="border-y border-[#dadce0] bg-[#f8f9fa]">

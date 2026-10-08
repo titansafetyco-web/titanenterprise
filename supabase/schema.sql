@@ -1879,17 +1879,17 @@ using (public.is_reviewer());
 grant select on public.testimonials to anon, authenticated;
 grant insert, update, delete on public.testimonials to authenticated;
 
-insert into public.testimonials (name, role, quote, role_es, quote_es, stars, sort_order)
-select seed.name, seed.role, seed.quote, seed.role_es, seed.quote_es, seed.stars, seed.sort_order
+insert into public.testimonials (name, role, quote, role_es, quote_es, stars, photo_path, sort_order)
+select seed.name, seed.role, seed.quote, seed.role_es, seed.quote_es, seed.stars, seed.photo_path, seed.sort_order
 from (
   values
-    ('Jordan Hale', 'Independent agent', 'The listing said what qualified, when it pays, and what review looks like. I knew the work before I accepted it.', 'Agente independiente', 'El listado decía qué calificaba, cuándo se paga y cómo es la revisión. Conocía el trabajo antes de aceptarlo.', 5, 0),
-    ('Priya Shah', 'Partner program', 'Interested people heard a clear offer and a path through signup. We could see which inquiries were ready for the next step.', 'Programa de socios', 'Las personas interesadas escucharon una oferta clara y un camino para el registro. Podíamos ver qué consultas estaban listas para el siguiente paso.', 5, 1),
-    ('Luis Ortega', 'Member', 'The requirements stayed on the job, and approved work followed the schedule we were given. Incomplete work did not move forward.', 'Miembro', 'Los requisitos permanecieron en el trabajo, y el trabajo aprobado siguió el calendario que nos dieron. El trabajo incompleto no avanzó.', 5, 2),
-    ('Maya Chen', 'Onboarding guide', 'Signup stayed in order. The next step was written down, so nobody had to guess what came after the inquiry.', 'Guía de incorporación', 'El registro se mantuvo en orden. El siguiente paso estaba escrito, así que nadie tenía que adivinar qué venía después de la consulta.', 5, 3),
-    ('Andre Brooks', 'Campaign lead', 'The offer was explained in plain language. People chose whether to continue, and the record showed that choice.', 'Líder de campaña', 'La oferta se explicó en lenguaje claro. Las personas eligieron si continuar, y el registro mostró esa elección.', 5, 4),
-    ('Elena Vargas', 'Field member', 'I could see the job, the requirements, and the review in one place. Approved work stayed on the schedule.', 'Miembro de campo', 'Podía ver el trabajo, los requisitos y la revisión en un solo lugar. El trabajo aprobado permaneció en el calendario.', 5, 5)
-) as seed(name, role, quote, role_es, quote_es, stars, sort_order)
+    ('Jordan Hale', 'Independent agent', 'The listing said what qualified, when it pays, and what review looks like. I knew the work before I accepted it.', 'Agente independiente', 'El listado decía qué calificaba, cuándo se paga y cómo es la revisión. Conocía el trabajo antes de aceptarlo.', 5, '/reviews/jordan-hale.jpg', 0),
+    ('Priya Shah', 'Partner program', 'Interested people heard a clear offer and a path through signup. We could see which inquiries were ready for the next step.', 'Programa de socios', 'Las personas interesadas escucharon una oferta clara y un camino para el registro. Podíamos ver qué consultas estaban listas para el siguiente paso.', 4, '', 1),
+    ('Luis Ortega', 'Member', 'The requirements stayed on the job, and approved work followed the schedule we were given. Incomplete work did not move forward.', 'Miembro', 'Los requisitos permanecieron en el trabajo, y el trabajo aprobado siguió el calendario que nos dieron. El trabajo incompleto no avanzó.', 5, '/reviews/luis-ortega.jpg', 2),
+    ('Maya Chen', 'Onboarding guide', 'Signup stayed in order. The next step was written down, so nobody had to guess what came after the inquiry.', 'Guía de incorporación', 'El registro se mantuvo en orden. El siguiente paso estaba escrito, así que nadie tenía que adivinar qué venía después de la consulta.', 4, '', 3),
+    ('Andre Brooks', 'Campaign lead', 'The offer was explained in plain language. People chose whether to continue, and the record showed that choice.', 'Líder de campaña', 'La oferta se explicó en lenguaje claro. Las personas eligieron si continuar, y el registro mostró esa elección.', 4, '/reviews/andre-brooks.jpg', 4),
+    ('Elena Vargas', 'Field member', 'I could see the job, the requirements, and the review in one place. Approved work stayed on the schedule.', 'Miembro de campo', 'Podía ver el trabajo, los requisitos y la revisión en un solo lugar. El trabajo aprobado permaneció en el calendario.', 5, '', 5)
+) as seed(name, role, quote, role_es, quote_es, stars, photo_path, sort_order)
 where not exists (select 1 from public.testimonials);
 
 create table if not exists public.agent_threads (

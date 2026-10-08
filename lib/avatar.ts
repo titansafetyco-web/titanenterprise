@@ -9,5 +9,6 @@ export function initials(name: string) {
 
 export function avatarUrl(path: string) {
   if (!path) return "";
+  if (path.startsWith("/") || path.startsWith("http://") || path.startsWith("https://")) return path;
   return `${supabaseUrl}/storage/v1/object/public/avatars/${path}`;
 }
