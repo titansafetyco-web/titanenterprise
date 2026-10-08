@@ -74,7 +74,7 @@ export async function addTestimonial(_state: ReviewState, formData: FormData): P
   const gate = await adminClient();
   if (!gate.supabase) return { error: gate.error };
   const review = readReview(formData);
-  if ("error" in review) return review;
+  if ("error" in review) return { error: review.error ?? "The review could not be saved." };
 
   const latest = await gate.supabase
     .from("testimonials")
@@ -85,7 +85,7 @@ export async function addTestimonial(_state: ReviewState, formData: FormData): P
   const sortOrder = (latest.data[0]?.sort_order ?? -1) + 1;
   const id = crypto.randomUUID();
   const photo = await storePhoto(gate.supabase, gate.userId, id, formData.get("photo"));
-  if ("error" in photo) return photo;
+  if ("error" in photo) return { error: photo.error ?? "The photo could not be saved." };
 
   const saved = await gate.supabase.from("testimonials").insert({
     id,
@@ -112,11 +112,11 @@ export async function updateTestimonial(_state: ReviewState, formData: FormData)
   const id = String(formData.get("id") ?? "");
   if (!/^[0-9a-f-]{36}$/i.test(id)) return { error: "The review could not be saved." };
   const review = readReview(formData);
-  if ("error" in review) return review;
+  if ("error" in review) return { error: review.error ?? "The review could not be saved." };
   const existing = await gate.supabase.from("testimonials").select("photo_path").eq("id", id).maybeSingle();
   if (existing.error) return { error: "The review could not be saved." };
   const photo = await storePhoto(gate.supabase, gate.userId, id, formData.get("photo"));
-  if ("error" in photo) return photo;
+  if ("error" in photo) return { error: photo.error ?? "The photo could not be saved." };
   const photoPath = photo.path || existing.data?.photo_path || "";
 
   const saved = await gate.supabase
