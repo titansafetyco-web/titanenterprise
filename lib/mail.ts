@@ -112,7 +112,7 @@ async function pullFolder(client: ImapFlow, folder: string, direction: "in" | "o
 
 export async function syncInbox(force = false) {
   const mailbox = account();
-  if (!mailbox.password) return "The mailbox for admin@titansafetystore.com is not connected yet.";
+  if (!mailbox.password) return "The mailbox for admin@titanconnective.com is not connected yet.";
   const supabase = await createClient();
   if (!supabase) return "";
   const due = await supabase.rpc("claim_mailbox_sync");
@@ -201,7 +201,7 @@ export async function sendMailbox(input: {
   storedBody?: string;
 }) {
   const mailbox = account();
-  if (!mailbox.password) return "The mailbox for admin@titansafetystore.com is not connected yet.";
+  if (!mailbox.password) return "The mailbox for admin@titanconnective.com is not connected yet.";
   const transport = nodemailer.createTransport({
     host: mailbox.smtpHost,
     port: mailbox.smtpPort,

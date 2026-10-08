@@ -2,7 +2,7 @@ export const site = {
   name: "Titan Connective",
   description:
     "Connecting businesses, people, and opportunities. Titan Connective connects companies, independent agents, and interested customers through partner programs, marketing, and technology. titanconnective.com",
-  contactEmail: "admin@titansafetystore.com",
+  contactEmail: "admin@titanconnective.com",
   nav: [
     { href: "/about", label: "About" },
     { href: "/#opportunities", label: "Opportunities" },
