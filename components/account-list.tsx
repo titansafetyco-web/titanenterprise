@@ -4,8 +4,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useId, useState, useTransition } from "react";
 import { deleteDeniedAccount } from "@/app/admin/review-actions";
 import { loadAccountDetails, verifyJobAction, type AccountDetails } from "@/app/dashboard/team/actions";
+import { JobPace } from "@/components/job-facts";
 import { useLocale } from "@/components/locale-provider";
 import { localizeError } from "@/lib/i18n/errors";
+import type { Locale } from "@/lib/i18n/locale";
 import { ui } from "@/lib/i18n/ui";
 import { timerTotalSeconds } from "@/lib/job-timer";
 import { formatMoney } from "@/lib/money";
@@ -88,6 +90,46 @@ function TrueTimer({
   }, [running, seconds, startedAt]);
 
   return <>{formatClock(shown)}</>;
+}
+
+function MemberJobPace({
+  job,
+  locale,
+}: {
+  job: {
+    startsOn: string;
+    expiresOn: string;
+    status: string;
+    timerElapsedSeconds: number;
+    timerStartedAt: string;
+    timerRunning: boolean;
+  };
+  locale: Locale;
+}) {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!job.timerRunning) return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [job.timerRunning]);
+
+  const status =
+    job.status === "done" || job.status === "incomplete" || job.status === "review" ? job.status : "processing";
+
+  return (
+    <div className="mt-2 max-w-md">
+      <JobPace
+        startsOn={job.startsOn}
+        expiresOn={job.expiresOn}
+        elapsed={job.timerElapsedSeconds}
+        startedAt={job.timerRunning ? job.timerStartedAt : ""}
+        status={status}
+        now={now}
+        locale={locale}
+      />
+    </div>
+  );
 }
 
 function levelName(level: string, t: ReturnType<typeof ui>) {
@@ -286,7 +328,7 @@ function AccountOverlay({ account, onClose }: { account: AccountRow; onClose: ()
 
   return (
     <div
-      className="fixed inset-0 z-30 flex items-start justify-center overflow-y-auto bg-ink/40 px-4 py-16"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink/40 px-4 py-16"
       onClick={onClose}
     >
       <section
@@ -404,6 +446,7 @@ function AccountOverlay({ account, onClose }: { account: AccountRow; onClose: ()
                                     : "Closed"}
                             </span>
                           </p>
+                          <MemberJobPace job={job} locale={locale} />
                           {job.status === "review" ? (
                             <div className="mt-2 flex flex-wrap gap-2">
                               {(["done", "incomplete"] as const).map((next) => (

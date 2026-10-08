@@ -88,6 +88,24 @@ select {
   bottom: 1.25rem;
 }
 
+@keyframes testimonial-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.testimonial-marquee {
+  animation: testimonial-marquee 42s linear infinite;
+}
+
+.testimonial-rail:hover .testimonial-marquee,
+.testimonial-rail:focus-within .testimonial-marquee {
+  animation-play-state: paused;
+}
+
 @keyframes tech-signal {
   from {
     left: 0;
@@ -104,7 +122,8 @@ select {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tech-signal {
+  .tech-signal,
+  .testimonial-marquee {
     animation: none;
   }
 }

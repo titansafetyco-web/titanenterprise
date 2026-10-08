@@ -330,6 +330,7 @@ export type JobSelection = {
   jobId: string;
   title: string;
   pay: JobPay;
+  payCents: number;
   status: JobProgress;
   selectedAt: string;
 };
@@ -341,7 +342,7 @@ export async function listSelections() {
 
   const { data, error } = await supabase
     .from("job_selections")
-    .select("user_id, status, created_at, jobs(id, title, pay)")
+    .select("user_id, status, created_at, jobs(id, title, pay, pay_cents)")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -354,7 +355,10 @@ export async function listSelections() {
 
   const items = (data ?? [])
     .map((row) => {
-      const job = row.jobs as { id: string; title: string; pay: string } | { id: string; title: string; pay: string }[] | null;
+      const job = row.jobs as
+        | { id: string; title: string; pay: string; pay_cents: number | null }
+        | { id: string; title: string; pay: string; pay_cents: number | null }[]
+        | null;
       const record = Array.isArray(job) ? job[0] : job;
       const status = jobProgress(String(row.status ?? ""));
       const pay = record ? jobPay(record.pay) : null;
@@ -364,6 +368,7 @@ export async function listSelections() {
         jobId: record.id,
         title: record.title,
         pay,
+        payCents: record.pay_cents ?? 0,
         status,
         selectedAt: String(row.created_at),
       };

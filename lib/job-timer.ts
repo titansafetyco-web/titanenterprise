@@ -53,14 +53,19 @@ export function timerHeat(
   const deadline = expirationDeadline(input.expiresOn);
   if (deadline !== null) {
     const start = /^\d{4}-\d{2}-\d{2}$/.test(input.startsOn)
-      ? Date.parse(`${input.startsOn}T12:00:00Z`)
+      ? Date.parse(`${input.startsOn}T00:00:00.000Z`)
       : Number.NaN;
-    const remainingSeconds = Math.max(0, Math.ceil((deadline - now) / 1000));
-    if (!Number.isFinite(start) || now <= start || deadline <= start) {
-      return { ratio: 0, remainingSeconds, tone: "cool" };
-    }
-    const ratio = Math.max(0, Math.min(1, (now - start) / (deadline - start)));
-    return { ratio, remainingSeconds, tone: heatTone(ratio) };
+    const windowSeconds =
+      Number.isFinite(start) && deadline > start
+        ? Math.max(1, Math.round((deadline - start) / 1000))
+        : JOB_OPEN_LIMIT_SECONDS;
+    const worked = timerTotalSeconds(input.elapsed, input.startedAt, now);
+    const ratio = Math.max(0, Math.min(1, worked / windowSeconds));
+    return {
+      ratio,
+      remainingSeconds: Math.max(0, windowSeconds - worked),
+      tone: heatTone(ratio),
+    };
   }
 
   const worked = timerTotalSeconds(input.elapsed, input.startedAt, now);

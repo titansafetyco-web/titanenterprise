@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { AgentSupportCard } from "@/components/agent-support";
 import { MessagesBoard } from "@/components/messages-board";
 import { SupportToggle } from "@/components/support-toggle";
 import { listApplications } from "@/lib/applications";
 import { getCurrentUser } from "@/lib/auth";
+import { loadAgentSupport } from "@/lib/agent-support";
 import { listChats } from "@/lib/chats";
 import { supportIsOnline } from "@/lib/maintenance";
 import { contactChoices } from "@/lib/i18n/catalog";
@@ -34,13 +36,14 @@ export default async function MessagesPage() {
   const t = ui(locale);
   const support = user.role === "admin";
   const mailError = support ? await syncInbox() : "";
-  const [messages, chats, applications, online, mailbox, drafts] = await Promise.all([
+  const [messages, chats, applications, online, mailbox, drafts, agentSupport] = await Promise.all([
     listMessages(),
     listChats(),
     listApplications(),
     supportIsOnline(),
     support ? listMailbox() : Promise.resolve([]),
     support ? listDrafts() : Promise.resolve([]),
+    loadAgentSupport(),
   ]);
   const topic = (value: string) =>
     contactChoices(locale).find((item) => item.value === value)?.label ?? value;
@@ -109,6 +112,9 @@ export default async function MessagesPage() {
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line px-6 py-5">
         <h1 className="font-display text-2xl font-bold uppercase tracking-wide">{t.messages}</h1>
         <SupportToggle online={online} />
+      </div>
+      <div className="min-w-0 border-b border-line px-6 py-5">
+        <AgentSupportCard initial={agentSupport} />
       </div>
       <MessagesBoard
         error={error ? localizeError(locale, error) : ""}

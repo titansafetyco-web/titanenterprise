@@ -14,7 +14,6 @@ const heatFill = {
 
 function formatLeft(seconds: number) {
   const safe = Math.max(0, Math.floor(seconds));
-  if (safe >= 48 * 3600) return `${Math.ceil(safe / 86400)}d`;
   const hours = Math.floor(safe / 3600);
   const minutes = Math.floor((safe % 3600) / 60);
   const remain = safe % 60;
@@ -36,26 +35,8 @@ export function JobFacts({
 }) {
   const t = ui(locale);
   const labels = locale === "es"
-    ? {
-        pay: "Pago",
-        qualification: "Calificación",
-        due: "Vence",
-        progress: "Progreso",
-        timeLeft: "Tiempo restante",
-        expired: "Plazo vencido",
-        startsSoon: "Inicia pronto",
-        days: "d",
-      }
-    : {
-        pay: "Pay",
-        qualification: "Qualification",
-        due: "Due",
-        progress: "Progress",
-        timeLeft: "Time left",
-        expired: "Expired",
-        startsSoon: "Starts soon",
-        days: "d",
-      };
+    ? { pay: "Pago" }
+    : { pay: "Pay" };
   const program =
     job.program === "safety"
       ? t.jobProgramSafety
@@ -68,42 +49,6 @@ export function JobFacts({
             : job.program === "insurance"
               ? t.jobProgramInsurance
               : "";
-  const startDate = job.startsOn ? new Date(`${job.startsOn}T12:00:00Z`) : null;
-  const explicitExpiry = job.expiresOn ? new Date(`${job.expiresOn}T12:00:00Z`) : null;
-  const dueDate = explicitExpiry && !Number.isNaN(explicitExpiry.getTime()) ? explicitExpiry : null;
-  const heat = timerHeat(
-    {
-      expiresOn: job.expiresOn,
-      startsOn: job.startsOn,
-      elapsed: timer.shownSeconds,
-      startedAt: "",
-      status: timer.status,
-    },
-    timer.now,
-  );
-  const progressPct = Math.round(heat.ratio * 100);
-  const leftLabel =
-    heat.tone === "done"
-      ? locale === "es"
-        ? "Hecho"
-        : "Done"
-      : heat.tone === "incomplete"
-        ? locale === "es"
-          ? "Incompleto"
-          : "Incomplete"
-        : `${labels.timeLeft}: ${formatLeft(heat.remainingSeconds)}`;
-  const dueText = dueDate
-    ? dueDate.toLocaleDateString(locale === "es" ? "es-US" : "en-US", {
-        dateStyle: "medium",
-        timeZone: "UTC",
-      })
-    : "";
-  const when = startDate
-    ? (startDate as Date).toLocaleDateString(locale === "es" ? "es-US" : "en-US", {
-        dateStyle: "medium",
-        timeZone: "UTC",
-      })
-    : "";
   const payAmount = job.payCents > 0 ? formatMoney(job.payCents, locale) : "";
   const cadenceLabel = job.customPayDays
     ? `${locale === "es" ? "Cada" : "Every"} ${job.customPayDays} ${locale === "es" ? "días" : "days"}`
@@ -142,40 +87,15 @@ export function JobFacts({
           </div>
         </div>
 
-        <div className="rounded-sm border border-line bg-white px-2.5 py-2">
-          <div className="flex items-center justify-between gap-3">
-            <p className="font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
-              {labels.progress}
-            </p>
-            <div className="flex flex-wrap items-center justify-end gap-1">
-              {when ? (
-                <span className="inline-flex min-h-6 items-center border border-line bg-canvas px-1.5 font-display text-[9px] font-semibold uppercase tracking-[0.1em] text-foreground">
-                  {locale === "es" ? "Inicia: " : "Begins: "}
-                  {when}
-                </span>
-              ) : null}
-              <p className="font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
-                {labels.due}: {dueText || "—"}
-              </p>
-            </div>
-          </div>
-          <div className="mt-1.5 grid grid-cols-12 gap-0.5" aria-hidden="true">
-            {Array.from({ length: 12 }, (_, index) => {
-              const fill = Math.max(0, Math.min(1, heat.ratio * 12 - index));
-              return (
-                <span key={index} className="h-2 overflow-hidden bg-canvas">
-                  <span className={`block h-full ${heatFill[heat.tone]}`} style={{ width: `${fill * 100}%` }} />
-                </span>
-              );
-            })}
-          </div>
-          <div className="mt-1.5 flex items-center justify-between gap-3">
-            <p className="font-display text-[10px] font-semibold uppercase tracking-[0.11em] text-foreground">
-              {progressPct}%
-            </p>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.11em] text-muted">{leftLabel}</p>
-          </div>
-        </div>
+        <JobPace
+          startsOn={job.startsOn}
+          expiresOn={job.expiresOn}
+          elapsed={timer.shownSeconds}
+          startedAt=""
+          status={timer.status}
+          now={timer.now}
+          locale={locale}
+        />
       </div>
 
       <details className="mt-2 rounded-sm border border-line bg-canvas px-2.5 py-2">
@@ -205,5 +125,94 @@ export function JobFacts({
         ) : null}
       </details>
     </>
+  );
+}
+
+export function JobPace({
+  startsOn,
+  expiresOn,
+  elapsed,
+  startedAt,
+  status,
+  now,
+  locale,
+}: {
+  startsOn: string;
+  expiresOn: string;
+  elapsed: number;
+  startedAt: string;
+  status: "processing" | "review" | "done" | "incomplete";
+  now: number;
+  locale: Locale;
+}) {
+  const labels = locale === "es"
+    ? { due: "Vence", progress: "Progreso", timeLeft: "Tiempo restante" }
+    : { due: "Due", progress: "Progress", timeLeft: "Time left" };
+  const startDate = startsOn ? new Date(`${startsOn}T00:00:00Z`) : null;
+  const explicitExpiry = expiresOn ? new Date(`${expiresOn}T12:00:00Z`) : null;
+  const dueDate = explicitExpiry && !Number.isNaN(explicitExpiry.getTime()) ? explicitExpiry : null;
+  const heat = timerHeat(
+    {
+      expiresOn,
+      startsOn,
+      elapsed,
+      startedAt,
+      status: status === "review" ? "processing" : status,
+    },
+    now,
+  );
+  const progressPct = Math.round(heat.ratio * 100);
+  const leftLabel =
+    heat.tone === "done"
+      ? locale === "es"
+        ? "Hecho"
+        : "Done"
+      : heat.tone === "incomplete"
+        ? locale === "es"
+          ? "Incompleto"
+          : "Incomplete"
+        : `${labels.timeLeft}: ${formatLeft(heat.remainingSeconds)}`;
+  const dueText = dueDate
+    ? dueDate.toLocaleDateString(locale === "es" ? "es-US" : "en-US", { dateStyle: "medium", timeZone: "UTC" })
+    : "";
+  const when = startDate && !Number.isNaN(startDate.getTime())
+    ? startDate.toLocaleDateString(locale === "es" ? "es-US" : "en-US", { dateStyle: "medium", timeZone: "UTC" })
+    : "";
+
+  return (
+    <div className="rounded-sm border border-line bg-white px-2.5 py-2">
+      <div className="flex items-center justify-between gap-3">
+        <p className="font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+          {labels.progress}
+        </p>
+        <div className="flex flex-wrap items-center justify-end gap-1">
+          {when ? (
+            <span className="inline-flex min-h-6 items-center border border-line bg-canvas px-1.5 font-display text-[9px] font-semibold uppercase tracking-[0.1em] text-foreground">
+              {locale === "es" ? "Inicia: " : "Begins: "}
+              {when}
+            </span>
+          ) : null}
+          <p className="font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+            {labels.due}: {dueText || "—"}
+          </p>
+        </div>
+      </div>
+      <div className="mt-1.5 grid grid-cols-12 gap-0.5" aria-hidden="true">
+        {Array.from({ length: 12 }, (_, index) => {
+          const fill = Math.max(0, Math.min(1, heat.ratio * 12 - index));
+          return (
+            <span key={index} className="h-2 overflow-hidden bg-canvas">
+              <span className={`block h-full ${heatFill[heat.tone]}`} style={{ width: `${fill * 100}%` }} />
+            </span>
+          );
+        })}
+      </div>
+      <div className="mt-1.5 flex items-center justify-between gap-3">
+        <p className="font-display text-[10px] font-semibold uppercase tracking-[0.11em] text-foreground">
+          {progressPct}%
+        </p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.11em] text-muted">{leftLabel}</p>
+      </div>
+    </div>
   );
 }

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createMemberAccount, getCurrentUser } from "@/lib/auth";
 import { formatPhone, phoneDigits } from "@/lib/phone";
+import { expiresOnFromMessage } from "@/lib/jobs";
 import { ratingFromCompletions } from "@/lib/ratings";
 import { createClient } from "@/lib/supabase/server";
 import { databaseMessage } from "@/lib/supabase/env";
@@ -45,6 +46,7 @@ export type AccountDetails = {
     pay: string;
     payCents: number;
     startsOn: string;
+    expiresOn: string;
     status: string;
     timerElapsedSeconds: number;
     timerStartedAt: string;
@@ -100,7 +102,7 @@ export async function loadAccountDetails(id: string): Promise<AccountDetails> {
     supabase.from("wallets").select("balance_cents").eq("user_id", id).maybeSingle(),
     supabase.from("wallet_transfers").select("amount_cents").eq("to_user", id),
     supabase.from("wallet_credits").select("amount_cents").eq("user_id", id),
-    supabase.from("job_selections").select("id, status, job_id, jobs(title, pay, pay_cents, starts_on)").eq("user_id", id),
+    supabase.from("job_selections").select("id, status, job_id, jobs(title, pay, pay_cents, starts_on, message)").eq("user_id", id),
     supabase.from("job_timers").select("job_id, elapsed_seconds, started_at").eq("user_id", id),
     supabase
       .from("applications")
@@ -136,8 +138,8 @@ export async function loadAccountDetails(id: string): Promise<AccountDetails> {
     status: string;
     job_id: string;
     jobs:
-      | { title: string; pay: string; pay_cents: number | null; starts_on: string | null }
-      | { title: string; pay: string; pay_cents: number | null; starts_on: string | null }[]
+      | { title: string; pay: string; pay_cents: number | null; starts_on: string | null; message: string | null }
+      | { title: string; pay: string; pay_cents: number | null; starts_on: string | null; message: string | null }[]
       | null;
   }[]).flatMap((row) => {
     const job = Array.isArray(row.jobs) ? row.jobs[0] : row.jobs;
@@ -152,6 +154,7 @@ export async function loadAccountDetails(id: string): Promise<AccountDetails> {
       pay: job.pay,
       payCents: job.pay_cents ?? 0,
       startsOn: job.starts_on ?? "",
+      expiresOn: expiresOnFromMessage(job.message ?? ""),
       status: row.status,
       timerElapsedSeconds: Math.max(0, timer?.elapsed_seconds ?? 0),
       timerStartedAt: startedAt,

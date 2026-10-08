@@ -103,7 +103,7 @@ export function OpportunityRail({
         {items.map((item) => (
           <li
             key={item.id}
-            className="w-[90%] min-w-[90%] snap-start sm:w-[80%] sm:min-w-[80%] md:w-[68%] md:min-w-[68%] lg:w-[62%] lg:min-w-[62%]"
+            className="w-[78%] min-w-[78%] snap-start sm:w-[68%] sm:min-w-[68%] md:w-[54%] md:min-w-[54%] lg:w-[46%] lg:min-w-[46%]"
           >
             <OpportunityCard
               item={item}

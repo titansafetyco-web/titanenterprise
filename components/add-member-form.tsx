@@ -44,14 +44,22 @@ export function AddMemberForm({
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line px-6 py-5">
-        <div className="flex flex-wrap items-center gap-6">
-          <p className="font-display text-2xl font-bold" aria-label={t.roleTeam}>
-            {teamCount}
-          </p>
+        <div className="flex min-w-0 flex-wrap items-center gap-4">
           <h1 className="font-display text-2xl font-bold uppercase tracking-wide">{t.teamMembers}</h1>
-          <p className="font-display text-2xl font-bold" aria-label={t.members}>
-            {memberCount}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="inline-flex items-baseline gap-2 border border-[#d9c79a] bg-[#fff4d6] px-3 py-1.5">
+              <span className="font-display text-xl font-bold leading-none text-[#1c160c]">{teamCount}</span>
+              <span className="font-display text-[11px] font-semibold uppercase tracking-[0.14em] text-[#7a5b00]">
+                {t.roleTeam}
+              </span>
+            </p>
+            <p className="inline-flex items-baseline gap-2 border border-line bg-canvas px-3 py-1.5">
+              <span className="font-display text-xl font-bold leading-none">{memberCount}</span>
+              <span className="font-display text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+                {t.members}
+              </span>
+            </p>
+          </div>
         </div>
         {admin ? (
           <button

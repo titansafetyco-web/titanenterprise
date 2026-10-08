@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/auth-form";
-import { Footer } from "@/components/footer";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser, safeNext } from "@/lib/auth";
 import { getLocale } from "@/lib/i18n/locale";
@@ -39,7 +38,6 @@ export default async function LoginPage({
           <AuthForm mode="login" next={next} rememberedEmail={remembered} />
         </div>
       </main>
-      <Footer name={site.name} />
     </>
   );
 }

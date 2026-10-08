@@ -7,6 +7,7 @@ import { getLocale } from "@/lib/i18n/locale";
 import { ui } from "@/lib/i18n/ui";
 import { siteIsClosed } from "@/lib/maintenance";
 import { site } from "@/lib/site";
+import { listTestimonials } from "@/lib/testimonials";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: `${ui(await getLocale()).settings} · ${site.name}` };
@@ -29,6 +30,7 @@ export default async function SettingsPage() {
             : t.roleAffiliate;
 
   const closed = await siteIsClosed();
+  const reviews = user.role === "admin" ? (await listTestimonials()) ?? [] : [];
 
   return (
     <SettingsPanel
@@ -41,6 +43,7 @@ export default async function SettingsPage() {
       region={user.state}
       admin={user.role === "admin"}
       closed={closed}
+      reviews={reviews}
     />
   );
 }

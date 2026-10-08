@@ -10,7 +10,7 @@ export async function Contact({ warm = false }: { warm?: boolean }) {
   const t = ui(locale);
 
   return (
-    <section id="contact" className={warm ? "bg-[#f6f0e4]" : "bg-canvas"}>
+    <section id="contact" className={`scroll-mt-28 ${warm ? "bg-[#f6f0e4]" : "bg-canvas"}`}>
       <div className={`mx-auto max-w-6xl px-6 py-8 sm:py-16 ${warm ? "md:pb-20 md:pt-2" : "md:py-24"}`}>
         <div
           className={`grid overflow-hidden md:grid-cols-12 ${

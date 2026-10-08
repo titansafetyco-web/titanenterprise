@@ -70,6 +70,9 @@ export async function Footer({ name }: { name: string }) {
           <p className="mt-3 text-xs leading-snug text-white/55">
             {t.footerDisclaimer}
           </p>
+          <p className="mt-3 text-xs leading-snug text-white/55">
+            {t.footerCopyright.replace("{name}", name)}
+          </p>
         </div>
         <div className="flex w-full items-center justify-between sm:-my-3 sm:h-full sm:w-auto sm:flex-col sm:self-stretch">
             <ul className="flex justify-center gap-3 sm:translate-y-8" aria-label="Assurances">

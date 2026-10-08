@@ -10,6 +10,16 @@ import { useLocale } from "@/components/locale-provider";
 import type { DashboardAlerts } from "@/lib/alerts";
 import { ui } from "@/lib/i18n/ui";
 
+function HelpIcon() {
+  return (
+    <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+      <circle cx="10" cy="10" r="7.25" />
+      <path d="M7.7 7.8a2.35 2.35 0 1 1 3.15 2.2c-.65.35-1.05.8-1.05 1.55" strokeLinecap="round" />
+      <circle cx="9.8" cy="14.15" r="0.7" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 function AlertDot({ label }: { label: string }) {
   return (
     <span className="inline-flex">
@@ -49,6 +59,7 @@ export function DashboardNav({
     ? [
         { href: "/dashboard/listing", label: t.addJob },
         { href: "/dashboard/jobs", label: t.yourJobs },
+        { href: "/dashboard/reviews", label: t.jobReviews },
         { href: "/dashboard/leaderboard", label: t.leaderboard },
       ]
     : [
@@ -115,6 +126,11 @@ export function DashboardNav({
   }
 
   const settingsActive = pathname === "/dashboard/settings";
+
+  function openHelp() {
+    window.dispatchEvent(new Event("titan-open-support"));
+    setMobileOpen(false);
+  }
 
   return (
     <aside className="flex flex-col border-b border-[#e7dcc4] bg-[#fbf6ec] lg:w-60 lg:shrink-0 lg:self-stretch lg:border-b-0 lg:border-r">
@@ -237,6 +253,10 @@ export function DashboardNav({
                     )}
                   </Link>
                 ))}
+                <button type="button" onClick={openHelp} className={itemClass(false)}>
+                  <HelpIcon />
+                  {t.help}
+                </button>
               </div>
             </nav>
           ) : null}
@@ -318,13 +338,18 @@ export function DashboardNav({
             </Link>
           ))}
         </nav>
-        <Link
-          href="/dashboard/settings"
-          aria-current={settingsActive ? "page" : undefined}
-          className={`mx-3 mb-5 mt-auto hidden items-center gap-3 rounded-lg px-3 py-3 transition-colors lg:flex ${
-            settingsActive ? "bg-[#fff4d2] shadow-[inset_3px_0_0_#e0b000]" : "bg-[#fffaf1] hover:bg-[#f3e6c8]"
-          }`}
-        >
+        <div className="mx-3 mb-5 mt-auto hidden flex-col gap-2 lg:flex">
+          <button type="button" onClick={openHelp} className={`${itemClass(false)} w-full justify-start`}>
+            <HelpIcon />
+            {t.help}
+          </button>
+          <Link
+            href="/dashboard/settings"
+            aria-current={settingsActive ? "page" : undefined}
+            className={`flex items-center gap-3 rounded-lg px-3 py-3 transition-colors ${
+              settingsActive ? "bg-[#fff4d2] shadow-[inset_3px_0_0_#e0b000]" : "bg-[#fffaf1] hover:bg-[#f3e6c8]"
+            }`}
+          >
           <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-[#1c160c] font-display text-xs font-semibold tracking-wide text-[#f5c400] ring-2 ring-[#f0c431]">
             {photo ? (
               <Image src={photo} alt="" width={40} height={40} className="size-10 object-cover" />
@@ -350,6 +375,7 @@ export function DashboardNav({
             </span>
           </span>
         </Link>
+        </div>
       </div>
     </aside>
   );

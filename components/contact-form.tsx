@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { sendMessage, type ContactState } from "@/app/contact/actions";
 import { useLocale } from "@/components/locale-provider";
 import { localizeError } from "@/lib/i18n/errors";
@@ -34,6 +34,28 @@ function ContactFields({
   const locale = useLocale();
   const t = ui(locale);
   const [state, formAction, pending] = useActionState(sendMessage, initialState);
+
+  useEffect(() => {
+    if (!state.ok) return;
+    const section = document.getElementById("contact");
+    if (!section) return;
+    const place = () => {
+      const top = section.getBoundingClientRect().top + window.scrollY - 112;
+      window.scrollTo({ top: Math.max(0, top), behavior: "auto" });
+    };
+    place();
+    const until = performance.now() + 3000;
+    const onScroll = () => {
+      if (performance.now() > until) return;
+      if (window.scrollY < 200) place();
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    const stop = window.setTimeout(() => window.removeEventListener("scroll", onScroll), 3100);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.clearTimeout(stop);
+    };
+  }, [state.ok]);
 
   if (state.ok) {
     return (

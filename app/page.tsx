@@ -12,6 +12,7 @@ import { Offerings } from "@/components/offerings";
 import { OpportunityPreview } from "@/components/opportunity-preview";
 import { Standards } from "@/components/standards";
 import { Technology } from "@/components/technology";
+import { Testimonials } from "@/components/testimonials";
 import { getCurrentUser } from "@/lib/auth";
 import { supportIsOnline } from "@/lib/maintenance";
 import { site } from "@/lib/site";
@@ -45,6 +46,7 @@ export default async function Home() {
         <Hero />
         <HowTitanWorks />
         <OpportunityPreview />
+        <Testimonials />
         <About />
         <Offerings />
         <Approach />

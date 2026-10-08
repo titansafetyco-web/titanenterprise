@@ -1,17 +1,20 @@
 import { redirect } from "next/navigation";
+import { AgentSupportBubble } from "@/components/agent-support";
 import { DashboardNav } from "@/components/dashboard-nav";
-import { Footer } from "@/components/footer";
 import { SiteHeader } from "@/components/site-header";
+import { loadAgentSupport } from "@/lib/agent-support";
 import { loadDashboardAlerts } from "@/lib/alerts";
 import { avatarUrl } from "@/lib/avatar";
 import { claimSubmissions, getCurrentUser } from "@/lib/auth";
-import { site } from "@/lib/site";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/dashboard");
   await claimSubmissions();
-  const alerts = await loadDashboardAlerts(user.id, user.role === "admin");
+  const [alerts, support] = await Promise.all([
+    loadDashboardAlerts(user.id, user.role === "admin"),
+    loadAgentSupport(),
+  ]);
 
   return (
     <>
@@ -28,7 +31,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <div className="min-w-0 flex-1 overflow-x-clip px-6 py-10 md:py-14">{children}</div>
         </div>
       </main>
-      <Footer name={site.name} />
+      <AgentSupportBubble initial={support} />
     </>
   );
 }

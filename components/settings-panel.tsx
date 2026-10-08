@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useId, useRef, useState, useTransition } from "react";
 import { uploadAvatar, saveProfileDetails, importProfileCsv, setSiteMaintenance, deleteAccount, formatAccount, type PhotoState } from "@/app/dashboard/settings/actions";
+import { TestimonialManager } from "@/components/testimonial-manager";
+import type { StoredReview } from "@/lib/testimonials";
 import { useLocale } from "@/components/locale-provider";
 import { initials } from "@/lib/avatar";
 import { localizeError } from "@/lib/i18n/errors";
@@ -24,6 +26,7 @@ export function SettingsPanel({
   region,
   admin,
   closed,
+  reviews,
 }: {
   name: string;
   email: string;
@@ -34,6 +37,7 @@ export function SettingsPanel({
   region: string;
   admin: boolean;
   closed: boolean;
+  reviews: StoredReview[];
 }) {
   const locale = useLocale();
   const t = ui(locale);
@@ -398,6 +402,7 @@ export function SettingsPanel({
               </button>
             </div>
           </div>
+          {admin ? <TestimonialManager reviews={reviews} /> : null}
           {confirmFormat ? (
             <div
               className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-6"

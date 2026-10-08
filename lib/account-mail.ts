@@ -2,7 +2,7 @@ import { site } from "@/lib/site";
 
 export type AccountNotice = "review" | "approved" | "denied";
 
-const origin = "https://www.titansafetystore.com";
+const origin = "https://www.titanconnective.com";
 const signInUrl = `${origin}/login`;
 const quote = "Connecting businesses, people, and opportunities.";
 

@@ -1706,6 +1706,8 @@ begin
 
     delete from public.messages where id is not null;
     delete from public.chats where id is not null;
+    delete from public.agent_messages where id is not null;
+    delete from public.agent_threads where id is not null;
     delete from public.applications where id is not null;
     delete from public.mailbox_messages where id is not null;
     delete from public.mailbox_drafts where id is not null;
@@ -1728,6 +1730,7 @@ begin
     delete from public.job_timers where user_id = uid;
     delete from public.applications where user_id = uid;
     delete from public.chats where user_id = uid;
+    delete from public.agent_threads where agent_id = uid;
     delete from public.nav_seen where user_id = uid;
     delete from public.wallet_payouts where user_id = uid;
     delete from public.payout_accounts where user_id = uid;
@@ -1825,3 +1828,285 @@ $$;
 
 revoke all on function public.delete_denied_account(uuid) from public, anon;
 grant execute on function public.delete_denied_account(uuid) to authenticated;
+
+create table if not exists public.testimonials (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  role text not null,
+  quote text not null,
+  role_es text not null default '',
+  quote_es text not null default '',
+  stars integer not null default 5,
+  photo_path text not null default '',
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now(),
+  constraint testimonials_stars check (stars between 1 and 5),
+  constraint testimonials_name check (char_length(name) between 2 and 80),
+  constraint testimonials_role check (char_length(role) between 2 and 80),
+  constraint testimonials_quote check (char_length(quote) between 12 and 500)
+);
+
+alter table public.testimonials
+  add column if not exists photo_path text not null default '';
+
+alter table public.testimonials enable row level security;
+
+drop policy if exists "read testimonials" on public.testimonials;
+create policy "read testimonials"
+on public.testimonials for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "add testimonials" on public.testimonials;
+create policy "add testimonials"
+on public.testimonials for insert
+to authenticated
+with check (public.is_reviewer());
+
+drop policy if exists "update testimonials" on public.testimonials;
+create policy "update testimonials"
+on public.testimonials for update
+to authenticated
+using (public.is_reviewer())
+with check (public.is_reviewer());
+
+drop policy if exists "remove testimonials" on public.testimonials;
+create policy "remove testimonials"
+on public.testimonials for delete
+to authenticated
+using (public.is_reviewer());
+
+grant select on public.testimonials to anon, authenticated;
+grant insert, update, delete on public.testimonials to authenticated;
+
+insert into public.testimonials (name, role, quote, role_es, quote_es, stars, sort_order)
+select seed.name, seed.role, seed.quote, seed.role_es, seed.quote_es, seed.stars, seed.sort_order
+from (
+  values
+    ('Jordan Hale', 'Independent agent', 'The listing said what qualified, when it pays, and what review looks like. I knew the work before I accepted it.', 'Agente independiente', 'El listado decía qué calificaba, cuándo se paga y cómo es la revisión. Conocía el trabajo antes de aceptarlo.', 5, 0),
+    ('Priya Shah', 'Partner program', 'Interested people heard a clear offer and a path through signup. We could see which inquiries were ready for the next step.', 'Programa de socios', 'Las personas interesadas escucharon una oferta clara y un camino para el registro. Podíamos ver qué consultas estaban listas para el siguiente paso.', 5, 1),
+    ('Luis Ortega', 'Member', 'The requirements stayed on the job, and approved work followed the schedule we were given. Incomplete work did not move forward.', 'Miembro', 'Los requisitos permanecieron en el trabajo, y el trabajo aprobado siguió el calendario que nos dieron. El trabajo incompleto no avanzó.', 5, 2),
+    ('Maya Chen', 'Onboarding guide', 'Signup stayed in order. The next step was written down, so nobody had to guess what came after the inquiry.', 'Guía de incorporación', 'El registro se mantuvo en orden. El siguiente paso estaba escrito, así que nadie tenía que adivinar qué venía después de la consulta.', 5, 3),
+    ('Andre Brooks', 'Campaign lead', 'The offer was explained in plain language. People chose whether to continue, and the record showed that choice.', 'Líder de campaña', 'La oferta se explicó en lenguaje claro. Las personas eligieron si continuar, y el registro mostró esa elección.', 5, 4),
+    ('Elena Vargas', 'Field member', 'I could see the job, the requirements, and the review in one place. Approved work stayed on the schedule.', 'Miembro de campo', 'Podía ver el trabajo, los requisitos y la revisión en un solo lugar. El trabajo aprobado permaneció en el calendario.', 5, 5)
+) as seed(name, role, quote, role_es, quote_es, stars, sort_order)
+where not exists (select 1 from public.testimonials);
+
+create table if not exists public.agent_threads (
+  id uuid primary key default gen_random_uuid(),
+  number integer generated by default as identity,
+  agent_id uuid not null references public.profiles (id) on delete cascade,
+  subject text not null default '',
+  status text not null default 'open' check (status in ('open', 'working', 'waiting', 'resolved')),
+  agent_read_at timestamptz not null default now(),
+  admin_read_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.agent_threads drop constraint if exists agent_threads_agent_id_key;
+alter table public.agent_threads add column if not exists subject text not null default '';
+alter table public.agent_threads add column if not exists status text not null default 'open';
+alter table public.agent_threads add column if not exists number integer generated by default as identity;
+alter table public.agent_threads drop constraint if exists agent_threads_status_check;
+alter table public.agent_threads
+  add constraint agent_threads_status_check
+  check (status in ('open', 'working', 'waiting', 'resolved'));
+create index if not exists agent_threads_status_idx on public.agent_threads (status, updated_at desc);
+
+create table if not exists public.agent_messages (
+  id uuid primary key default gen_random_uuid(),
+  thread_id uuid not null references public.agent_threads (id) on delete cascade,
+  sender_id uuid not null references public.profiles (id) on delete cascade,
+  body text not null check (char_length(btrim(body)) between 1 and 2000),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists agent_messages_thread_idx on public.agent_messages (thread_id, created_at);
+
+alter table public.agent_threads enable row level security;
+alter table public.agent_messages enable row level security;
+
+create or replace function public.is_agent_member()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid()
+      and status = 'approved'
+      and role <> 'admin'
+  );
+$$;
+
+drop policy if exists "read agent threads" on public.agent_threads;
+create policy "read agent threads"
+on public.agent_threads for select
+to authenticated
+using (agent_id = auth.uid() or public.is_reviewer());
+
+drop policy if exists "read agent messages" on public.agent_messages;
+create policy "read agent messages"
+on public.agent_messages for select
+to authenticated
+using (
+  exists (
+    select 1 from public.agent_threads
+    where id = thread_id
+      and (agent_id = auth.uid() or public.is_reviewer())
+  )
+);
+
+grant select on public.agent_threads to authenticated;
+grant select on public.agent_messages to authenticated;
+
+create or replace function public.open_agent_ticket(subject text, note text)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  me uuid := auth.uid();
+  thread uuid;
+  trimmed text := btrim(coalesce(note, ''));
+  title text := btrim(coalesce(subject, ''));
+begin
+  if me is null or not public.is_agent_member() then
+    raise exception 'Your account cannot use support chat.';
+  end if;
+  if char_length(title) < 2 then
+    raise exception 'Enter a subject.';
+  end if;
+  if char_length(title) > 80 then
+    raise exception 'Keep the subject under 80 characters.';
+  end if;
+  if char_length(trimmed) < 2 then
+    raise exception 'Write a short note.';
+  end if;
+  if char_length(trimmed) > 2000 then
+    raise exception 'Keep the note under 2,000 characters.';
+  end if;
+
+  insert into public.agent_threads (agent_id, subject, status)
+  values (me, title, 'open')
+  returning id into thread;
+
+  insert into public.agent_messages (thread_id, sender_id, body)
+  values (thread, me, trimmed);
+
+  return thread;
+end;
+$$;
+
+create or replace function public.reply_agent_ticket(thread uuid, note text)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  me uuid := auth.uid();
+  owner uuid;
+  current_status text;
+  reviewer boolean := public.is_reviewer();
+  message uuid;
+  trimmed text := btrim(coalesce(note, ''));
+begin
+  if me is null then
+    raise exception 'Your account cannot use support chat.';
+  end if;
+  if char_length(trimmed) < 2 then
+    raise exception 'Write a short note.';
+  end if;
+  if char_length(trimmed) > 2000 then
+    raise exception 'Keep the note under 2,000 characters.';
+  end if;
+
+  select agent_id, status into owner, current_status
+  from public.agent_threads
+  where id = thread;
+
+  if owner is null then
+    raise exception 'That ticket does not exist.';
+  end if;
+  if not reviewer and (owner <> me or not public.is_agent_member()) then
+    raise exception 'Your account cannot use support chat.';
+  end if;
+
+  insert into public.agent_messages (thread_id, sender_id, body)
+  values (thread, me, trimmed)
+  returning id into message;
+
+  update public.agent_threads
+  set updated_at = now(),
+      status = case
+        when reviewer then 'working'
+        when current_status in ('waiting', 'resolved') then 'open'
+        else current_status
+      end,
+      agent_read_at = case when owner = me then now() else agent_read_at end,
+      admin_read_at = case when reviewer then now() else admin_read_at end
+  where id = thread;
+
+  return message;
+end;
+$$;
+
+create or replace function public.set_agent_ticket_status(thread uuid, next text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_reviewer() then
+    raise exception 'Your account cannot use support chat.';
+  end if;
+  if next not in ('open', 'working', 'waiting', 'resolved') then
+    raise exception 'That ticket could not be updated.';
+  end if;
+  update public.agent_threads
+  set status = next,
+      updated_at = now(),
+      admin_read_at = now()
+  where id = thread;
+  if not found then
+    raise exception 'That ticket does not exist.';
+  end if;
+end;
+$$;
+
+drop function if exists public.send_agent_support(text, uuid);
+
+create or replace function public.mark_agent_support_read(thread uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  me uuid := auth.uid();
+begin
+  if me is null or thread is null then
+    return;
+  end if;
+  if public.is_reviewer() then
+    update public.agent_threads set admin_read_at = now() where id = thread;
+  else
+    update public.agent_threads set agent_read_at = now() where id = thread and agent_id = me;
+  end if;
+end;
+$$;
+
+revoke all on function public.open_agent_ticket(text, text) from public, anon;
+revoke all on function public.reply_agent_ticket(uuid, text) from public, anon;
+revoke all on function public.set_agent_ticket_status(uuid, text) from public, anon;
+revoke all on function public.mark_agent_support_read(uuid) from public, anon;
+grant execute on function public.open_agent_ticket(text, text) to authenticated;
+grant execute on function public.reply_agent_ticket(uuid, text) to authenticated;
+grant execute on function public.set_agent_ticket_status(uuid, text) to authenticated;
+grant execute on function public.mark_agent_support_read(uuid) to authenticated;

@@ -104,6 +104,7 @@ export function Header({
               account={account}
               onAdmin={onDashboard}
               signOut={signOut}
+              hideDashboard={onDashboard}
             />
           </nav>
           <div className="hidden shrink-0 lg:block">
@@ -120,7 +121,7 @@ export function Header({
           <div className="mx-auto flex max-w-6xl flex-col items-start gap-1">
             <div className="mb-4 flex w-full items-start justify-between gap-3 border-b border-white/50 pb-4">
               <LanguageToggle />
-              {account ? (
+              {account && !onDashboard ? (
                 <Link
                   href="/dashboard"
                   aria-current={onDashboard ? "page" : undefined}
